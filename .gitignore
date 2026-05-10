@@ -1,2 +1,4 @@
 .env
 meals_log.json
+__pycache__/
+*.pyc
