@@ -22,6 +22,12 @@ FOOD_DATABASE = {
     "potato": 77,
     "onion": 40,
     "spinach": 23,
+    "peas": 81,
+    "carrots": 41,
+    "broccoli": 34,
+    "green beans": 31,
+    "mushrooms": 22,
+    "butternut squash": 45,
 
     # Dairy
     "milk": 42,
@@ -37,20 +43,45 @@ FOOD_DATABASE = {
     "burger": 295,
     "pizza": 266,
     "fries": 312,
+
+    # Sweets & Desserts
+    "ice cream": 207,
+    "waffle cone": 377,
+    "chocolate": 546,
+    "cake": 257,
+    "cookie": 502,
+
+    # Drinks
+    "milk": 42,
+    "juice": 45,
+    "soda": 41,
+
+    # Snacks
+    "chips": 536,
+    "popcorn": 375,
+    "nuts": 607,
 }
 
 def get_calories(food_name, grams=100):
     """
-    Returns calories for a food item
-    Default serving size is 100g
+    Returns calories for a food item with fuzzy matching
     """
     food = food_name.lower().strip()
+    
+    # Exact match first
     if food in FOOD_DATABASE:
         calories = (FOOD_DATABASE[food] * grams) / 100
         return calories
-    else:
-        print(f"'{food_name}' not found in database")
-        return 0
+    
+    # Fuzzy match — check if any database key is IN the food name
+    for key in FOOD_DATABASE:
+        if key in food:
+            calories = (FOOD_DATABASE[key] * grams) / 100
+            print(f"  (matched '{food_name}' → '{key}')")
+            return calories
+    
+    print(f"  '{food_name}' not found in database")
+    return 0
 
 def list_all_foods():
     """
