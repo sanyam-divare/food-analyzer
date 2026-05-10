@@ -59,3 +59,19 @@ def list_all_foods():
     print("\n Available foods in database:")
     for food in FOOD_DATABASE:
         print(f"  {food}: {FOOD_DATABASE[food]} cal/100g")
+
+def search_by_calories(min_cal, max_cal):
+    """
+    Find foods within a calorie range per 100g
+    """
+    print(f"\n🔍 Foods between {min_cal}-{max_cal} cal per 100g:")
+    found = []
+    for food, calories in FOOD_DATABASE.items():
+        if min_cal <= calories <= max_cal:
+            found.append(food)
+            print(f"  {food}: {calories} cal")
+    
+    if not found:
+        print("  No foods found in that range!")
+    
+    return found
