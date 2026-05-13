@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2d6a4f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Food Analyzer">
+    <link rel="manifest" href="/static/manifest.json">
+    <title>🍽️ Food Analyzer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>🍽️ Food Analyzer</h1>
+        <p>AI Powered Nutrition Tracker</p>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('analyze')">📸 Analyze</button>
+            <button class="tab" onclick="showTab('history')">📅 History</button>
+        </div>
+
+        <!-- Analyze Tab -->
+        <div id="tab-analyze" class="tab-content active">
+
+            <!-- Camera Section -->
+            <div class="card">
+                <h2>Take a Photo</h2>
+                <div class="camera-container">
+                    <video id="camera-preview" autoplay playsinline></video>
+                    <canvas id="canvas" style="display:none"></canvas>
+                    <img id="photo-preview" style="display:none" alt="Food photo">
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="startCamera()">📷 Open Camera</button>
+                    <button class="btn-success" onclick="capturePhoto()" id="capture-btn" style="display:none">✅ Capture</button>
+                    <button class="btn-secondary" onclick="uploadPhoto()">📁 Upload Photo</button>
+                    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+
+            <!-- Voice Section -->
+            <div class="card">
+                <h2>🎤 Voice Input</h2>
+                <p class="hint">Say what you ate — e.g. "I had rice and chicken curry"</p>
+                <div class="voice-container">
+                    <button class="btn-voice" id="voice-btn" onclick="toggleVoice()">🎤 Tap to Speak</button>
+                    <div id="voice-text" class="voice-text"></div>
+                </div>
+                <button class="btn-primary" onclick="analyzeVoice()" id="analyze-voice-btn" style="display:none">
+                    🔍 Analyze Food
+                </button>
+            </div>
+
+            <!-- Analyze Button -->
+            <button class="btn-analyze" onclick="analyzePhoto()" id="analyze-btn" style="display:none">
+                🤖 Analyze with AI
+            </button>
+
+            <!-- Loading -->
+            <div id="loading" style="display:none" class="loading">
+                <div class="spinner"></div>
+                <p>AI is analyzing your food...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" style="display:none" class="card results">
+                <h2>📊 Nutrition Results</h2>
+                <p id="meal-description" class="meal-desc"></p>
+
+                <div id="foods-list"></div>
+
+                <div class="total-calories">
+                    <span>🔥 Total Calories</span>
+                    <span id="total-cal" class="cal-number"></span>
+                </div>
+
+                <div class="macros">
+                    <div class="macro">
+                        <span class="macro-label">Protein</span>
+                        <span id="total-protein" class="macro-value"></span>
+                    </div>
+                    <div class="macro">
+                        <span class="macro-label">Carbs</span>
+                        <span id="total-carbs" class="macro-value"></span>
+                    </div>
+                    <div class="macro">
+                        <span class="macro-label">Fat</span>
+                        <span id="total-fat" class="macro-value"></span>
+                    </div>
+                </div>
+
+                <button class="btn-secondary" onclick="resetApp()">🔄 Analyze Another</button>
+            </div>
+
+        </div>
+
+        <!-- History Tab -->
+        <div id="tab-history" class="tab-content">
+            <div class="card">
+                <h2>📅 Meal History</h2>
+                <div id="history-list">
+                    <p class="hint">Loading history...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="/static/js/app.js"></script>
+
+</body>
+</html>
