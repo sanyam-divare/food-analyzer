@@ -172,15 +172,15 @@ def analyze_image_with_ai(image_path):
                         "data": image_data
                     }
                 },
-                {
-                    "text": """Analyze this food image. List each food item you can see.
-                    Respond in this exact JSON format only, no other text:
+                {"text": """Analyze this food image. List each food item you see.
+                    Be specific with food names e.g. 'raw banana' not just 'banana',
+                    'cooked white rice' not just 'rice', 'grilled chicken breast' not just 'chicken'.
+                    Respond ONLY in this exact JSON format, no other text:
                     {
                         "foods": [
-                            {"name": "food name", "estimated_grams": 100},
-                            {"name": "food name", "estimated_grams": 150}
+                            {"name": "specific food name", "estimated_grams": 100}
                         ],
-                        "meal_description": "brief description of the meal"
+                        "meal_description": "brief description"
                     }"""
                 }
             ]

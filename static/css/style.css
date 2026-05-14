@@ -1,241 +1,565 @@
-# Food Analyzer - Flask Web App
-# Author: Sanyam
-# Started: May 2026
+/* ── Google Fonts ──────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-import os
-import json
-import base64
-import requests
-import sqlite3
-from datetime import datetime
-from flask import Flask, render_template, request, jsonify
-from dotenv import load_dotenv
+/* ── Reset & Base ──────────────────────────────── */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-# Load environment variables
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+:root {
+    --green:        #1a6b3c;
+    --green-mid:    #2d9154;
+    --green-light:  #4ab870;
+    --green-pale:   #e8f5ee;
+    --orange:       #e8622a;
+    --orange-pale:  #fdf0ea;
+    --white:        #ffffff;
+    --gray-50:      #f9fafb;
+    --gray-100:     #f3f4f6;
+    --gray-200:     #e5e7eb;
+    --gray-400:     #9ca3af;
+    --gray-600:     #4b5563;
+    --gray-900:     #111827;
+    --red:          #dc2626;
+    --red-pale:     #fef2f2;
+    --shadow-sm:    0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md:    0 4px 16px rgba(0,0,0,0.10);
+    --shadow-lg:    0 8px 32px rgba(0,0,0,0.12);
+    --radius-sm:    8px;
+    --radius-md:    14px;
+    --radius-lg:    20px;
+}
 
-app = Flask(__name__)
+body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-900);
+    min-height: 100vh;
+    padding-bottom: 48px;
+    -webkit-font-smoothing: antialiased;
+}
 
-# ─── Database ────────────────────────────────────────
-def get_db():
-    conn = sqlite3.connect('food_database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+/* ── Header ────────────────────────────────────── */
+header {
+    background: linear-gradient(150deg, var(--green) 0%, var(--green-mid) 60%, var(--green-light) 100%);
+    color: var(--white);
+    text-align: center;
+    padding: 28px 20px 40px;
+    position: relative;
+    overflow: hidden;
+}
 
-def search_food(food_name):
-    """Search food in database with fuzzy matching"""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT food_name, energy_kcal, protein, fat, carbohydrates
-        FROM foods
-        WHERE LOWER(food_name) LIKE ?
-        LIMIT 1
-    """, (f'%{food_name.lower()}%',))
-    result = cursor.fetchone()
-    conn.close()
-    return dict(result) if result else None
+header::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+}
 
-# ─── Gemini AI ───────────────────────────────────────
-def analyze_with_gemini(image_base64, mime_type="image/jpeg"):
-    """Send image to Gemini for food analysis"""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: -20px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+}
 
-    payload = {
-        "contents": [{
-            "parts": [
-                {
-                    "inline_data": {
-                        "mime_type": mime_type,
-                        "data": image_base64
-                    }
-                },
-                {
-                    "text": """Analyze this food image. List each food item you see.
-                    Respond ONLY in this exact JSON format, no other text:
-                    {
-                        "foods": [
-                            {"name": "food name", "estimated_grams": 100},
-                            {"name": "food name", "estimated_grams": 150}
-                        ],
-                        "meal_description": "brief description"
-                    }"""
-                }
-            ]
-        }]
-    }
+header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+}
 
-    response = requests.post(url, json=payload)
-    if response.status_code == 200:
-        result = response.json()
-        text = result["candidates"][0]["content"]["parts"][0]["text"]
-        text = text.strip()
-        if "```" in text:
-            text = text.split("```")[1]
-            if text.startswith("json"):
-                text = text[4:]
-        return json.loads(text.strip())
-    else:
-        return None
+header p {
+    font-size: 0.85rem;
+    opacity: 0.80;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    position: relative;
+    z-index: 1;
+}
 
-# ─── Routes ──────────────────────────────────────────
-@app.route('/')
-def index():
-    return render_template('index.html')
+/* ── Main Container ────────────────────────────── */
+main {
+    max-width: 520px;
+    margin: -18px auto 0;
+    padding: 0 14px;
+    position: relative;
+    z-index: 2;
+}
 
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    """Analyze food image from camera or upload"""
-    try:
-        data = request.get_json()
-        image_base64 = data.get('image')
-        mime_type = data.get('mime_type', 'image/jpeg')
+/* ── Tabs ──────────────────────────────────────── */
+.tabs {
+    display: flex;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 5px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-md);
+    gap: 4px;
+}
 
-        # Get AI analysis
-        ai_result = analyze_with_gemini(image_base64, mime_type)
-        if not ai_result:
-            return jsonify({"error": "AI analysis failed"}), 500
+.tab {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--gray-400);
+    transition: all 0.2s ease;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.01em;
+}
 
-        # Look up nutrition for each food
-        foods_with_nutrition = []
-        total_calories = 0
+.tab.active {
+    background: var(--green);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(26,107,60,0.3);
+}
 
-        for food in ai_result['foods']:
-            nutrition = search_food(food['name'])
-            grams = food['estimated_grams']
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
-            if nutrition:
-                calories = (nutrition['energy_kcal'] * grams) / 100
-                protein = (nutrition['protein'] * grams) / 100
-                fat = (nutrition['fat'] * grams) / 100
-                carbs = (nutrition['carbohydrates'] * grams) / 100
-            else:
-                calories = protein = fat = carbs = 0
+/* ── Cards ─────────────────────────────────────── */
+.card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
 
-            foods_with_nutrition.append({
-                "name": food['name'],
-                "grams": grams,
-                "calories": round(calories),
-                "protein": round(protein, 1),
-                "fat": round(fat, 1),
-                "carbs": round(carbs, 1),
-                "found_in_db": nutrition is not None
-            })
-            total_calories += calories
+.card h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--green);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
-        result = {
-            "meal_description": ai_result['meal_description'],
-            "foods": foods_with_nutrition,
-            "total_calories": round(total_calories),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M")
-        }
+/* ── Camera ────────────────────────────────────── */
+.camera-container {
+    width: 100%;
+    background: var(--gray-900);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 14px;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
 
-        # Save to log
-        save_meal_log(result)
+.camera-placeholder {
+    color: var(--gray-400);
+    font-size: 2.5rem;
+    text-align: center;
+}
 
-        return jsonify(result)
+#camera-preview,
+#photo-preview {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    display: block;
+}
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+/* ── Button Group ──────────────────────────────── */
+.button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
 
-@app.route('/analyze-voice', methods=['POST'])
-def analyze_voice():
-    """Analyze food from voice text input"""
-    try:
-        data = request.get_json()
-        voice_text = data.get('text', '')
+/* ── Buttons ───────────────────────────────────── */
+.btn-primary,
+.btn-success,
+.btn-secondary,
+.btn-danger,
+.btn-voice,
+.btn-analyze {
+    padding: 11px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.01em;
+    flex: 1;
+    white-space: nowrap;
+}
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+.btn-primary {
+    background: var(--green);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(26,107,60,0.25);
+}
 
-        payload = {
-            "contents": [{
-                "parts": [{
-                    "text": f"""Extract food items from this text: "{voice_text}"
-                    Respond ONLY in this exact JSON format:
-                    {{
-                        "foods": [
-                            {{"name": "food name", "estimated_grams": 100}}
-                        ],
-                        "meal_description": "brief description"
-                    }}"""
-                }]
-            }]
-        }
+.btn-primary:hover { background: var(--green-mid); }
 
-        response = requests.post(url, json=payload)
-        if response.status_code == 200:
-            result = response.json()
-            text = result["candidates"][0]["content"]["parts"][0]["text"]
-            text = text.strip()
-            if "```" in text:
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-            ai_result = json.loads(text.strip())
+.btn-success {
+    background: var(--green-light);
+    color: var(--white);
+}
 
-            # Look up nutrition
-            foods_with_nutrition = []
-            total_calories = 0
+.btn-secondary {
+    background: var(--green-pale);
+    color: var(--green);
+    border: 1px solid rgba(26,107,60,0.15);
+}
 
-            for food in ai_result['foods']:
-                nutrition = search_food(food['name'])
-                grams = food['estimated_grams']
+.btn-secondary:hover { background: #d4edde; }
 
-                if nutrition:
-                    calories = (nutrition['energy_kcal'] * grams) / 100
-                    protein = (nutrition['protein'] * grams) / 100
-                    fat = (nutrition['fat'] * grams) / 100
-                    carbs = (nutrition['carbohydrates'] * grams) / 100
-                else:
-                    calories = protein = fat = carbs = 0
+.btn-danger {
+    background: var(--red-pale);
+    color: var(--red);
+    border: 1px solid rgba(220,38,38,0.15);
+}
 
-                foods_with_nutrition.append({
-                    "name": food['name'],
-                    "grams": grams,
-                    "calories": round(calories),
-                    "protein": round(protein, 1),
-                    "fat": round(fat, 1),
-                    "carbs": round(carbs, 1),
-                    "found_in_db": nutrition is not None
-                })
-                total_calories += calories
+.btn-analyze {
+    width: 100%;
+    background: linear-gradient(135deg, var(--orange), #c0392b);
+    color: var(--white);
+    font-size: 1rem;
+    padding: 15px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    box-shadow: 0 4px 14px rgba(232,98,42,0.35);
+    letter-spacing: 0.01em;
+}
 
-            result = {
-                "meal_description": ai_result['meal_description'],
-                "foods": foods_with_nutrition,
-                "total_calories": round(total_calories),
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M")
-            }
+.btn-analyze:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(232,98,42,0.40);
+}
 
-            save_meal_log(result)
-            return jsonify(result)
+.btn-primary:active,
+.btn-success:active,
+.btn-secondary:active,
+.btn-analyze:active {
+    transform: scale(0.97);
+}
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+/* ── Voice ─────────────────────────────────────── */
+.voice-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0;
+}
 
-@app.route('/history', methods=['GET'])
-def history():
-    """Get meal history"""
-    try:
-        if os.path.exists('meals_log.json'):
-            with open('meals_log.json', 'r') as f:
-                log = json.load(f)
-            return jsonify(log[-10:])  # Last 10 meals
-        return jsonify([])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+.btn-voice {
+    background: var(--green-pale);
+    color: var(--green);
+    border: 2px solid rgba(26,107,60,0.20);
+    border-radius: 50px;
+    padding: 14px 32px;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
 
-def save_meal_log(meal_data):
-    """Save meal to JSON log"""
-    log_file = 'meals_log.json'
-    log = []
-    if os.path.exists(log_file):
-        with open(log_file, 'r') as f:
-            log = json.load(f)
-    log.append(meal_data)
-    with open(log_file, 'w') as f:
-        json.dump(log, f, indent=2)
+.btn-voice:hover {
+    background: #d4edde;
+    border-color: var(--green);
+}
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+.btn-voice.recording {
+    background: #fef2f2;
+    color: var(--red);
+    border-color: rgba(220,38,38,0.4);
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,0.2); }
+    50% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+}
+
+.voice-text {
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    text-align: center;
+    min-height: 22px;
+    font-style: italic;
+    padding: 0 8px;
+    line-height: 1.5;
+}
+
+.hint {
+    font-size: 0.82rem;
+    color: var(--gray-400);
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+/* ── Loading ───────────────────────────────────── */
+.loading {
+    text-align: center;
+    padding: 36px 20px;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid var(--green-pale);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    margin: 0 auto 14px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading p {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ── Results Card ──────────────────────────────── */
+.results { padding: 20px; }
+
+.meal-desc {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 16px;
+    font-style: italic;
+    line-height: 1.6;
+    padding: 10px 14px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--green-light);
+}
+
+/* ── Nutrition Table ───────────────────────────── */
+.table-container {
+    overflow-x: auto;
+    margin: 0 0 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+    -webkit-overflow-scrolling: touch;
+}
+
+.nutrition-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    min-width: 440px;
+    font-family: 'DM Mono', monospace;
+}
+
+.nutrition-table thead {
+    background: var(--green);
+    color: var(--white);
+}
+
+.nutrition-table th {
+    padding: 10px 8px;
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.nutrition-table th:first-child {
+    text-align: left;
+    padding-left: 14px;
+    min-width: 130px;
+}
+
+.nutrition-table td {
+    padding: 9px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: middle;
+    color: var(--gray-600);
+}
+
+.nutrition-table td:first-child {
+    text-align: left;
+    padding-left: 14px;
+    color: var(--gray-900);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.82rem;
+}
+
+.nutrition-table tbody tr:hover {
+    background: var(--green-pale);
+}
+
+.nutrition-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Total row */
+.total-row {
+    background: var(--green-pale) !important;
+}
+
+.total-row td {
+    padding: 11px 8px !important;
+    border-bottom: none !important;
+    color: var(--green) !important;
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+.total-row td:first-child {
+    color: var(--green) !important;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Calorie column highlight */
+.kcal-cell {
+    font-weight: 700;
+    color: var(--orange) !important;
+}
+
+/* Not in DB badge */
+.not-in-db {
+    font-size: 0.68rem;
+    color: var(--red);
+    background: var(--red-pale);
+    padding: 1px 5px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-left: 4px;
+    font-family: 'DM Sans', sans-serif;
+    vertical-align: middle;
+}
+
+/* ── Macro Summary ─────────────────────────────── */
+.macro-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.macro-card {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    text-align: center;
+}
+
+.macro-card.calories {
+    background: var(--orange-pale);
+    border-color: rgba(232,98,42,0.2);
+}
+
+.macro-label {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--gray-400);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+}
+
+.macro-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    font-family: 'DM Mono', monospace;
+}
+
+.macro-card.calories .macro-value {
+    color: var(--orange);
+    font-size: 1.1rem;
+}
+
+/* ── History ───────────────────────────────────── */
+.history-item {
+    border-bottom: 1px solid var(--gray-100);
+    padding: 14px 0;
+}
+
+.history-item:last-child { border-bottom: none; }
+
+.history-date {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    margin-bottom: 3px;
+    font-family: 'DM Mono', monospace;
+}
+
+.history-desc {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    color: var(--gray-900);
+}
+
+.history-foods {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+.history-cal {
+    font-size: 0.85rem;
+    color: var(--orange);
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+}
+
+/* ── Scrollbar ─────────────────────────────────── */
+.table-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--green-light);
+    border-radius: 2px;
+}
+
+/* ── Section Label ─────────────────────────────── */
+.section-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 16px 0 6px;
+}

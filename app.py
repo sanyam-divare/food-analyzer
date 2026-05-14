@@ -4,14 +4,12 @@
 
 import os
 import json
-import base64
 import requests
 import sqlite3
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -24,78 +22,162 @@ def get_db():
     return conn
 
 def search_food(food_name):
-    """Search AFCD database with fuzzy matching"""
-    conn = get_db()
-    cursor = conn.cursor()
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
 
-    # Try full name match first
-    cursor.execute("""
-        SELECT food_name, energy_kcal, protein, fat, carbohydrates
-        FROM foods_afcd
-        WHERE LOWER(food_name) LIKE ?
-        LIMIT 1
-    """, (f'%{food_name.lower()}%',))
-    result = cursor.fetchone()
+        query = """
+            SELECT food_name, energy_kcal,
+                   COALESCE(protein, 0) as protein,
+                   COALESCE(fat, 0) as fat,
+                   COALESCE(carbohydrates, 0) as carbohydrates,
+                   COALESCE(fibre, 0) as fibre,
+                   COALESCE(sodium, 0) as sodium,
+                   COALESCE(calcium, 0) as calcium,
+                   COALESCE(iron, 0) as iron,
+                   COALESCE(magnesium, 0) as magnesium,
+                   COALESCE(potassium, 0) as potassium,
+                   COALESCE(zinc, 0) as zinc,
+                   COALESCE(vitamin_a, 0) as vitamin_a,
+                   COALESCE(vitamin_c, 0) as vitamin_c,
+                   COALESCE(vitamin_d, 0) as vitamin_d,
+                   COALESCE(vitamin_e, 0) as vitamin_e,
+                   COALESCE(cholesterol, 0) as cholesterol,
+                   COALESCE(sugars, 0) as sugars
+            FROM foods_afcd
+            WHERE LOWER(food_name) LIKE ?
+            ORDER BY LENGTH(food_name) ASC
+            LIMIT 1
+        """
 
-    # Try word by word if no match
-    if not result:
-        words = food_name.lower().split()
-        for word in words:
-            if len(word) > 3:
-                cursor.execute("""
-                    SELECT food_name, energy_kcal, protein, fat, carbohydrates
-                    FROM foods_afcd
-                    WHERE LOWER(food_name) LIKE ?
-                    LIMIT 1
-                """, (f'%{word}%',))
-                result = cursor.fetchone()
-                if result:
-                    break
+        # Try exact word match first (highest priority)
+        cursor.execute(query, (f'%{food_name.lower()}%',))
+        result = cursor.fetchone()
 
-    conn.close()
-    return dict(result) if result else None
+        # Try individual words if no match
+        if not result:
+            words = food_name.lower().split()
+            for word in words:
+                if len(word) > 3:
+                    cursor.execute(query, (f'%{word}%',))
+                    result = cursor.fetchone()
+                    if result:
+                        break
+
+        # Fallback to manual foods table
+        if not result:
+            cursor.execute("""
+                SELECT food_name, energy_kcal,
+                       COALESCE(protein, 0) as protein,
+                       COALESCE(fat, 0) as fat,
+                       COALESCE(carbohydrates, 0) as carbohydrates,
+                       0 as fibre, 0 as sodium, 0 as calcium,
+                       0 as iron, 0 as magnesium, 0 as potassium,
+                       0 as zinc, 0 as vitamin_a, 0 as vitamin_c,
+                       0 as vitamin_d, 0 as vitamin_e,
+                       0 as cholesterol, 0 as sugars
+                FROM foods
+                WHERE LOWER(food_name) LIKE ?
+                LIMIT 1
+            """, (f'%{food_name.lower()}%',))
+            result = cursor.fetchone()
+
+        conn.close()
+        return dict(result) if result else None
+
+    except Exception as e:
+        print(f"DB search error for '{food_name}': {e}")
+        return None
 
 # ─── Gemini AI ───────────────────────────────────────
 def analyze_with_gemini(image_base64, mime_type="image/jpeg"):
-    """Send image to Gemini for food analysis"""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-
     payload = {
         "contents": [{
             "parts": [
-                {
-                    "inline_data": {
-                        "mime_type": mime_type,
-                        "data": image_base64
-                    }
-                },
-                {
-                    "text": """Analyze this food image. List each food item you see.
+                {"inline_data": {"mime_type": mime_type, "data": image_base64}},
+                {"text": """Analyze this food image. List each food item you see.
                     Respond ONLY in this exact JSON format, no other text:
                     {
                         "foods": [
-                            {"name": "food name", "estimated_grams": 100},
-                            {"name": "food name", "estimated_grams": 150}
+                            {"name": "food name", "estimated_grams": 100}
                         ],
                         "meal_description": "brief description"
-                    }"""
-                }
+                    }"""}
             ]
         }]
     }
-
     response = requests.post(url, json=payload)
     if response.status_code == 200:
         result = response.json()
-        text = result["candidates"][0]["content"]["parts"][0]["text"]
-        text = text.strip()
+        text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
         if "```" in text:
             text = text.split("```")[1]
             if text.startswith("json"):
                 text = text[4:]
         return json.loads(text.strip())
-    else:
-        return None
+    return None
+
+# ─── Nutrition calculator ─────────────────────────────
+
+def calculate_nutrition(ai_result):
+    foods_with_nutrition = []
+    total_calories = 0
+
+    for food in ai_result['foods']:
+        g = food['estimated_grams']
+        food_name = food['name']
+
+        print(f"DEBUG: Looking up '{food_name}' ({g}g)")
+
+        # Step 1 — get candidates
+        candidates = get_candidates(food_name)
+        print(f"DEBUG: Found {len(candidates)} candidates")
+
+        # Step 2 — ask Gemini to pick best match
+        best_key = ask_gemini_to_match(food_name, g, candidates)
+
+        # Step 3 — get nutrition by key
+        n = get_nutrition_by_key(best_key) if best_key else None
+
+        # Fallback to old search if Gemini match fails
+        if not n:
+            print(f"DEBUG: Falling back to fuzzy search for '{food_name}'")
+            n = search_food(food_name)
+
+        def calc(key):
+            return round((n.get(key, 0) or 0) * g / 100, 2) if n else 0
+
+        matched_name = n['food_name'] if n else 'Not found'
+        print(f"DEBUG: Final match → {matched_name}")
+
+        entry = {
+            "name":        food_name,
+            "matched":     matched_name,
+            "grams":       g,
+            "found_in_db": n is not None,
+            "calories":    calc('energy_kcal'),
+            "protein":     calc('protein'),
+            "fat":         calc('fat'),
+            "carbs":       calc('carbohydrates'),
+            "fibre":       calc('fibre'),
+            "sugars":      calc('sugars'),
+            "sodium":      calc('sodium'),
+            "calcium":     calc('calcium'),
+            "iron":        calc('iron'),
+            "magnesium":   calc('magnesium'),
+            "potassium":   calc('potassium'),
+            "zinc":        calc('zinc'),
+            "vitamin_a":   calc('vitamin_a'),
+            "vitamin_c":   calc('vitamin_c'),
+            "vitamin_d":   calc('vitamin_d'),
+            "vitamin_e":   calc('vitamin_e'),
+            "cholesterol": calc('cholesterol'),
+        }
+        foods_with_nutrition.append(entry)
+        total_calories += entry['calories']
+
+    return foods_with_nutrition, round(total_calories, 1)
 
 # ─── Routes ──────────────────────────────────────────
 @app.route('/')
@@ -104,68 +186,37 @@ def index():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    """Analyze food image from camera or upload"""
     try:
-        data = request.get_json()
-        image_base64 = data.get('image')
-        mime_type = data.get('mime_type', 'image/jpeg')
+        data          = request.get_json()
+        image_base64  = data.get('image')
+        mime_type     = data.get('mime_type', 'image/jpeg')
 
-        # Get AI analysis
         ai_result = analyze_with_gemini(image_base64, mime_type)
         if not ai_result:
             return jsonify({"error": "AI analysis failed"}), 500
 
-        # Look up nutrition for each food
-        foods_with_nutrition = []
-        total_calories = 0
-
-        for food in ai_result['foods']:
-            nutrition = search_food(food['name'])
-            grams = food['estimated_grams']
-
-            if nutrition:
-                calories = (nutrition['energy_kcal'] * grams) / 100
-                protein = (nutrition['protein'] * grams) / 100
-                fat = (nutrition['fat'] * grams) / 100
-                carbs = (nutrition['carbohydrates'] * grams) / 100
-            else:
-                calories = protein = fat = carbs = 0
-
-            foods_with_nutrition.append({
-                "name": food['name'],
-                "grams": grams,
-                "calories": round(calories),
-                "protein": round(protein, 1),
-                "fat": round(fat, 1),
-                "carbs": round(carbs, 1),
-                "found_in_db": nutrition is not None
-            })
-            total_calories += calories
-
+        foods, total_calories = calculate_nutrition(ai_result)
         result = {
             "meal_description": ai_result['meal_description'],
-            "foods": foods_with_nutrition,
-            "total_calories": round(total_calories),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M")
+            "foods":            foods,
+            "total_calories":   total_calories,
+            "timestamp":        datetime.now().strftime("%Y-%m-%d %H:%M")
         }
-
-        # Save to log
         save_meal_log(result)
-
         return jsonify(result)
 
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 @app.route('/analyze-voice', methods=['POST'])
 def analyze_voice():
-    """Analyze food from voice text input"""
     try:
-        data = request.get_json()
+        data       = request.get_json()
         voice_text = data.get('text', '')
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-
         payload = {
             "contents": [{
                 "parts": [{
@@ -181,79 +232,158 @@ def analyze_voice():
             }]
         }
 
-        response = requests.post(url, json=payload)
+        response  = requests.post(url, json=payload)
         if response.status_code == 200:
             result = response.json()
-            text = result["candidates"][0]["content"]["parts"][0]["text"]
-            text = text.strip()
+            text   = result["candidates"][0]["content"]["parts"][0]["text"].strip()
             if "```" in text:
                 text = text.split("```")[1]
                 if text.startswith("json"):
                     text = text[4:]
             ai_result = json.loads(text.strip())
 
-            # Look up nutrition
-            foods_with_nutrition = []
-            total_calories = 0
-
-            for food in ai_result['foods']:
-                nutrition = search_food(food['name'])
-                grams = food['estimated_grams']
-
-                if nutrition:
-                    calories = (nutrition['energy_kcal'] * grams) / 100
-                    protein = (nutrition['protein'] * grams) / 100
-                    fat = (nutrition['fat'] * grams) / 100
-                    carbs = (nutrition['carbohydrates'] * grams) / 100
-                else:
-                    calories = protein = fat = carbs = 0
-
-                foods_with_nutrition.append({
-                    "name": food['name'],
-                    "grams": grams,
-                    "calories": round(calories),
-                    "protein": round(protein, 1),
-                    "fat": round(fat, 1),
-                    "carbs": round(carbs, 1),
-                    "found_in_db": nutrition is not None
-                })
-                total_calories += calories
-
+            foods, total_calories = calculate_nutrition(ai_result)
             result = {
                 "meal_description": ai_result['meal_description'],
-                "foods": foods_with_nutrition,
-                "total_calories": round(total_calories),
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M")
+                "foods":            foods,
+                "total_calories":   total_calories,
+                "timestamp":        datetime.now().strftime("%Y-%m-%d %H:%M")
             }
-
             save_meal_log(result)
             return jsonify(result)
 
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 @app.route('/history', methods=['GET'])
 def history():
-    """Get meal history"""
     try:
         if os.path.exists('meals_log.json'):
             with open('meals_log.json', 'r') as f:
                 log = json.load(f)
-            return jsonify(log[-10:])  # Last 10 meals
+            return jsonify(log[-10:])
         return jsonify([])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 def save_meal_log(meal_data):
-    """Save meal to JSON log"""
     log_file = 'meals_log.json'
     log = []
     if os.path.exists(log_file):
-        with open(log_file, 'r') as f:
+        with open('meals_log.json', 'r') as f:
             log = json.load(f)
     log.append(meal_data)
     with open(log_file, 'w') as f:
         json.dump(log, f, indent=2)
+
+
+def get_candidates(food_name):
+    """Get top 15 candidates from database"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    candidates = []
+
+    # Search by full name
+    cursor.execute("""
+        SELECT food_key, food_name, energy_kcal
+        FROM foods_afcd
+        WHERE LOWER(food_name) LIKE ?
+        ORDER BY LENGTH(food_name) ASC
+        LIMIT 15
+    """, (f'%{food_name.lower()}%',))
+    candidates = cursor.fetchall()
+
+    # Try word by word if too few results
+    if len(candidates) < 3:
+        words = food_name.lower().split()
+        for word in words:
+            if len(word) > 3:
+                cursor.execute("""
+                    SELECT food_key, food_name, energy_kcal
+                    FROM foods_afcd
+                    WHERE LOWER(food_name) LIKE ?
+                    ORDER BY LENGTH(food_name) ASC
+                    LIMIT 15
+                """, (f'%{word}%',))
+                candidates = cursor.fetchall()
+                if candidates:
+                    break
+
+    conn.close()
+    return [dict(c) for c in candidates]
+
+
+def ask_gemini_to_match(food_name, grams, candidates):
+    """Ask Gemini to pick the best matching food from candidates"""
+    if not candidates:
+        return None
+
+    # Format candidates for Gemini
+    candidate_list = "\n".join([
+        f"- Key: {c['food_key']} | {c['food_name']} | {c['energy_kcal']} kcal/100g"
+        for c in candidates
+    ])
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+    payload = {
+        "contents": [{
+            "parts": [{
+                "text": f"""I have identified "{food_name}" ({grams}g) in a food image.
+From the Australian Food Composition Database, these are the closest matches:
+
+{candidate_list}
+
+Which food key best represents a typical "{food_name}" as it would appear in a meal?
+Consider it is likely fresh/raw/cooked as normally eaten, not processed or a snack form.
+
+Respond ONLY with the food key, nothing else. Example: F001234"""
+            }]
+        }]
+    }
+
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        result = response.json()
+        key = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+        print(f"DEBUG Gemini matched '{food_name}' → {key}")
+        return key
+    return None
+
+
+def get_nutrition_by_key(food_key):
+    """Get nutrition by exact food key"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT food_name, energy_kcal,
+               COALESCE(protein, 0) as protein,
+               COALESCE(fat, 0) as fat,
+               COALESCE(carbohydrates, 0) as carbohydrates,
+               COALESCE(fibre, 0) as fibre,
+               COALESCE(sodium, 0) as sodium,
+               COALESCE(calcium, 0) as calcium,
+               COALESCE(iron, 0) as iron,
+               COALESCE(magnesium, 0) as magnesium,
+               COALESCE(potassium, 0) as potassium,
+               COALESCE(zinc, 0) as zinc,
+               COALESCE(vitamin_a, 0) as vitamin_a,
+               COALESCE(vitamin_c, 0) as vitamin_c,
+               COALESCE(vitamin_d, 0) as vitamin_d,
+               COALESCE(vitamin_e, 0) as vitamin_e,
+               COALESCE(cholesterol, 0) as cholesterol,
+               COALESCE(sugars, 0) as sugars
+        FROM foods_afcd
+        WHERE food_key = ?
+        LIMIT 1
+    """, (food_key,))
+    result = cursor.fetchone()
+    conn.close()
+    return dict(result) if result else None
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
