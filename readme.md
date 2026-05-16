@@ -1,20 +1,22 @@
-Hi Claude! Continuing from yesterday's session.
-I am Sanyam, learning coding on Samsung S26 Ultra
-using Termux + code-server on 27" monitor setup.
+# Food Analyzer
 
-Progress so far:
-- Learned git basics, push/pull/branch/merge
-- Created two GitHub repos:
-  github.com/sanyam-divare/my-first-python-app
-  github.com/sanyam-divare/food-analyzer
-- Built AI food analyzer using Gemini API
-- Uses virtual environment (venv)
-- fuzzy matching for food database
-- meals saved to meals_log.json
+AI-powered food nutrition tracker using Claude Vision + AFCD database.
 
-Next step: Convert to Flask web app
-then PWA installable on mobile!
+## Current Status (May 2026)
+- ✅ Flask web app running
+- ✅ Claude Vision API integrated  
+- ✅ AFCD database (1,588 foods)
+- ✅ ChromaDB vector search working
+- ✅ Multi-provider support (Claude/Gemini/OpenAI)
+- 🔄 Indian food database — next session
 
-To resume:
-cd ~/food-analyzer
-source venv/bin/activate
+## To Resume
+cd E:\Sanyam_code\food-analyzer
+venv\Scripts\activate
+python app.py
+
+## Next Steps
+1. Run import_indian.py → add Indian foods
+2. Rebuild vector DB → python build_vector_db.py
+3. Test with Puri Chole image
+4. Expand Indian food CSV

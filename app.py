@@ -21,6 +21,7 @@ import sqlite3
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, g
 from dotenv import load_dotenv
+# import inspect
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
@@ -35,7 +36,105 @@ print("DEBUG: CLAUDE_API_KEY loaded:", "YES" if CLAUDE_API_KEY else "NO")
 print("DEBUG: OPENAI_API_KEY loaded:", "YES" if OPENAI_API_KEY else "NO")
 print("DEBUG: DEFAULT AI_PROVIDER:", AI_PROVIDER)
 
+# Vector search imports
+try:
+    import chromadb
+    from sentence_transformers import SentenceTransformer
+    VECTOR_SEARCH_AVAILABLE = True
+except ImportError:
+    VECTOR_SEARCH_AVAILABLE = False
+    print("WARNING: chromadb or sentence-transformers not installed")
+
+USE_VECTOR_SEARCH = os.getenv("USE_VECTOR_SEARCH", "false").lower() == "true"
+print(f"DEBUG: VECTOR_SEARCH_AVAILABLE={VECTOR_SEARCH_AVAILABLE}, USE_VECTOR_SEARCH={USE_VECTOR_SEARCH}")
+
+# ── Vector DB setup ───────────────────────────────
+chroma_collection = None
+embedding_model = None
+
+def init_vector_db():
+    global chroma_collection, embedding_model
+    print(f"DEBUG init_vector_db called: "
+          f"AVAILABLE={VECTOR_SEARCH_AVAILABLE}, "
+          f"USE={USE_VECTOR_SEARCH}")    # ← add this line
+    if not VECTOR_SEARCH_AVAILABLE or not USE_VECTOR_SEARCH:
+        print("Vector search disabled — using text matching")
+        return
+    try:
+        print("Loading vector database...")
+        chroma_client = chromadb.PersistentClient(path="./food_vectors")
+        chroma_collection = chroma_client.get_collection("afcd_foods")
+        embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        count = chroma_collection.count()
+        print(f"✅ Vector DB loaded — {count} foods ready")
+    except Exception as e:
+        print(f"⚠️ Vector DB failed to load: {e}")
+        print("   Falling back to text matching")
+
+# init_vector_db()
+
+
+# ── Vector search function ────────────────────────
+def vector_search_food(food_name, n_results=5):
+    """
+    Search AFCD using semantic vector similarity
+    Returns same format as get_candidates() for compatibility
+    """
+    if not chroma_collection or not embedding_model:
+        return None
+
+    try:
+        # Generate embedding for the query
+        embedding = embedding_model.encode([food_name]).tolist()
+
+        # Search ChromaDB
+        results = chroma_collection.query(
+            query_embeddings=embedding,
+            n_results=n_results
+        )
+
+        if not results or not results['ids'][0]:
+            return None
+
+        # Format results same as get_candidates()
+        candidates = []
+        for i, food_key in enumerate(results['ids'][0]):
+            metadata = results['metadatas'][0][i]
+            distance = results['distances'][0][i]
+            candidates.append({
+                'food_key': food_key,
+                'food_name': metadata['food_name'],
+                'energy_kcal': metadata['energy_kcal'],
+                'distance': distance,
+                # Convert distance to similarity score
+                # distance 0 = perfect match, 1 = completely different
+                'similarity': round(1 - distance, 3)
+            })
+
+        return candidates
+
+    except Exception as e:
+        request_log(f"Vector search error: {e}")
+        return None
+    
+
+
+
 app = Flask(__name__)
+
+
+# Temporary debug endpoint to inspect which `analyze_with_claude_image`
+# implementation is currently available to the running server.
+@app.route('/_debug_claude_source')
+def _debug_claude_source():
+    try:
+        src = inspect.getsource(analyze_with_claude_image)
+    except Exception as e:
+        src = f'Could not get source: {e}'
+    return jsonify({
+        'app_file': __file__,
+        'analyze_with_claude_image_source': src
+    })
 
 
 def request_log(msg):
@@ -258,39 +357,214 @@ def analyze_with_gemini(image_base64, mime_type="image/jpeg"):
         return {"error": f"Failed to parse Gemini response: {e}. Response text: {response.text}"}
 
 
+# def analyze_with_claude_text(voice_text):
+#     if not CLAUDE_API_KEY:
+#         return {"error": "Missing CLAUDE_API_KEY environment variable. Add it to .env or set it in your shell."}
+
+#     url = "https://api.anthropic.com/v1/complete"
+#     prompt = f"Extract food items from this text: \"{voice_text}\"\nRespond ONLY in this exact JSON format:\n{{\n  \"foods\": [\n    {{\"name\": \"food name\", \"estimated_grams\": 100}}\n  ],\n  \"meal_description\": \"brief description\"\n}}"
+#     payload = {
+#         "model": "claude-3.5",
+#         "prompt": prompt,
+#         "max_tokens": 1000,
+#         "temperature": 0
+#     }
+#     headers = {
+#         "x-api-key": CLAUDE_API_KEY,
+#         "Content-Type": "application/json"
+#     }
+
+#     response = requests.post(url, headers=headers, json=payload)
+#     if response.status_code != 200:
+#         return {"error": f"Claude API error {response.status_code}: {response.text}"}
+
+#     try:
+#         result = response.json()
+#         text = result.get("completion", "").strip()
+#         request_log(f"Claude returned length={len(response.text)}")
+#         return json.loads(text)
+#     except Exception as e:
+#         request_log(f"Failed to parse Claude response: {e}")
+#         return {"error": f"Failed to parse Claude response: {e}. Response text: {response.text}"}
+
+
+# def analyze_with_claude_image(image_base64, mime_type="image/jpeg"):
+#     return {"error": "Claude image analysis is not implemented yet. Gemini is still required for image-based input unless you add a Claude Vision API integration."}
 def analyze_with_claude_text(voice_text):
     if not CLAUDE_API_KEY:
-        return {"error": "Missing CLAUDE_API_KEY environment variable. Add it to .env or set it in your shell."}
+        return {"error": "Missing CLAUDE_API_KEY environment variable."}
 
-    url = "https://api.anthropic.com/v1/complete"
-    prompt = f"Extract food items from this text: \"{voice_text}\"\nRespond ONLY in this exact JSON format:\n{{\n  \"foods\": [\n    {{\"name\": \"food name\", \"estimated_grams\": 100}}\n  ],\n  \"meal_description\": \"brief description\"\n}}"
-    payload = {
-        "model": "claude-3.5",
-        "prompt": prompt,
-        "max_tokens": 1000,
-        "temperature": 0
-    }
+    url = "https://api.anthropic.com/v1/messages"
+
     headers = {
         "x-api-key": CLAUDE_API_KEY,
+        "anthropic-version": "2023-06-01",      # ← required header
         "Content-Type": "application/json"
     }
 
+    payload = {
+        "model": "claude-haiku-4-5",            # ← correct model name
+        "max_tokens": 1000,
+        "messages": [                            # ← messages array, not prompt
+            {
+                "role": "user",
+                "content": f"""Extract food items from this text: \"{voice_text}\"
+Respond ONLY in this exact JSON format, no other text:
+{{
+    "foods": [
+        {{
+            "name": "specific food name",
+            "cooking_method": "raw|grilled|fried|boiled|steamed|baked|roasted|sauteed|not applicable",
+            "category": "protein|grain|vegetable|fruit|dairy|sauce|condiment|beverage",
+            "estimated_grams": 100,
+            "confidence": "high|medium|low",
+            "visual_notes": "extracted from voice description"
+        }}
+    ],
+    "meal_description": "brief description",
+    "cuisine_type": "Indian|Australian|Asian|Mediterranean|Western|Mixed|Unknown",
+    "plate_coverage": "full"
+}}"""
+            }
+        ]
+    }
+
     response = requests.post(url, headers=headers, json=payload)
+    request_log(f"Claude text HTTP status: {response.status_code}")
+
     if response.status_code != 200:
         return {"error": f"Claude API error {response.status_code}: {response.text}"}
 
     try:
         result = response.json()
-        text = result.get("completion", "").strip()
-        request_log(f"Claude returned length={len(response.text)}")
-        return json.loads(text)
+        text = result["content"][0]["text"].strip()  # ← correct response parsing
+        request_log(f"Claude text returned length={len(text)}")
+
+        # Clean markdown if present
+        if "```" in text:
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+
+        return json.loads(text.strip())
     except Exception as e:
-        request_log(f"Failed to parse Claude response: {e}")
-        return {"error": f"Failed to parse Claude response: {e}. Response text: {response.text}"}
+        request_log(f"Failed to parse Claude text response: {e}")
+        return {"error": f"Failed to parse Claude response: {e}"}
 
 
 def analyze_with_claude_image(image_base64, mime_type="image/jpeg"):
-    return {"error": "Claude image analysis is not implemented yet. Gemini is still required for image-based input unless you add a Claude Vision API integration."}
+    if not CLAUDE_API_KEY:
+        return {"error": "Missing CLAUDE_API_KEY environment variable."}
+
+    url = "https://api.anthropic.com/v1/messages"
+
+    headers = {
+        "x-api-key": CLAUDE_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "claude-haiku-4-5",
+        "max_tokens": 1000,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",           # ← image block first
+                        "source": {
+                            "type": "base64",
+                            "media_type": mime_type,
+                            "data": image_base64
+                        }
+                    },
+                    {
+                        "type": "text",            # ← text block second
+                        "text": """You are an expert food analyst and nutritionist.
+    Analyse this food plate image carefully.
+
+    RULES:
+    1. Identify every distinct food item visible on the plate
+    2. Be specific - use the most precise food name possible
+    3. For cooking method: use 'raw', 'grilled', 'fried', 'boiled',
+    'steamed', 'baked', 'roasted', 'sauteed'
+    4. For leafy greens: identify the specific type if visible
+    (spinach/rocket/cos lettuce/baby spinach/mixed leaves)
+    - if truly cannot identify, use 'mixed leafy salad greens'
+    5. For sauces/dressings: identify as specifically as possible
+    (mayonnaise/tomato sauce/chilli sauce/yoghurt dressing)
+    6. Estimate weight in grams based on visual portion size
+    7. Confidence: 'high' if clearly visible,
+                'medium' if partially visible or overlapping,
+                'low' if guessing based on context
+    8. Consider ALL cuisines - Australian, Indian, Asian,
+    Mediterranean, Middle Eastern, etc.
+    9. CRITICAL - Use ingredient names NOT dish names:
+        - Say 'avocado, raw' NOT 'guacamole'
+        - Say 'tomato salsa' NOT 'pico de gallo'  
+        - Say 'chickpea curry' NOT 'chole'
+        - Say 'fried bread' NOT 'puri'
+        This helps match to our nutrition database
+
+    10. For bread/rolls be specific but simple:
+        - 'white bread roll' not 'submarine sandwich roll'
+        - 'sourdough bread' not 'artisan sourdough loaf'
+        - 'naan bread' not 'traditional tandoor naan'
+    11. Distinguish raw vs cooked carefully:
+        - White crisp onion rings = raw
+        - Soft brown translucent onion = cooked/caramelized
+        - Bright red tomato = fresh/raw
+        - Dark chewy tomato = sundried
+    12. Only list food items you can clearly see.
+        Do NOT guess hidden ingredients inside sandwiches
+        unless clearly visible at the edges.
+
+
+    Respond ONLY in this exact JSON format, no other text:
+    {
+        "foods": [
+            {
+                "name": "specific food name",
+                "cooking_method": "raw|grilled|fried|boiled|steamed|baked|roasted|sauteed|not applicable",
+                "category": "protein|grain|vegetable|fruit|dairy|sauce|condiment|beverage",
+                "estimated_grams": 100,
+                "confidence": "high|medium|low",
+                "visual_notes": "brief note on what you actually see"
+            }
+        ],
+        "meal_description": "brief description",
+        "cuisine_type": "Indian|Australian|Asian|Mediterranean|Western|Mixed|Unknown",
+        "plate_coverage": "full|partial|half eaten"
+    }"""
+                        }
+                    ]
+                }
+            ]
+        }
+
+    response = requests.post(url, headers=headers, json=payload)
+    request_log(f"Claude image HTTP status: {response.status_code}")
+
+    if response.status_code != 200:
+        return {"error": f"Claude API error {response.status_code}: {response.text}"}
+
+    try:
+        result = response.json()
+        text = result["content"][0]["text"].strip()
+        request_log(f"Claude image returned length={len(text)}")
+
+        # Clean markdown if present
+        if "```" in text:
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+
+        return json.loads(text.strip())
+    except Exception as e:
+        request_log(f"Failed to parse Claude image response: {e}")
+        return {"error": f"Failed to parse Claude response: {e}"}
+    
 
 
 def analyze_with_openai_image(image_base64, mime_type="image/jpeg"):
@@ -458,66 +732,195 @@ def calculate_row_nutrition(item):
         'cholesterol': calc('cholesterol'),
         'per100': per100,
     }
+# def calculate_nutrition(ai_result):
+#     foods_with_nutrition = []
+#     total_calories = 0
+
+#     for food in ai_result['foods']:
+#         grams = food.get('estimated_grams', 0)
+#         food_name = food['name']
+#         confidence = food.get('confidence', 'high')
+
+#         # Log low confidence items as warnings
+#         if confidence == 'low':
+#             request_log(f"⚠️ Low confidence for '{food_name}' — may be inaccurate")
+
+#         # Step 1 — get candidates
+#         candidates = get_candidates(food_name)
+#         request_log(f"Found {len(candidates)} candidates")
+
+#         # Step 2 — choose best match from candidate names first
+#         best_key = find_best_candidate_key(food_name, candidates)
+#         if best_key:
+#             request_log(f"Matched '{food_name}' by text score to {best_key}")
+
+#         # Step 3 — ask Gemini only when candidates are ambiguous
+#         if not best_key:
+#             if len(candidates) == 1:
+#                 best_key = candidates[0]['food_key']
+#                 request_log(f"Single candidate — auto matched to {best_key}")
+#             elif len(candidates) > 1:
+#                 request_log(f"Candidates ambiguous for '{food_name}', asking AI to match")
+#                 best_key = ask_gemini_to_match(food_name, grams, candidates)
+#             else:
+#                 request_log(f"No candidates found for '{food_name}'")
+
+#         # Step 4 — get nutrition by key
+#         n = get_nutrition_by_key(best_key) if best_key else None
+
+#         # Fallback to old search if Gemini match fails
+#         if not n:
+#             print(f"DEBUG: Falling back to fuzzy search for '{food_name}'")
+#             n = search_food(food_name)
+
+#         def calc(key):
+#             return round((n.get(key, 0) or 0) * grams / 100, 2) if n else 0
+
+#         matched_name = n['food_name'] if n else 'Not found'
+#         request_log(f"Final match → {matched_name}")
+
+#         entry = {
+#             "name":        food_name,
+#             "matched":     matched_name,
+#             "grams":       grams,
+#             "found_in_db": n is not None,
+#             "confidence": confidence,
+#             "warning": "Low confidence — please verify" if confidence == 'low' else None,
+#             "calories":    calc('energy_kcal'),
+#             "protein":     calc('protein'),
+#             "fat":         calc('fat'),
+#             "carbs":       calc('carbohydrates'),
+#             "fibre":       calc('fibre'),
+#             "sugars":      calc('sugars'),
+#             "sodium":      calc('sodium'),
+#             "calcium":     calc('calcium'),
+#             "iron":        calc('iron'),
+#             "magnesium":   calc('magnesium'),
+#             "potassium":   calc('potassium'),
+#             "zinc":        calc('zinc'),
+#             "vitamin_a":   calc('vitamin_a'),
+#             "vitamin_c":   calc('vitamin_c'),
+#             "vitamin_d":   calc('vitamin_d'),
+#             "vitamin_e":   calc('vitamin_e'),
+#             "cholesterol": calc('cholesterol'),
+#         }
+#         foods_with_nutrition.append(entry)
+#         total_calories += entry['calories']
+
+#     return foods_with_nutrition, round(total_calories, 1)
+
 def calculate_nutrition(ai_result):
     foods_with_nutrition = []
     total_calories = 0
 
-    for food in ai_result['foods']:
+    for food in ai_result.get('foods', []):
         grams = food.get('estimated_grams', 0)
-        food_name = food['name']
-        request_log(f"Looking up '{food_name}' ({grams}g)")
+        food_name = food.get('name', '')
+        confidence = food.get('confidence', 'high')
+        category = food.get('category', '')
+        cooking_method = food.get('cooking_method', '')
 
-        # Step 1 — get candidates
-        candidates = get_candidates(food_name)
-        request_log(f"Found {len(candidates)} candidates")
+        request_log(f"Looking up '{food_name}' ({grams}g) "
+                   f"[confidence={confidence}]")
 
-        # Step 2 — choose best match from candidate names first
-        best_key = find_best_candidate_key(food_name, candidates)
+        best_key = None
+        matched_name = 'Not found'
+        n = None
+        match_method = 'none'
+
+        # ── Vector search path ────────────────────
+        if USE_VECTOR_SEARCH and VECTOR_SEARCH_AVAILABLE:
+            # Build richer query using all Claude's context
+            search_query = food_name
+            if cooking_method and cooking_method != 'not applicable':
+                search_query = f"{cooking_method} {food_name}"
+
+            vector_results = vector_search_food(search_query, n_results=5)
+
+            if vector_results:
+                best = vector_results[0]
+                similarity = best['similarity']
+                request_log(f"Vector match: '{best['food_name']}' "
+                           f"similarity={similarity}")
+
+                # High confidence threshold
+                if similarity >= 0.65:
+                    best_key = best['food_key']
+                    match_method = f'vector ({similarity})'
+                elif similarity >= 0.45 and confidence != 'low':
+                    # Medium confidence — use but flag it
+                    best_key = best['food_key']
+                    match_method = f'vector-medium ({similarity})'
+                    request_log(f"⚠️ Medium similarity match for "
+                               f"'{food_name}'")
+                else:
+                    request_log(f"Vector similarity too low ({similarity})"
+                               f" for '{food_name}' — no match")
+
+        # ── Text search fallback ──────────────────
+        else:
+            candidates = get_candidates(food_name)
+            request_log(f"Found {len(candidates)} candidates")
+
+            best_key = find_best_candidate_key(food_name, candidates)
+
+            if not best_key:
+                if len(candidates) == 1:
+                    best_key = candidates[0]['food_key']
+                    request_log(f"Single candidate auto-matched")
+                elif len(candidates) > 1:
+                    request_log(f"Candidates ambiguous, asking AI")
+                    best_key = ask_gemini_to_match(
+                        food_name, grams, candidates)
+                else:
+                    request_log(f"No candidates found")
+
+            match_method = 'text'
+
+        # ── Get nutrition by key ──────────────────
         if best_key:
-            request_log(f"Matched '{food_name}' by text score to {best_key}")
+            n = get_nutrition_by_key(best_key)
 
-        # Step 3 — ask Gemini only when candidates are ambiguous
-        if not best_key:
-            request_log(f"Candidates ambiguous for '{food_name}', asking AI to match")
-            best_key = ask_gemini_to_match(food_name, grams, candidates)
-
-        # Step 4 — get nutrition by key
-        n = get_nutrition_by_key(best_key) if best_key else None
-
-        # Fallback to old search if Gemini match fails
+        # ── Final fallback ────────────────────────
         if not n:
-            print(f"DEBUG: Falling back to fuzzy search for '{food_name}'")
+            request_log(f"Falling back to fuzzy search for '{food_name}'")
             n = search_food(food_name)
 
         def calc(key):
             return round((n.get(key, 0) or 0) * grams / 100, 2) if n else 0
 
         matched_name = n['food_name'] if n else 'Not found'
-        request_log(f"Final match → {matched_name}")
+        request_log(f"Final match → {matched_name} [{match_method}]")
 
         entry = {
-            "name":        food_name,
-            "matched":     matched_name,
-            "grams":       grams,
+            "name": food_name,
+            "matched": matched_name,
+            "grams": grams,
             "found_in_db": n is not None,
-            "calories":    calc('energy_kcal'),
-            "protein":     calc('protein'),
-            "fat":         calc('fat'),
-            "carbs":       calc('carbohydrates'),
-            "fibre":       calc('fibre'),
-            "sugars":      calc('sugars'),
-            "sodium":      calc('sodium'),
-            "calcium":     calc('calcium'),
-            "iron":        calc('iron'),
-            "magnesium":   calc('magnesium'),
-            "potassium":   calc('potassium'),
-            "zinc":        calc('zinc'),
-            "vitamin_a":   calc('vitamin_a'),
-            "vitamin_c":   calc('vitamin_c'),
-            "vitamin_d":   calc('vitamin_d'),
-            "vitamin_e":   calc('vitamin_e'),
+            "confidence": confidence,
+            "cooking_method": cooking_method,
+            "category": category,
+            "warning": "Low confidence — please verify" \
+                       if confidence == 'low' else None,
+            "calories": calc('energy_kcal'),
+            "protein": calc('protein'),
+            "fat": calc('fat'),
+            "carbs": calc('carbohydrates'),
+            "fibre": calc('fibre'),
+            "sugars": calc('sugars'),
+            "sodium": calc('sodium'),
+            "calcium": calc('calcium'),
+            "iron": calc('iron'),
+            "magnesium": calc('magnesium'),
+            "potassium": calc('potassium'),
+            "zinc": calc('zinc'),
+            "vitamin_a": calc('vitamin_a'),
+            "vitamin_c": calc('vitamin_c'),
+            "vitamin_d": calc('vitamin_d'),
+            "vitamin_e": calc('vitamin_e'),
             "cholesterol": calc('cholesterol'),
         }
+
         foods_with_nutrition.append(entry)
         total_calories += entry['calories']
 
@@ -711,28 +1114,65 @@ def get_candidates(food_name):
     return [dict(c) for c in candidates[:40]]
 
 
+# def find_best_candidate_key(food_name, candidates):
+#     normalized = normalize_text(food_name)
+#     words = normalized.split()
+
+#     for c in candidates:
+#         cand_norm = normalize_text(c['food_name'])
+#         if cand_norm == normalized:
+#             return c['food_key']
+
+#     if words:
+#         for c in candidates:
+#             cand_norm = normalize_text(c['food_name'])
+#             if all(word in cand_norm.split() for word in words):
+#                 return c['food_key']
+
+#     scored = [(score_text_match(food_name, c['food_name']), c) for c in candidates]
+#     scored.sort(key=lambda item: item[0], reverse=True)
+#     if scored and scored[0][0] >= 0.65:
+#         return scored[0][1]['food_key']
+
+#     return None
+
 def find_best_candidate_key(food_name, candidates):
     normalized = normalize_text(food_name)
     words = normalized.split()
 
+    # Exact match first
     for c in candidates:
         cand_norm = normalize_text(c['food_name'])
         if cand_norm == normalized:
             return c['food_key']
 
+    # All words match
     if words:
         for c in candidates:
             cand_norm = normalize_text(c['food_name'])
             if all(word in cand_norm.split() for word in words):
                 return c['food_key']
 
-    scored = [(score_text_match(food_name, c['food_name']), c) for c in candidates]
+    # Score with processing term penalty
+    PROCESSING_TERMS = ['sundried', 'dried', 'powdered',
+                        'oil', 'juice', 'paste', 'canned',
+                        'pickled', 'frozen', 'dehydrated']
+
+    scored = []
+    for c in candidates:
+        score = score_text_match(food_name, c['food_name'])
+        cand_norm = normalize_text(c['food_name'])
+        for term in PROCESSING_TERMS:
+            if term in cand_norm and term not in normalized:
+                score -= 0.3
+        scored.append((score, c))
+
     scored.sort(key=lambda item: item[0], reverse=True)
-    if scored and scored[0][0] >= 0.65:
+
+    if scored and scored[0][0] >= 0.5:
         return scored[0][1]['food_key']
 
     return None
-
 
 def ask_gemini_to_match(food_name, grams, candidates):
     """Ask Gemini to pick the best matching food from candidates"""
@@ -859,5 +1299,8 @@ def get_nutrition_by_key(food_key):
     return dict(result) if result else None
 
 
+# ─── Bottom of app.py ────────────────────────────
+
 if __name__ == '__main__':
+    init_vector_db()    # ← make sure NO # at the start!
     app.run(host='0.0.0.0', port=5000, debug=True)

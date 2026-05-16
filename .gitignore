@@ -2,3 +2,9 @@
 meals_log.json
 __pycache__/
 *.pyc
+*.tgz
+*.tar.gz
+ngrok*
+venv/
+.venv/
+env/
