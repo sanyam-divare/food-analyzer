@@ -163,29 +163,80 @@ def analyze_image_with_ai(image_path):
     # url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
+    # payload = {
+    #     "contents": [{
+    #         "parts": [
+    #             {
+    #                 "inline_data": {
+    #                     "mime_type": mime_type,
+    #                     "data": image_data
+    #                 }
+    #             },
+    #             {"text": """Analyze this food image. List each food item you see.
+    #                 Be specific with food names e.g. 'raw banana' not just 'banana',
+    #                 'cooked white rice' not just 'rice', 'grilled chicken breast' not just 'chicken'.
+    #                 Respond ONLY in this exact JSON format, no other text:
+    #                 {
+    #                     "foods": [
+    #                         {"name": "specific food name", "estimated_grams": 100}
+    #                     ],
+    #                     "meal_description": "brief description"
+    #                 }"""
+    #             }
+    #         ]
+    #     }]
+    # }
     payload = {
         "contents": [{
             "parts": [
                 {
                     "inline_data": {
                         "mime_type": mime_type,
-                        "data": image_data
+                        "data": image_base64
                     }
                 },
-                {"text": """Analyze this food image. List each food item you see.
-                    Be specific with food names e.g. 'raw banana' not just 'banana',
-                    'cooked white rice' not just 'rice', 'grilled chicken breast' not just 'chicken'.
-                    Respond ONLY in this exact JSON format, no other text:
+                {"text": """You are an expert food analyst and nutritionist.
+            Analyse this food plate image carefully.
+
+            RULES:
+            1. Identify every distinct food item visible on the plate
+            2. Be specific - use the most precise food name possible
+            3. For cooking method: use 'raw', 'grilled', 'fried', 'boiled', 
+            'steamed', 'baked', 'roasted', 'sauteed'
+            4. For leafy greens: identify the specific type if visible 
+            (spinach/rocket/cos lettuce/baby spinach/mixed leaves)
+            - if truly cannot identify, use 'mixed leafy salad greens'
+            5. For sauces/dressings: identify as specifically as possible
+            (mayonnaise/tomato sauce/chilli sauce/yoghurt dressing)
+            6. Estimate weight in grams based on visual portion size
+            7. Confidence: 'high' if clearly visible, 
+                        'medium' if partially visible or overlapping,
+                        'low' if guessing based on context
+            8. Consider ALL cuisines - Australian, Indian, Asian, 
+            Mediterranean, Middle Eastern, etc.
+
+            Respond ONLY in this exact JSON format, no other text:
+            {
+                "foods": [
                     {
-                        "foods": [
-                            {"name": "specific food name", "estimated_grams": 100}
-                        ],
-                        "meal_description": "brief description"
-                    }"""
-                }
-            ]
-        }]
-    }
+                        "name": "specific food name",
+                        "cooking_method": "raw|grilled|fried|boiled|steamed|baked|roasted|sauteed|not applicable",
+                        "category": "protein|grain|vegetable|fruit|dairy|sauce|condiment|beverage",
+                        "estimated_grams": 100,
+                        "confidence": "high|medium|low",
+                        "visual_notes": "brief note on what you actually see"
+                    }
+                ],
+                "meal_description": "brief description",
+                "cuisine_type": "Indian|Australian|Asian|Mediterranean|Western|Mixed|Unknown",
+                "plate_coverage": "full|partial|half eaten"
+            }"""
+                        }
+                    ]
+                }]
+            }
+
+
 
     # Call Gemini API
     response = requests.post(url, json=payload)

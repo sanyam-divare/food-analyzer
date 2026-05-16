@@ -25,6 +25,18 @@
             <button class="tab" onclick="showTab('history')">📅 History</button>
         </div>
 
+        <div id="error-message" class="error-banner" style="display:none"></div>
+
+        <div class="card">
+            <h2>🧠 AI Provider</h2>
+            <p class="hint">Choose which model to use for analysis.</p>
+            <select id="provider-select" class="provider-select">
+                <option value="gemini" selected>Gemini</option>
+                <option value="claude">Claude (voice/text only)</option>
+                <option value="openai">OpenAI (vision)</option>
+            </select>
+        </div>
+
         <!-- Analyze Tab -->
         <div id="tab-analyze" class="tab-content active">
 
@@ -73,6 +85,15 @@
             <div id="results" style="display:none" class="card results">
                 <h2>📊 Nutrition Results</h2>
                 <p id="meal-description" class="meal-desc"></p>
+                <div class="debug-panel">
+                    <button class="btn-small" id="toggle-debug" onclick="document.getElementById('debug-log').classList.toggle('visible')">Toggle Debug Log</button>
+                    <pre id="debug-log" class="debug-log" style="display:none; white-space:pre-wrap; max-height:200px; overflow:auto"></pre>
+                </div>
+
+                <div class="result-actions">
+                    <button class="btn-secondary" onclick="recalculateNutrition()">🔁 Recalculate</button>
+                    <button class="btn-secondary" onclick="resetApp()">🔄 Analyze Another</button>
+                </div>
 
                 <!-- Macro Summary Cards -->
                 <div class="macro-summary">
@@ -101,7 +122,7 @@
                         <thead>
                             <tr>
                                 <th>Food Item</th>
-                                <th>Amt</th>
+                                <th>Amt (g)</th>
                                 <th>Kcal</th>
                                 <th>Protein</th>
                                 <th>Carbs</th>
@@ -165,7 +186,6 @@
                     </table>
                 </div>
 
-                <button class="btn-secondary" onclick="resetApp()">🔄 Analyze Another</button>
             </div>
 
         </div>
