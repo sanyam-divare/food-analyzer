@@ -48,14 +48,23 @@ print("DEBUG: DEFAULT AI_PROVIDER:", AI_PROVIDER)
 # USE_VECTOR_SEARCH = os.getenv("USE_VECTOR_SEARCH", "false").lower() == "true"
 # print(f"DEBUG: VECTOR_SEARCH_AVAILABLE={VECTOR_SEARCH_AVAILABLE}, USE_VECTOR_SEARCH={USE_VECTOR_SEARCH}")
 # ── Vector search imports ─────────────────────────
+# ── ChromaDB import (Windows only) ───────────────
 try:
     import chromadb
-    from sentence_transformers import SentenceTransformer
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
-    print("WARNING: chromadb not installed")
+    print("WARNING: chromadb not installed (OK on mobile)")
 
+# ── SentenceTransformer (both Windows + Mobile) ──
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    print("WARNING: sentence-transformers not installed")
+
+# ── Qdrant import ─────────────────────────────────
 try:
     from qdrant_client import QdrantClient
     QDRANT_AVAILABLE = True
@@ -76,12 +85,16 @@ def init_vector_search():
     global qdrant_client_instance, chroma_collection, embedding_model
 
     # Always load embedding model — used by both
-    try:
-        print("🧠 Loading embedding model...")
-        embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        print("✅ Embedding model ready!")
-    except Exception as e:
-        print(f"⚠️ Embedding model failed: {e}")
+    if SENTENCE_TRANSFORMERS_AVAILABLE:
+        try:
+            print("🧠 Loading embedding model...")
+            embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+            print("✅ Embedding model ready!")
+        except Exception as e:
+            print(f"⚠️ Embedding model failed: {e}")
+            return
+    else:
+        print("⚠️ sentence-transformers not available!")
         return
 
     if USE_QDRANT:
@@ -210,7 +223,7 @@ def search_food_vector(food_name, cooking_method="", n_results=5):
                 with_payload=True,
                 score_threshold=0.3
             ).points
-            
+
             matches = []
             for hit in results:
                 p = hit.payload
