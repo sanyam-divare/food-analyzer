@@ -42,12 +42,13 @@ def get_gemini_embeddings_batch(texts):
 
 def migrate_data(batch_size=100):
     """Streams data out of SQLite and upserts it into Qdrant Cloud."""
-    conn = sqlite3.connect("foods.db")
+    # 1. Connect to your exact database file
+    conn = sqlite3.connect("food_database.db")
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # Grab your local rows (Adjust table/column names if yours differ)
-    cursor.execute("SELECT food_key, food_name FROM foods_afcd")
+    # 2. Select using your exact column fields
+    cursor.execute("SELECT id, food_key, food_name FROM foods_afcd")
     
     batch_rows = []
     total_migrated = 0
@@ -68,8 +69,8 @@ def migrate_data(batch_size=100):
             
         points = []
         for i, row in enumerate(rows):
-            # Qdrant requires a clean integer or standard UUID for point IDs
-            point_id = int(row["food_key"]) 
+            # Using the pure integer 'id' column for Qdrant's internal indexing
+            point_id = int(row["id"]) 
             
             points.append(
                 PointStruct(
@@ -77,7 +78,7 @@ def migrate_data(batch_size=100):
                     vector=embeddings[i],
                     payload={
                         "food_name": row["food_name"],
-                        "food_key": row["food_key"]
+                        "food_key": row["food_key"] # Stores your original alpha key safely
                     }
                 )
             )
