@@ -31,7 +31,7 @@ def get_gemini_embeddings_batch(texts):
     """Fetches text embeddings in bulk from the Gemini API."""
     try:
         response = gemini_client.models.embed_content(
-            model="text-embedding-004",
+            model="gemini-embedding-001",
             contents=texts
         )
         # Extract the vector arrays out of the response object

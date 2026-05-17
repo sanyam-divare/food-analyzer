@@ -8,3 +8,4 @@ ngrok*
 venv/
 .venv/
 env/
+test.py
