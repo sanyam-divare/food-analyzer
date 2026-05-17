@@ -2,11 +2,13 @@ import os
 import sqlite3
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 
+
 # Load environment configs
-load_dotenv()
+load_dotenv(override=True)  # override=True ensures we get the latest .env values
 
 # 1. Initialize Clients
 print("🔗 Connecting to Cloud Services...")
@@ -17,7 +19,7 @@ qdrant_client = QdrantClient(
     prefer_grpc=False  # 🚀 CRITICAL: Tells the client to use pure HTTP REST, bypassing grpcio completely!
 )
 COLLECTION_NAME = "food_analyzer"
-EMBEDDING_DIM = 768  # text-embedding-004 produces 768-dimensional vectors
+EMBEDDING_DIM = 768  # gemini-embedding-001 produces 768-dimensional vectors
 
 # 2. Setup Qdrant Collection (Creates it if it doesn't exist)
 if not qdrant_client.collection_exists(COLLECTION_NAME):
@@ -32,7 +34,10 @@ def get_gemini_embeddings_batch(texts):
     try:
         response = gemini_client.models.embed_content(
             model="gemini-embedding-001",
-            contents=texts
+            contents=texts,
+            config=types.EmbedContentConfig(
+            output_dimensionality=768
+            )
         )
         # Extract the vector arrays out of the response object
         return [embedding.values for embedding in response.embeddings]

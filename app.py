@@ -36,17 +36,84 @@ print("DEBUG: CLAUDE_API_KEY loaded:", "YES" if CLAUDE_API_KEY else "NO")
 print("DEBUG: OPENAI_API_KEY loaded:", "YES" if OPENAI_API_KEY else "NO")
 print("DEBUG: DEFAULT AI_PROVIDER:", AI_PROVIDER)
 
-# Vector search imports
+# # Vector search imports
+# try:
+#     import chromadb
+#     from sentence_transformers import SentenceTransformer
+#     VECTOR_SEARCH_AVAILABLE = True
+# except ImportError:
+#     VECTOR_SEARCH_AVAILABLE = False
+#     print("WARNING: chromadb or sentence-transformers not installed")
+
+# USE_VECTOR_SEARCH = os.getenv("USE_VECTOR_SEARCH", "false").lower() == "true"
+# print(f"DEBUG: VECTOR_SEARCH_AVAILABLE={VECTOR_SEARCH_AVAILABLE}, USE_VECTOR_SEARCH={USE_VECTOR_SEARCH}")
+# ── Vector search imports ─────────────────────────
 try:
     import chromadb
     from sentence_transformers import SentenceTransformer
-    VECTOR_SEARCH_AVAILABLE = True
+    CHROMADB_AVAILABLE = True
 except ImportError:
-    VECTOR_SEARCH_AVAILABLE = False
-    print("WARNING: chromadb or sentence-transformers not installed")
+    CHROMADB_AVAILABLE = False
+    print("WARNING: chromadb not installed")
 
-USE_VECTOR_SEARCH = os.getenv("USE_VECTOR_SEARCH", "false").lower() == "true"
-print(f"DEBUG: VECTOR_SEARCH_AVAILABLE={VECTOR_SEARCH_AVAILABLE}, USE_VECTOR_SEARCH={USE_VECTOR_SEARCH}")
+try:
+    from qdrant_client import QdrantClient
+    QDRANT_AVAILABLE = True
+except ImportError:
+    QDRANT_AVAILABLE = False
+    print("WARNING: qdrant-client not installed")
+
+USE_QDRANT = os.getenv("USE_QDRANT", "false").lower() == "true"
+QDRANT_COLLECTION = "food_analyzer"
+CHROMA_PATH = "./food_vectors"
+
+# ── Globals ───────────────────────────────────────
+qdrant_client_instance = None
+chroma_collection = None
+embedding_model = None  # shared by both ChromaDB and Qdrant
+
+def init_vector_search():
+    global qdrant_client_instance, chroma_collection, embedding_model
+
+    # Always load embedding model — used by both
+    try:
+        print("🧠 Loading embedding model...")
+        embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("✅ Embedding model ready!")
+    except Exception as e:
+        print(f"⚠️ Embedding model failed: {e}")
+        return
+
+    if USE_QDRANT:
+        # ── Qdrant Cloud ──────────────────────────
+        if not QDRANT_AVAILABLE:
+            print("⚠️ qdrant-client not installed!")
+            return
+        try:
+            print("🔗 Connecting to Qdrant Cloud...")
+            qdrant_client_instance = QdrantClient(
+                url=os.getenv("QDRANT_URL"),
+                api_key=os.getenv("QDRANT_API_KEY"),
+                prefer_grpc=False
+            )
+            count = qdrant_client_instance.count(QDRANT_COLLECTION).count
+            print(f"✅ Qdrant ready — {count} foods in cloud!")
+        except Exception as e:
+            print(f"⚠️ Qdrant connection failed: {e}")
+
+    else:
+        # ── ChromaDB Local ────────────────────────
+        if not CHROMADB_AVAILABLE:
+            print("⚠️ chromadb not installed!")
+            return
+        try:
+            print("📂 Loading ChromaDB local database...")
+            chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+            chroma_collection = chroma_client.get_collection("afcd_foods")
+            count = chroma_collection.count()
+            print(f"✅ ChromaDB ready — {count} foods local!")
+        except Exception as e:
+            print(f"⚠️ ChromaDB failed: {e}")
 
 # ── Vector DB setup ───────────────────────────────
 chroma_collection = None
@@ -117,7 +184,108 @@ def vector_search_food(food_name, n_results=5):
         request_log(f"Vector search error: {e}")
         return None
     
+def search_food_vector(food_name, cooking_method="", n_results=5):
+    """
+    Single search function — automatically uses Qdrant or ChromaDB
+    based on USE_QDRANT flag. Returns same format either way.
+    """
+    if not embedding_model:
+        return None
 
+    # Build rich query
+    query = f"{cooking_method} {food_name}".strip() \
+            if cooking_method and cooking_method != "not applicable" \
+            else food_name
+
+    # Generate embedding — same for both backends
+    embedding = embedding_model.encode([query])[0].tolist()
+
+    try:
+        if USE_QDRANT and qdrant_client_instance:
+            # ── Search Qdrant Cloud ───────────────
+            results = qdrant_client_instance.query_points(
+                collection_name=QDRANT_COLLECTION,
+                query=embedding,
+                limit=n_results,
+                with_payload=True,
+                score_threshold=0.3
+            ).points
+            
+            matches = []
+            for hit in results:
+                p = hit.payload
+                matches.append({
+                    'food_key':      p.get('food_key'),
+                    'food_name':     p.get('food_name'),
+                    'similarity':    round(hit.score, 3),
+                    'energy_kcal':   p.get('energy_kcal', 0),
+                    'protein':       p.get('protein', 0),
+                    'fat':           p.get('fat', 0),
+                    'carbohydrates': p.get('carbohydrates', 0),
+                    'fibre':         p.get('fibre', 0),
+                    'sugars':        p.get('sugars', 0),
+                    'sodium':        p.get('sodium', 0),
+                    'calcium':       p.get('calcium', 0),
+                    'iron':          p.get('iron', 0),
+                    'magnesium':     p.get('magnesium', 0),
+                    'potassium':     p.get('potassium', 0),
+                    'zinc':          p.get('zinc', 0),
+                    'vitamin_a':     p.get('vitamin_a', 0),
+                    'vitamin_c':     p.get('vitamin_c', 0),
+                    'vitamin_d':     p.get('vitamin_d', 0),
+                    'vitamin_e':     p.get('vitamin_e', 0),
+                    'cholesterol':   p.get('cholesterol', 0),
+                })
+            return matches if matches else None
+
+        elif not USE_QDRANT and chroma_collection:
+            # ── Search ChromaDB Local ─────────────
+            results = chroma_collection.query(
+                query_embeddings=[embedding],
+                n_results=n_results
+            )
+            if not results or not results['ids'][0]:
+                return None
+
+            matches = []
+            for i, food_key in enumerate(results['ids'][0]):
+                metadata = results['metadatas'][0][i]
+                distance = results['distances'][0][i]
+                similarity = round(1 - distance, 3)
+
+                # ChromaDB has metadata but not full nutrition
+                # Fall back to SQLite for nutrition data
+                nutrition = get_nutrition_by_key(food_key) or {}
+
+                matches.append({
+                    'food_key':      food_key,
+                    'food_name':     metadata.get('food_name', ''),
+                    'similarity':    similarity,
+                    'energy_kcal':   nutrition.get('energy_kcal', 0),
+                    'protein':       nutrition.get('protein', 0),
+                    'fat':           nutrition.get('fat', 0),
+                    'carbohydrates': nutrition.get('carbohydrates', 0),
+                    'fibre':         nutrition.get('fibre', 0),
+                    'sugars':        nutrition.get('sugars', 0),
+                    'sodium':        nutrition.get('sodium', 0),
+                    'calcium':       nutrition.get('calcium', 0),
+                    'iron':          nutrition.get('iron', 0),
+                    'magnesium':     nutrition.get('magnesium', 0),
+                    'potassium':     nutrition.get('potassium', 0),
+                    'zinc':          nutrition.get('zinc', 0),
+                    'vitamin_a':     nutrition.get('vitamin_a', 0),
+                    'vitamin_c':     nutrition.get('vitamin_c', 0),
+                    'vitamin_d':     nutrition.get('vitamin_d', 0),
+                    'vitamin_e':     nutrition.get('vitamin_e', 0),
+                    'cholesterol':   nutrition.get('cholesterol', 0),
+                })
+            return matches if matches else None
+
+    except Exception as e:
+        request_log(f"Vector search error: {e}")
+        return None
+
+    return None
 
 
 app = Flask(__name__)
@@ -356,40 +524,6 @@ def analyze_with_gemini(image_base64, mime_type="image/jpeg"):
         request_log(f"Failed to parse Gemini response: {e}")
         return {"error": f"Failed to parse Gemini response: {e}. Response text: {response.text}"}
 
-
-# def analyze_with_claude_text(voice_text):
-#     if not CLAUDE_API_KEY:
-#         return {"error": "Missing CLAUDE_API_KEY environment variable. Add it to .env or set it in your shell."}
-
-#     url = "https://api.anthropic.com/v1/complete"
-#     prompt = f"Extract food items from this text: \"{voice_text}\"\nRespond ONLY in this exact JSON format:\n{{\n  \"foods\": [\n    {{\"name\": \"food name\", \"estimated_grams\": 100}}\n  ],\n  \"meal_description\": \"brief description\"\n}}"
-#     payload = {
-#         "model": "claude-3.5",
-#         "prompt": prompt,
-#         "max_tokens": 1000,
-#         "temperature": 0
-#     }
-#     headers = {
-#         "x-api-key": CLAUDE_API_KEY,
-#         "Content-Type": "application/json"
-#     }
-
-#     response = requests.post(url, headers=headers, json=payload)
-#     if response.status_code != 200:
-#         return {"error": f"Claude API error {response.status_code}: {response.text}"}
-
-#     try:
-#         result = response.json()
-#         text = result.get("completion", "").strip()
-#         request_log(f"Claude returned length={len(response.text)}")
-#         return json.loads(text)
-#     except Exception as e:
-#         request_log(f"Failed to parse Claude response: {e}")
-#         return {"error": f"Failed to parse Claude response: {e}. Response text: {response.text}"}
-
-
-# def analyze_with_claude_image(image_base64, mime_type="image/jpeg"):
-#     return {"error": "Claude image analysis is not implemented yet. Gemini is still required for image-based input unless you add a Claude Vision API integration."}
 def analyze_with_claude_text(voice_text):
     if not CLAUDE_API_KEY:
         return {"error": "Missing CLAUDE_API_KEY environment variable."}
@@ -732,82 +866,7 @@ def calculate_row_nutrition(item):
         'cholesterol': calc('cholesterol'),
         'per100': per100,
     }
-# def calculate_nutrition(ai_result):
-#     foods_with_nutrition = []
-#     total_calories = 0
 
-#     for food in ai_result['foods']:
-#         grams = food.get('estimated_grams', 0)
-#         food_name = food['name']
-#         confidence = food.get('confidence', 'high')
-
-#         # Log low confidence items as warnings
-#         if confidence == 'low':
-#             request_log(f"⚠️ Low confidence for '{food_name}' — may be inaccurate")
-
-#         # Step 1 — get candidates
-#         candidates = get_candidates(food_name)
-#         request_log(f"Found {len(candidates)} candidates")
-
-#         # Step 2 — choose best match from candidate names first
-#         best_key = find_best_candidate_key(food_name, candidates)
-#         if best_key:
-#             request_log(f"Matched '{food_name}' by text score to {best_key}")
-
-#         # Step 3 — ask Gemini only when candidates are ambiguous
-#         if not best_key:
-#             if len(candidates) == 1:
-#                 best_key = candidates[0]['food_key']
-#                 request_log(f"Single candidate — auto matched to {best_key}")
-#             elif len(candidates) > 1:
-#                 request_log(f"Candidates ambiguous for '{food_name}', asking AI to match")
-#                 best_key = ask_gemini_to_match(food_name, grams, candidates)
-#             else:
-#                 request_log(f"No candidates found for '{food_name}'")
-
-#         # Step 4 — get nutrition by key
-#         n = get_nutrition_by_key(best_key) if best_key else None
-
-#         # Fallback to old search if Gemini match fails
-#         if not n:
-#             print(f"DEBUG: Falling back to fuzzy search for '{food_name}'")
-#             n = search_food(food_name)
-
-#         def calc(key):
-#             return round((n.get(key, 0) or 0) * grams / 100, 2) if n else 0
-
-#         matched_name = n['food_name'] if n else 'Not found'
-#         request_log(f"Final match → {matched_name}")
-
-#         entry = {
-#             "name":        food_name,
-#             "matched":     matched_name,
-#             "grams":       grams,
-#             "found_in_db": n is not None,
-#             "confidence": confidence,
-#             "warning": "Low confidence — please verify" if confidence == 'low' else None,
-#             "calories":    calc('energy_kcal'),
-#             "protein":     calc('protein'),
-#             "fat":         calc('fat'),
-#             "carbs":       calc('carbohydrates'),
-#             "fibre":       calc('fibre'),
-#             "sugars":      calc('sugars'),
-#             "sodium":      calc('sodium'),
-#             "calcium":     calc('calcium'),
-#             "iron":        calc('iron'),
-#             "magnesium":   calc('magnesium'),
-#             "potassium":   calc('potassium'),
-#             "zinc":        calc('zinc'),
-#             "vitamin_a":   calc('vitamin_a'),
-#             "vitamin_c":   calc('vitamin_c'),
-#             "vitamin_d":   calc('vitamin_d'),
-#             "vitamin_e":   calc('vitamin_e'),
-#             "cholesterol": calc('cholesterol'),
-#         }
-#         foods_with_nutrition.append(entry)
-#         total_calories += entry['calories']
-
-#     return foods_with_nutrition, round(total_calories, 1)
 
 def calculate_nutrition(ai_result):
     foods_with_nutrition = []
@@ -828,34 +887,62 @@ def calculate_nutrition(ai_result):
         n = None
         match_method = 'none'
 
-        # ── Vector search path ────────────────────
-        if USE_VECTOR_SEARCH and VECTOR_SEARCH_AVAILABLE:
-            # Build richer query using all Claude's context
-            search_query = food_name
-            if cooking_method and cooking_method != 'not applicable':
-                search_query = f"{cooking_method} {food_name}"
+        # ── Vector search path ────────────────────────────
+        if (USE_QDRANT and QDRANT_AVAILABLE) or \
+        (not USE_QDRANT and CHROMADB_AVAILABLE):
 
-            vector_results = vector_search_food(search_query, n_results=5)
+            vector_results = search_food_vector(
+                food_name,
+                cooking_method,
+                n_results=5
+            )
 
             if vector_results:
                 best = vector_results[0]
                 similarity = best['similarity']
-                request_log(f"Vector match: '{best['food_name']}' "
-                           f"similarity={similarity}")
+                backend = "Qdrant" if USE_QDRANT else "ChromaDB"
+                request_log(f"{backend} match: '{best['food_name']}' "
+                        f"similarity={similarity}")
 
-                # High confidence threshold
                 if similarity >= 0.65:
-                    best_key = best['food_key']
-                    match_method = f'vector ({similarity})'
+                    n = best
+                    match_method = f'{backend.lower()} ({similarity})'
                 elif similarity >= 0.45 and confidence != 'low':
-                    # Medium confidence — use but flag it
-                    best_key = best['food_key']
-                    match_method = f'vector-medium ({similarity})'
-                    request_log(f"⚠️ Medium similarity match for "
-                               f"'{food_name}'")
+                    n = best
+                    match_method = f'{backend.lower()}-medium ({similarity})'
+                    request_log(f"⚠️ Medium similarity for '{food_name}'")
                 else:
-                    request_log(f"Vector similarity too low ({similarity})"
-                               f" for '{food_name}' — no match")
+                    request_log(f"Similarity too low ({similarity}) "
+                            f"for '{food_name}'")
+                    
+        # # ── Vector search path ────────────────────
+        # if USE_VECTOR_SEARCH and VECTOR_SEARCH_AVAILABLE:
+        #     # Build richer query using all Claude's context
+        #     search_query = food_name
+        #     if cooking_method and cooking_method != 'not applicable':
+        #         search_query = f"{cooking_method} {food_name}"
+
+        #     vector_results = vector_search_food(search_query, n_results=5)
+
+        #     if vector_results:
+        #         best = vector_results[0]
+        #         similarity = best['similarity']
+        #         request_log(f"Vector match: '{best['food_name']}' "
+        #                    f"similarity={similarity}")
+
+        #         # High confidence threshold
+        #         if similarity >= 0.65:
+        #             best_key = best['food_key']
+        #             match_method = f'vector ({similarity})'
+        #         elif similarity >= 0.45 and confidence != 'low':
+        #             # Medium confidence — use but flag it
+        #             best_key = best['food_key']
+        #             match_method = f'vector-medium ({similarity})'
+        #             request_log(f"⚠️ Medium similarity match for "
+        #                        f"'{food_name}'")
+        #         else:
+        #             request_log(f"Vector similarity too low ({similarity})"
+        #                        f" for '{food_name}' — no match")
 
         # ── Text search fallback ──────────────────
         else:
@@ -1302,5 +1389,5 @@ def get_nutrition_by_key(food_key):
 # ─── Bottom of app.py ────────────────────────────
 
 if __name__ == '__main__':
-    init_vector_db()    # ← make sure NO # at the start!
+    init_vector_search()    # ← make sure NO # at the start!
     app.run(host='0.0.0.0', port=5000, debug=True)
