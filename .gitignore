@@ -9,4 +9,6 @@ venv/
 .venv/
 env/
 test.py
-food_vectors/
+food_vectors/venv/
+food_database.db
+ngrok-v3-stable-linux-arm64.tgz
