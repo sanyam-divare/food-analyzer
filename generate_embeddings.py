@@ -72,7 +72,7 @@ def main():
                 WHERE id = ?
             """, (json.dumps(vector), food_id))
 
-            if (i + 1) % 50 == 0:
+            if (i + 1) % 100 == 0:
                 conn.commit()
                 print(f"  Progress: {i+1}/{total} ({((i+1)/total*100):.1f}%)")
 
