@@ -37,12 +37,20 @@ app = Flask(__name__)
 AFCD_EMBEDDING_CACHE = []
 
 def load_embeddings_into_cache():
-    """Load and deserialize AFCD embeddings once at startup to prevent slow DB loops"""
+    """Load and deserialize AFCD embeddings once at startup to prevent slow DB loops, respecting FAST_MODE to save RAM."""
     global AFCD_EMBEDDING_CACHE
+    
+    # Check if FAST_MODE is enabled to save memory on platforms like Render
+    if os.getenv("FAST_MODE", "false").lower() == "true":
+        print("🚀 FAST_MODE active: Bypassing embedding cache generation to optimize memory usage.")
+        AFCD_EMBEDDING_CACHE = []
+        return
+
     try:
         conn = sqlite3.connect('food_database.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+        
         cursor.execute("SELECT food_key, food_name, embedding FROM foods_afcd WHERE embedding IS NOT NULL")
         rows = cursor.fetchall()
         conn.close()
@@ -58,9 +66,12 @@ def load_embeddings_into_cache():
                 })
             except Exception:
                 continue
+                
         print(f"SUCCESS: Cached {len(AFCD_EMBEDDING_CACHE)} AFCD food embeddings into memory.")
+        
     except Exception as e:
         print(f"WARNING: Could not warm embedding cache: {e}")
+
 
 # ─── Logging ─────────────────────────────────────────
 def request_log(msg):
