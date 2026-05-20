@@ -8,6 +8,6 @@ ngrok*
 venv/
 .venv/
 env/
-test*
+test.py
 food_vectors/venv/
 ngrok-v3-stable-linux-arm64.tgz

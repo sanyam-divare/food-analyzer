@@ -232,7 +232,7 @@ def analyze_with_gemini_vision(image_base64, mime_type="image/jpeg"):
                 ]
             }]
         }
-        response = requests.post(url, json=payload, timeout=60)
+        response = requests.post(url, json=payload, timeout=30)
         if response.status_code != 200:
             return {"error": f"Gemini Vision error {response.status_code}"}
         
@@ -386,186 +386,30 @@ def build_food_entry(food, grams, provider, afcd_data=None, afcd_score=0.0):
         }
     }
 
-# ... (Your environment variables and global variables are up here)
-
-# ── NEW HELPER FUNCTION: PLACE THIS HERE ────────────────────────────────
-import requests # Make sure requests is imported at the top of your file
-
-def get_openai_embeddings_batch(text_list):
-    """
-    Fetches embeddings for ALL food items in a single API round-trip.
-    Reduces 4-5 network calls down to 1.
-    """
-    # Grab your OpenAI key from environment variables
-    openai_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY ")
-    
-    if not text_list or not openai_key:
-        return {}
-    try:
-        url = "https://api.openai.com/v1/embeddings"
-        headers = {"Authorization": f"Bearer {openai_key.strip()}", "Content-Type": "application/json"}
-        payload = {"input": text_list, "model": "text-embedding-3-small"}
-        
-        res = requests.post(url, headers=headers, json=payload, timeout=10)
-        if res.status_code == 200:
-            data = res.json()["data"]
-            # Map the original text back to its vector array
-            return {text_list[i]: data[i]["embedding"] for i in range(len(text_list))}
-        print(f"⚠️ OpenAI Batch Embedding Error: {res.status_code}")
-        return {}
-    except Exception as e:
-        print(f"⚠️ OpenAI Batch Embedding network failure: {e}")
-        return {}
-
-
-# ── YOUR UPDATED CORE PIPELINE FUNCTION ─────────────────────────────────
-# ─── Optimized Batch Vector Network Utilities ─────────────────────────
-
-def get_query_embeddings_batch(text_list):
-    """
-    Fetches Gemini embeddings for ALL food items in a single API round-trip.
-    Drastically minimizes network overhead, eliminating 503 errors and timeouts.
-    """
-    if not GEMINI_API_KEY or not text_list:
-        return {}
-        
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:batchEmbedContents?key={GEMINI_API_KEY}'
-    
-    try:
-        # Construct the batch request format Google expects
-        requests_payload = [
-            {
-                "model": "models/gemini-embedding-2",
-                "content": {"parts": [{"text": text.lower().strip()}]}
-            }
-            for text in text_list
-        ]
-        
-        request_log(f"⚡ Batch embedding {len(text_list)} items via Gemini...")
-        response = requests.post(url, json={"requests": requests_payload}, timeout=10)
-        
-        if response.status_code == 200:
-            embeddings_data = response.json().get('embeddings', [])
-            # Map each input string back to its corresponding vector array
-            return {text_list[i]: embeddings_data[i]['values'] for i in range(len(text_list))}
-            
-        request_log(f"⚠️ Batch Embedding failed with status code: {response.status_code}")
-        return {}
-    except Exception as e:
-        request_log(f"⚠️ Batch Embedding network exception: {e}")
-        return {}
-
-
-def search_afcd_by_precalculated_embedding(query_vec, food_name, threshold=0.82):
-    """Scans the local global memory cache instantly using a pre-calculated vector."""
-    if not query_vec:
-        return None, 0.0
-
-    best_score = 0.0
-    best_key = None
-
-    # In-memory scan remains blistering fast
-    for row in AFCD_EMBEDDING_CACHE:
-        score = cosine_similarity(query_vec, row['embedding'])
-        if score > best_score:
-            best_score = score
-            best_key = row['food_key']
-
-    request_log(f"Cached Vector Scan '{food_name}' → max score={best_score:.3f}")
-
-    if best_score >= threshold:
-        return best_key, best_score
-    return None, best_score
-
-
-# ─── Core Pipeline Implementation ─────────────────────────────────────
-import os
-
 def calculate_nutrition(ai_result, provider):
-    """
-    Processes nutritional structures with an instant-pass 'FAST_MODE' option
-    to skip downstream database validation loops.
-    """
     foods_out = []
     total_cal = 0
-    foods_list = ai_result.get('foods', [])
 
-    # Check if Fast Mode is active (default to false if not set)
-    fast_mode = os.getenv("FAST_MODE", "false").lower() == "true"
-
-    if fast_mode:
-        request_log("🚀 FAST_MODE active: Skipping embedding API calls and AFCD database lookups.")
-        batch_vectors = {}
-    else:
-        # Gather unique food names for a single batch network call
-        food_names_to_batch = list(set([str(f.get('name', '')).strip() for f in foods_list if f.get('name')]))
-        batch_vectors = get_query_embeddings_batch(food_names_to_batch)
-
-    # Core loop
-    for food in foods_list:
+    for food in ai_result.get('foods', []):
         grams = food.get('estimated_grams', 100) or 100
-        food_name = str(food.get('name', '')).strip()
+        food_name = food.get('name', '')
 
-        afcd_data = None
-        afcd_score = 0.0
+        request_log(f"Processing '{food_name}' ({grams}g)")
 
-        # Run database matching ONLY if fast_mode is disabled
-        if not fast_mode:
-            query_vec = batch_vectors.get(food_name)
-            afcd_key, afcd_score = search_afcd_by_precalculated_embedding(query_vec, food_name, threshold=0.82)
-            afcd_data = get_nutrition_by_key(afcd_key) if afcd_key else None
-            
-            if afcd_data:
-                request_log(f"AFCD verified match: {afcd_data['food_name']} (Score: {afcd_score:.2f})")
+        # Fast memory scan threshold matching
+        afcd_key, afcd_score = search_afcd_by_embedding(food_name, threshold=0.82)
+        afcd_data = get_nutrition_by_key(afcd_key) if afcd_key else None
 
-        # If fast_mode is true, build_food_entry naturally falls back 
-        # to using raw provider values (Claude/Gemini) without crashing
+        if afcd_data:
+            request_log(f"AFCD verified match: {afcd_data['food_name']} (Score: {afcd_score:.2f})")
+        else:
+            request_log(f"No match >= 0.82. Reverting to structural {provider} fallback parameters.")
+
         entry = build_food_entry(food, grams, provider, afcd_data, afcd_score)
         foods_out.append(entry)
         total_cal += entry['calories']
 
     return foods_out, round(total_cal, 1)
-
-# def calculate_nutrition(ai_result, provider):
-#     """
-#     Optimized pipeline processing logic utilizing pre-batched Gemini embeddings 
-#     to handle complex multi-ingredient analysis under 2 seconds.
-#     """
-#     foods_out = []
-#     total_cal = 0
-#     foods_list = ai_result.get('foods', [])
-
-#     # STEP 1: Gather all unique food names for a single batch network call
-#     food_names_to_batch = list(set([str(f.get('name', '')).strip() for f in foods_list if f.get('name')]))
-
-#     # Execute exactly ONE network call to get vectors for everything on the plate
-#     batch_vectors = get_query_embeddings_batch(food_names_to_batch)
-
-#     # STEP 2: Loop through items instantly using the in-memory batch vector cache
-#     for food in foods_list:
-#         grams = food.get('estimated_grams', 100) or 100
-#         food_name = str(food.get('name', '')).strip()
-
-#         request_log(f"Processing '{food_name}' ({grams}g)")
-
-#         # Extract vector from our batch payload map
-#         query_vec = batch_vectors.get(food_name)
-        
-#         # Match using the precalculated vector against your in-memory SQLite matrix
-#         afcd_key, afcd_score = search_afcd_by_precalculated_embedding(query_vec, food_name, threshold=0.82)
-#         afcd_data = get_nutrition_by_key(afcd_key) if afcd_key else None
-
-#         if afcd_data:
-#             request_log(f"AFCD verified match: {afcd_data['food_name']} (Score: {afcd_score:.2f})")
-#         else:
-#             request_log(f"No match >= 0.82. Reverting to structural {provider} fallback parameters.")
-
-#         entry = build_food_entry(food, grams, provider, afcd_data, afcd_score)
-#         foods_out.append(entry)
-#         total_cal += entry['calories']
-
-#     return foods_out, round(total_cal, 1)
-
 
 # ─── Image Resize ─────────────────────────────────────
 def resize_image(image_base64):
