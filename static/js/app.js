@@ -140,7 +140,7 @@ function renderResultRows() {
                 <input type="text" class="food-edit" value="${f.name}" data-index="${index}" data-field="name" />
                 ${f.matched && f.matched !== f.name ?
                     `<div style="font-size:0.7rem;color:var(--gray-400)">Matched: ${f.matched}</div>` : ''}
-                ${!f.found_in_db ? '<span class="not-in-db">not in DB</span>' : ''}
+                ${!f.found_in_db ? '<span class="not-in-db">~</span>' : ''}
             </td>
             <td><input type="number" min="0" class="amount-edit" value="${f.grams}" data-index="${index}" data-field="grams" /></td>
             <td class="kcal-cell">${Math.round(f.calories)}</td>

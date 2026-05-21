@@ -163,34 +163,69 @@ def get_nutrition_by_key(food_key):
     return dict(result) if result else None
 
 # ─── Prompts & Structural Verification ─────────────────
-SHARED_JSON_SCHEMA = """Respond ONLY in this exact JSON format, no other text:
-{
-  "foods": [
-    {
-      "name": "specific food name",
-      "cooking_method": "raw|grilled|fried|boiled|steamed|baked|roasted|not applicable",
-      "category": "protein|grain|vegetable|fruit|dairy|sauce|condiment|beverage",
-      "estimated_grams": 100,
-      "confidence": "high|medium|low",
-      "nutrition_per_100g": {
-        "calories_kcal": 0, "protein_g": 0, "fat_g": 0, "carbohydrates_g": 0, "fibre_g": 0,
-        "sugar_g": 0, "sodium_mg": 0, "calcium_mg": 0, "iron_mg": 0, "magnesium_mg": 0,
-        "potassium_mg": 0, "zinc_mg": 0, "vitamin_a_ug": 0, "vitamin_c_mg": 0, "vitamin_d_ug": 0,
-        "vitamin_e_mg": 0, "cholesterol_mg": 0
-      },
-      "gut_microbiome": {
-        "prebiotic_score": 0, "probiotic_score": 0,
-        "bacteria_promoted": [], "bacteria_reduced": [],
-        "fibre_type": "soluble|insoluble|both|none",
-        "gut_health_notes": "brief clinical note"
-      }
-    }
-  ],
-  "meal_description": "brief description",
-  "cuisine_type": "Indian|Australian|Asian|Mediterranean|Western|Mixed|Unknown",
-  "overall_gut_health_score": 0,
-  "overall_gut_notes": "overall gut health summary"
-}"""
+# SHARED_JSON_SCHEMA = """Respond ONLY in this exact JSON format, no other text:
+# {
+#   "foods": [
+#     {
+#       "name": "specific food name",
+#       "cooking_method": "raw|grilled|fried|boiled|steamed|baked|roasted|not applicable",
+#       "category": "protein|grain|vegetable|fruit|dairy|sauce|condiment|beverage",
+#       "estimated_grams": 100,
+#       "confidence": "high|medium|low",
+#       "nutrition_per_100g": {
+#         "calories_kcal": 0, "protein_g": 0, "fat_g": 0, "carbohydrates_g": 0, "fibre_g": 0,
+#         "sugar_g": 0, "sodium_mg": 0, "calcium_mg": 0, "iron_mg": 0, "magnesium_mg": 0,
+#         "potassium_mg": 0, "zinc_mg": 0, "vitamin_a_ug": 0, "vitamin_c_mg": 0, "vitamin_d_ug": 0,
+#         "vitamin_e_mg": 0, "cholesterol_mg": 0
+#       },
+#       "gut_microbiome": {
+#         "prebiotic_score": 0, "probiotic_score": 0,
+#         "bacteria_promoted": [], "bacteria_reduced": [],
+#         "fibre_type": "soluble|insoluble|both|none",
+#         "gut_health_notes": "brief clinical note"
+#       }
+#     }
+#   ],
+#   "meal_description": "brief description",
+#   "cuisine_type": "Indian|Australian|Asian|Mediterranean|Western|Mixed|Unknown",
+#   "overall_gut_health_score": 0,
+#   "overall_gut_notes": "overall gut health summary"
+# }"""
+SHARED_JSON_SCHEMA = """Analyze this food image as a clinical nutritionist.
+        Identify each food item visible and estimate portion weight.
+        Provide key nutrition values per 100g from your knowledge.
+        For minerals/vitamins give your best estimate — approximate is fine.
+
+        Respond ONLY in valid JSON:
+        {
+        "foods": [
+            {
+            "name": "specific food name",
+            "cooking_method": "raw|grilled|fried|boiled|steamed|baked|not applicable",
+            "category": "protein|grain|vegetable|fruit|dairy|sauce|condiment|beverage",
+            "estimated_grams": 150,
+            "confidence": "high|medium|low",
+            "nutrition_per_100g": {
+                "calories_kcal": 95,
+                "protein_g": 1.4,
+                "fat_g": 0.2,
+                "carbohydrates_g": 20,
+                "fibre_g": 2.6,
+                "sugar_g": 12,
+                "sodium_mg": 1,
+                "calcium_mg": 5,
+                "iron_mg": 0.3,
+                "potassium_mg": 358,
+                "vitamin_c_mg": 8.7,
+                "cholesterol_mg": 0
+            }
+            }
+        ],
+        "meal_description": "one sentence",
+        "cuisine_type": "Asian|Western|Indian|Mediterranean|Mixed|Unknown",
+        "overall_gut_health_score": 0,
+        "overall_gut_notes": ""
+        }"""
 
 # ─── Engine Callers ───────────────────────────────────
 def analyze_with_claude_vision(image_base64, mime_type="image/jpeg"):
@@ -206,7 +241,7 @@ def analyze_with_claude_vision(image_base64, mime_type="image/jpeg"):
                 "content-type": "application/json"
             },
             json={
-                "model": "claude-sonnet-4-6",
+                "model": "claude-haiku-4-5-20251001",
                 "max_tokens": 4000,
                 "messages": [{
                     "role": "user",
@@ -239,7 +274,7 @@ def analyze_with_gemini_vision(image_base64, mime_type="image/jpeg"):
             "contents": [{
                 "parts": [
                     {"inline_data": {"mime_type": mime_type, "data": image_base64}},
-                    {"text": f"You are a clinical nutritionist and gut specialist. Calculate fallback estimates for nutrition metrics if things do not match database. {SHARED_JSON_SCHEMA}"}
+                    {"text": f"You are a clinical nutritionist. Analyze this food image. {SHARED_JSON_SCHEMA}"}
                 ]
             }]
         }
@@ -267,7 +302,7 @@ def analyze_with_claude_voice(voice_text):
                 "content-type": "application/json"
             },
             json={
-                "model": "claude-sonnet-4-6",
+                "model": "claude-haiku-4-5-20251001",
                 "max_tokens": 2000,
                 "messages": [{
                     "role": "user",
@@ -283,20 +318,71 @@ def analyze_with_claude_voice(voice_text):
     except Exception as e:
         return {"error": f"Claude voice parser crash: {e}"}
 
+# def analyze_with_gemini_voice(voice_text):
+#     if not GEMINI_API_KEY:
+#         return {"error": "Missing GEMINI_API_KEY"}
+#     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+#     try:
+#         payload = {"contents": [{"parts": [{"text": f"Extract details from: '{voice_text}'. {SHARED_JSON_SCHEMA}"}]}]}
+#         r = requests.post(url, json=payload, timeout=20)
+#         text = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+#         if "```" in text:
+#             text = text.split("```")[1]
+#             if text.startswith("json"): text = text[4:]
+#         return json.loads(text.strip())
+#     except Exception as e:
+#         return {"error": f"Gemini voice parser crash: {e}"}
 def analyze_with_gemini_voice(voice_text):
+    """
+    Safely extracts food structures from voice inputs using robust regex extraction
+    and structural verification to eliminate parsing crashes.
+    """
     if not GEMINI_API_KEY:
         return {"error": "Missing GEMINI_API_KEY"}
+        
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
     try:
-        payload = {"contents": [{"parts": [{"text": f"Extract details from: '{voice_text}'. {SHARED_JSON_SCHEMA}"}]}]}
-        r = requests.post(url, json=payload, timeout=20)
-        text = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-        if "```" in text:
-            text = text.split("```")[1]
-            if text.startswith("json"): text = text[4:]
-        return json.loads(text.strip())
+        payload = {
+            "contents": [{
+                "parts": [{"text": f"Extract details from this meal description: '{voice_text}'. {SHARED_JSON_SCHEMA}"}]
+            }]
+        }
+        
+        # Bumping timeout from 20 to 30 to allow full token generation processing windows
+        r = requests.post(url, json=payload, timeout=30)
+        
+        if r.status_code != 200:
+            return {"error": f"Gemini Voice API Error {r.status_code}: {r.text[:200]}"}
+            
+        response_json = r.json()
+        
+        # ── SAFE KEY CHECKING ─────────────────────────────────────────────────
+        # Gracefully handle unexpected or empty responses from the API
+        candidates = response_json.get("candidates", [])
+        if not candidates or "content" not in candidates[0] or "parts" not in candidates[0]["content"]:
+            return {"error": "Gemini returned an empty or flagged response payload."}
+            
+        raw_text = candidates[0]["content"]["parts"][0].get("text", "").strip()
+        
+        # ── BULLETPROOF TEXT EXTRACTION ───────────────────────────────────────
+        # Use regex to safely capture anything inside a ```json ... ``` block
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', raw_text, re.DOTALL)
+        if json_match:
+            clean_text = json_match.group(1).strip()
+        else:
+            # Fall back to using the raw text directly if no backticks are present
+            clean_text = raw_text
+            
+        # ── SAFE JSON PARSING ─────────────────────────────────────────────────
+        return json.loads(clean_text)
+        
+    except json.JSONDecodeError as je:
+        request_log(f"JSON Parse Failure. Raw Text received: {raw_text}")
+        return {"error": f"Gemini returned poorly formatted JSON: {str(je)}"}
     except Exception as e:
-        return {"error": f"Gemini voice parser crash: {e}"}
+        return {"error": f"Gemini voice parser crash: {str(e)}"}
+
 
 # ─── Nutrition Matrix Builder ─────────────────────────
 def build_food_entry(food, grams, provider, afcd_data=None, afcd_score=0.0):
