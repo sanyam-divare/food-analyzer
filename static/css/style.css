@@ -592,3 +592,929 @@ main {
     letter-spacing: 0.05em;
     margin: 16px 0 6px;
 }
+/* ── Add to end of style.css ──────────────────────── */
+
+/* ── Daily Gap Card ─────────────────────────────── */
+.gap-card {
+    background: var(--bg-card);
+    border-radius: var(--r-lg);
+    padding: 18px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.gap-card-empty {
+    opacity: 0.7;
+}
+
+.gap-card-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.gap-meal-count {
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    margin-bottom: 14px;
+    font-weight: 500;
+}
+
+/* ── Macro Progress Bars ────────────────────────── */
+.macro-progress-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.macro-progress-row {}
+
+.macro-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    margin-bottom: 4px;
+}
+
+.macro-progress-val {
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    color: var(--text-muted);
+}
+
+.macro-progress-bar-bg {
+    height: 7px;
+    background: var(--gray-100, #f3f4f6);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.macro-progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s ease;
+    min-width: 2px;
+}
+
+/* ── Alerts ─────────────────────────────────────── */
+.gap-alerts-section {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+}
+
+.gap-alerts-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.gap-alert {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: var(--r-sm);
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+}
+
+.gap-alert:last-child { margin-bottom: 0; }
+
+.gap-alert-high {
+    background: #fef2f2;
+    border: 1px solid rgba(220,38,38,0.2);
+}
+
+.gap-alert-medium {
+    background: #fff7ed;
+    border: 1px solid rgba(232,118,42,0.25);
+}
+
+.gap-alert-warning {
+    background: #fffbeb;
+    border: 1px solid rgba(234,179,8,0.25);
+}
+
+.gap-alert-caution {
+    background: #fffbeb;
+    border: 1px solid rgba(234,179,8,0.2);
+}
+
+.gap-alert-good {
+    background: var(--mint-pale, #e8f7ef);
+    border: 1px solid rgba(13,51,32,0.1);
+}
+
+.gap-alert-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.gap-alert strong {
+    display: block;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.gap-alert-nums {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+}
+
+.gap-alert-msg {
+    color: var(--text-mid);
+    margin-top: 2px;
+    line-height: 1.5;
+}
+
+/* ── Timeline Card ──────────────────────────────── */
+.timeline-card {
+    background: var(--bg-card);
+    border-radius: var(--r-lg);
+    padding: 18px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.timeline-section {
+    border-left: 3px solid var(--mint, #5ecb8a);
+    margin-left: 8px;
+    padding-left: 14px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.timeline-section:last-child { margin-bottom: 0; }
+
+.timeline-section::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 8px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--mint, #5ecb8a);
+    border: 2px solid var(--bg-card);
+}
+
+.timeline-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.timeline-icon { font-size: 1rem; }
+
+.timeline-cat-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text);
+    flex: 1;
+}
+
+.timeline-cat-cal {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.78rem;
+    color: var(--amber, #e8762a);
+    font-weight: 700;
+}
+
+.timeline-meals {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.timeline-meal {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.timeline-meal-time {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    padding-top: 2px;
+    min-width: 32px;
+}
+
+.timeline-meal-body { flex: 1; }
+
+.timeline-meal-desc {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.timeline-meal-foods {
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 3px;
+}
+
+.timeline-meal-cal {
+    font-size: 0.73rem;
+    color: var(--amber, #e8762a);
+    font-weight: 600;
+}
+
+.timeline-section-totals {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono, monospace);
+    padding: 6px 8px;
+    background: var(--bg, #f4f6f1);
+    border-radius: var(--r-sm);
+}
+/* ── Add to end of style.css ──────────────────────── */
+
+/* ── Fitness Card ───────────────────────────────── */
+.fitness-card {
+    background: linear-gradient(135deg, #0d3320 0%, #1a5c38 100%);
+    border-radius: var(--r-lg);
+    padding: 18px;
+    margin-bottom: 12px;
+    color: #fff;
+    box-shadow: var(--shadow-lg);
+}
+
+.fitness-card .gap-card-title {
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 14px;
+}
+
+.fitness-stats-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.fitness-stat {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    border-radius: var(--r-sm);
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.activity-stat {
+    background: rgba(94,203,138,0.2);
+    border-color: rgba(94,203,138,0.3);
+}
+
+.fitness-stat-val {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.fitness-stat-lbl {
+    display: block;
+    font-size: 0.62rem;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 3px;
+    font-weight: 600;
+}
+
+.fitness-calorie-bar {
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--r-sm);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fitness-calorie-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.8);
+}
+
+.fitness-calorie-remaining {
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+
+.fitness-calorie-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.15);
+}
+
+.fitness-cal-num {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #fff;
+}
+
+.cal-over { color: #ff8080 !important; }
+.cal-ok   { color: #5ecb8a !important; }
+
+.fitness-unavailable {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.82rem;
+    padding: 8px 0;
+}
+
+/* ── Recommendation Cards ───────────────────────── */
+.recs-section {
+    margin-bottom: 12px;
+}
+
+.rec-card {
+    background: var(--bg-card);
+    border-radius: var(--r-md);
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--border);
+}
+
+.rec-card.rec-high   { border-left-color: #dc2626; }
+.rec-card.rec-medium { border-left-color: var(--amber); }
+.rec-card.rec-low    { border-left-color: var(--mint); }
+
+.rec-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.rec-emoji { font-size: 1.1rem; }
+
+.rec-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text);
+}
+
+.rec-message {
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.rec-actions {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: var(--r-sm);
+}
+
+.rec-actions li {
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    line-height: 1.4;
+}
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLE.CSS ADDITIONS — append to end of your existing style.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── Date Navigator ─────────────────────────────────────────────────────── */
+.date-nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.date-nav-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.date-nav-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    letter-spacing: -0.01em;
+}
+
+.date-nav-sub {
+    font-size: 0.70rem;
+    color: var(--gray-400);
+    font-family: 'DM Mono', monospace;
+}
+
+.date-nav-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--gray-200);
+    border-radius: 50%;
+    background: var(--gray-50);
+    color: var(--gray-600);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.date-nav-btn:hover:not(:disabled) {
+    background: var(--green-pale);
+    border-color: var(--green-light);
+    color: var(--green);
+}
+
+.date-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.date-nav-refresh {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gray-400);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-nav-refresh:hover { color: var(--green); transform: rotate(30deg); }
+
+.date-nav-refresh.spinning {
+    animation: spin-once 0.6s linear forwards;
+}
+
+@keyframes spin-once {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+
+/* ── Skeleton Loader ─────────────────────────────────────────────────────── */
+.history-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 0;
+}
+
+.skeleton-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    border: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sk {
+    background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+}
+
+.sk-title  { height: 14px; width: 55%; }
+.sk-bar    { height: 10px; width: 100%; }
+.sk-bar-short { width: 72%; }
+
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+
+/* ── Recs Section Label ──────────────────────────────────────────────────── */
+.recs-section-label {
+    font-size: 0.70rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--gray-400);
+    padding: 0 2px 8px;
+    display: block;
+}
+
+
+/* ── Rec Card — Base ─────────────────────────────────────────────────────── */
+.rec-card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    border-left: 4px solid var(--gray-200);
+    position: relative;
+    overflow: hidden;
+}
+
+.rec-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    border-radius: 0 0 0 60px;
+    opacity: 0.06;
+}
+
+/* ── Rec Card — Type Accents ─────────────────────────────────────────────── */
+.rec-activity {
+    border-left-color: #e8622a;
+    background: linear-gradient(135deg, #fff 0%, #fff8f5 100%);
+}
+.rec-activity::before { background: #e8622a; }
+
+.rec-timing {
+    border-left-color: #2563eb;
+    background: linear-gradient(135deg, #fff 0%, #f0f6ff 100%);
+}
+.rec-timing::before { background: #2563eb; }
+
+.rec-meal-timing {
+    border-left-color: var(--green-mid);
+    background: linear-gradient(135deg, #fff 0%, #f0faf4 100%);
+}
+.rec-meal-timing::before { background: var(--green-mid); }
+
+.rec-nutrient {
+    border-left-color: #7c3aed;
+    background: linear-gradient(135deg, #fff 0%, #f8f4ff 100%);
+}
+.rec-nutrient::before { background: #7c3aed; }
+
+.rec-reminder {
+    border-left-color: var(--gray-400);
+    background: var(--gray-50);
+}
+
+/* Priority overrides for high-urgency cards */
+.rec-priority-high.rec-nutrient,
+.rec-priority-high.rec-activity {
+    box-shadow: 0 2px 12px rgba(220,38,38,0.12);
+}
+
+
+/* ── Rec Header ──────────────────────────────────────────────────────────── */
+.rec-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.rec-emoji {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    line-height: 1.3;
+}
+
+.rec-header-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rec-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--gray-900);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+.rec-badge {
+    font-size: 0.60rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-400);
+}
+
+/* Priority dot */
+.rec-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+}
+.dot-high    { background: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
+.dot-medium  { background: #e8622a; box-shadow: 0 0 0 3px rgba(232,98,42,0.15); }
+.dot-caution { background: #ca8a04; box-shadow: 0 0 0 3px rgba(202,138,4,0.15); }
+.dot-low     { background: var(--green-light); }
+
+
+/* ── Rec Message ─────────────────────────────────────────────────────────── */
+.rec-message {
+    font-size: 0.82rem;
+    color: var(--gray-600);
+    line-height: 1.65;
+    margin-bottom: 10px;
+}
+
+
+/* ── Rec Actions (bullet list) ───────────────────────────────────────────── */
+.rec-actions {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.03);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.rec-actions li {
+    font-size: 0.80rem;
+    color: var(--gray-600);
+    line-height: 1.5;
+    padding-left: 2px;
+}
+
+
+/* ── Rec Options (numbered dinner choices) ───────────────────────────────── */
+.rec-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.rec-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+    transition: border-color 0.15s;
+}
+
+.rec-option:hover {
+    border-color: var(--green-light);
+    background: var(--green-pale);
+}
+
+.rec-option-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--green);
+    color: var(--white);
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-family: 'DM Mono', monospace;
+}
+
+.rec-option-text {
+    font-size: 0.80rem;
+    color: var(--gray-700);
+    line-height: 1.5;
+}
+
+
+/* ── History meta row (date + meal category pill) ────────────────────────── */
+.history-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.history-cat-pill {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--green-pale);
+    color: var(--green);
+    border: 1px solid rgba(26,107,60,0.15);
+}
+/* ── Collapsible Rec Cards ───────────────────────────────────────────────── */
+.rec-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+    opacity: 0;
+}
+
+.rec-card.rec-open .rec-body {
+    max-height: 600px;
+    opacity: 1;
+}
+
+.rec-toggle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--gray-200);
+    background: var(--gray-50);
+    color: var(--gray-400);
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Mono', monospace;
+    margin-top: 3px;
+    user-select: none;
+}
+
+.rec-card.rec-open .rec-toggle {
+    background: var(--green-pale);
+    border-color: var(--green-light);
+    color: var(--green);
+}
+.remove-food-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.add-food-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px;
+}
+.add-food-row input { flex: 1; padding: 8px; }
+.add-food-btn {
+    background: #2d8f58;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.confirm-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    margin: 16px 0;
+}
+
+.confirm-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;           /* perfectly round */
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    gap: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.confirm-btn:active {
+    transform: scale(0.92);       /* satisfying press feedback */
+    opacity: 0.85;
+}
+
+.confirm-icon {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.confirm-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.confirm-reject {
+    background: #ef4444;
+    color: white;
+}
+
+.confirm-accept {
+    background: #22c55e;
+    color: white;
+}
+
+
+
+.voice-or-type {
+    margin: 16px 0;
+}
+
+.voice-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+    color: var(--gray-400, #9ca3af);
+    font-size: 0.8rem;
+}
+
+.voice-divider::before,
+.voice-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gray-600, #4b5563);
+}
+
+.type-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.manual-text-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--gray-600, #4b5563);
+    background: var(--gray-800, #1f2937);
+    color: white;
+    font-size: 0.9rem;
+}
+
+.manual-text-input:focus {
+    outline: none;
+    border-color: #22c55e;
+}
+
+.type-submit-btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: #22c55e;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 700;
+}

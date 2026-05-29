@@ -9,11 +9,19 @@ import json
 import math
 from io import BytesIO
 from base64 import b64decode, b64encode
-from datetime import datetime
+from datetime import datetime,timezone
+from zoneinfo import ZoneInfo  # Python 3.9+
 import requests
 import sqlite3
 from flask import Flask, render_template, request, jsonify, g
 from dotenv import load_dotenv
+
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+TOKEN_FILE = os.path.join(os.path.dirname(__file__), 'google_token.json')
 
 try:
     from PIL import Image
@@ -30,6 +38,9 @@ AI_PROVIDER = os.getenv("AI_PROVIDER", "claude").lower()
 print("DEBUG: GEMINI_API_KEY:", "YES" if GEMINI_API_KEY else "NO")
 print("DEBUG: CLAUDE_API_KEY:", "YES" if CLAUDE_API_KEY else "NO")
 print("DEBUG: AI_PROVIDER:", AI_PROVIDER)
+
+# At top of file, after your imports:
+GOOGLE_FIT_AVAILABLE = True  # since you import directly at top
 
 app = Flask(__name__)
 
@@ -72,6 +83,36 @@ def load_embeddings_into_cache():
     except Exception as e:
         print(f"WARNING: Could not warm embedding cache: {e}")
 
+
+
+# ── Daily nutrition targets (add near top of file) ───
+DAILY_TARGETS = {
+    "calories":    2000,   # kcal
+    "protein":       50,   # g
+    "carbs":        275,   # g
+    "fat":           78,   # g
+    "fibre":         30,   # g
+    "sodium":      2300,   # mg
+    "calcium":     1000,   # mg
+    "iron":          18,   # mg
+    "potassium":   3500,   # mg
+    "vitamin_c":     90,   # mg
+    "cholesterol":  300,   # mg
+}
+# ─── timezone aware function ─────────────────────────────────────────
+
+def get_local_now():
+    """Returns current time in Australian Eastern time"""
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo("Australia/Melbourne")
+        return datetime.now(tz)
+    except Exception:
+        # Fallback if zoneinfo not available
+        return datetime.now()
+
+def get_local_timestamp():
+    return get_local_now().strftime("%Y-%m-%d %H:%M")
 
 # ─── Logging ─────────────────────────────────────────
 def request_log(msg):
@@ -722,7 +763,7 @@ def analyze_v1():
             "overall_gut_notes": ai_result.get('overall_gut_notes', ''),
             "foods": foods,
             "total_calories": total_calories,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "timestamp": get_local_timestamp(),
             "debug_log": g.request_log
         }
 
@@ -731,6 +772,24 @@ def analyze_v1():
     except Exception as e:
         return jsonify({"error": f"Server processing breakdown: {str(e)}"}), 500
 
+def save_meal_log(meal_data):
+    log_file = 'meals_log.json'
+    log = []
+    if os.path.exists(log_file):
+        with open('meals_log.json', 'r') as f:
+            log = json.load(f)
+
+    # Fix timezone here too
+    timestamp = meal_data.get('timestamp', get_local_timestamp())
+    meal_data['meal_category'] = get_meal_category(timestamp)
+    meal_data['date'] = timestamp[:10]
+
+    log.append(meal_data)
+    with open(log_file, 'w') as f:
+        json.dump(log, f, indent=2)
+
+
+        
 @app.route('/analyze-voice', methods=['POST'])
 def analyze_voice():
     try:
@@ -759,7 +818,7 @@ def analyze_voice():
             "overall_gut_notes": ai_result.get('overall_gut_notes', ''),
             "foods": foods,
             "total_calories": total_calories,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "timestamp": get_local_timestamp(),
             "debug_log": g.request_log
         }
 
@@ -768,14 +827,49 @@ def analyze_voice():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# @app.route('/recalculate', methods=['POST'])
+# def recalculate():
+#     try:
+#         data = request.get_json() or {}
+#         foods = data.get('foods', [])
+#         provider = data.get('provider', AI_PROVIDER).lower()
+
+#         recalculated = []
+#         for item in foods:
+#             name = str(item.get('name', '') or '').strip()
+#             try:
+#                 grams = float(item.get('grams', 0) or 0)
+#             except Exception:
+#                 grams = 100
+
+#             afcd_key, afcd_score = search_afcd_by_embedding(name, threshold=0.82)
+#             afcd_data = get_nutrition_by_key(afcd_key) if afcd_key else None
+
+#             fake_food = {
+#                 "name": name,
+#                 "confidence": item.get('confidence', 'medium'),
+#                 "cooking_method": item.get('cooking_method', ''),
+#                 "category": item.get('category', ''),
+#                 "nutrition_per_100g": None,
+#                 "gut_microbiome": item.get('gut_microbiome', {})
+#             }
+#             entry = build_food_entry(fake_food, grams, provider, afcd_data, afcd_score)
+#             recalculated.append(entry)
+
+#         return jsonify({'foods': recalculated})
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
 @app.route('/recalculate', methods=['POST'])
 def recalculate():
     try:
         data = request.get_json() or {}
         foods = data.get('foods', [])
-        provider = data.get('provider', AI_PROVIDER).lower()
+        if not isinstance(foods, list):
+            return jsonify({'error': 'Invalid payload'}), 400
 
         recalculated = []
+
         for item in foods:
             name = str(item.get('name', '') or '').strip()
             try:
@@ -783,9 +877,26 @@ def recalculate():
             except Exception:
                 grams = 100
 
-            afcd_key, afcd_score = search_afcd_by_embedding(name, threshold=0.82)
-            afcd_data = get_nutrition_by_key(afcd_key) if afcd_key else None
+            afcd_data = None
+            afcd_score = 0.0
 
+            if name:
+                fast_mode = os.getenv("FAST_MODE", "false").lower() == "true"
+
+                if not fast_mode and AFCD_EMBEDDING_CACHE:
+                    # ── Use your existing vector cache ──
+                    afcd_key, afcd_score = search_afcd_by_embedding(
+                        name, threshold=0.75  # slightly lower for manual entry
+                    )
+                    afcd_data = get_nutrition_by_key(afcd_key) if afcd_key else None
+
+                # ── Fallback: direct SQLite fuzzy search ──
+                if not afcd_data:
+                    afcd_data = fuzzy_search_sqlite(name)
+                    if afcd_data:
+                        afcd_score = 0.70  # reasonable confidence for fuzzy match
+
+            # Build fake food structure matching what build_food_entry expects
             fake_food = {
                 "name": name,
                 "confidence": item.get('confidence', 'medium'),
@@ -794,12 +905,102 @@ def recalculate():
                 "nutrition_per_100g": None,
                 "gut_microbiome": item.get('gut_microbiome', {})
             }
-            entry = build_food_entry(fake_food, grams, provider, afcd_data, afcd_score)
+
+            entry = build_food_entry(
+                fake_food, grams, AI_PROVIDER, afcd_data, afcd_score
+            )
+
+            # Add per100 for JS calculateRowNutrition compatibility
+            if afcd_data:
+                entry['per100'] = {
+                    'energy_kcal':   afcd_data.get('energy_kcal', 0),
+                    'protein':       afcd_data.get('protein', 0),
+                    'fat':           afcd_data.get('fat', 0),
+                    'carbohydrates': afcd_data.get('carbohydrates', 0),
+                    'fibre':         afcd_data.get('fibre', 0),
+                    'sugars':        afcd_data.get('sugars', 0),
+                    'sodium':        afcd_data.get('sodium', 0),
+                    'calcium':       afcd_data.get('calcium', 0),
+                    'iron':          afcd_data.get('iron', 0),
+                    'magnesium':     afcd_data.get('magnesium', 0),
+                    'potassium':     afcd_data.get('potassium', 0),
+                    'zinc':          afcd_data.get('zinc', 0),
+                    'vitamin_a':     afcd_data.get('vitamin_a', 0),
+                    'vitamin_c':     afcd_data.get('vitamin_c', 0),
+                    'vitamin_d':     afcd_data.get('vitamin_d', 0),
+                    'vitamin_e':     afcd_data.get('vitamin_e', 0),
+                    'cholesterol':   afcd_data.get('cholesterol', 0),
+                }
+
             recalculated.append(entry)
 
         return jsonify({'foods': recalculated})
+
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
+
+def fuzzy_search_sqlite(food_name):
+    """
+    Direct SQLite fuzzy search — fallback when embedding cache misses.
+    Handles plurals, partial matches, and word-by-word search.
+    No external API calls needed.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    normalized = food_name.lower().strip()
+
+    # Build words list — also try stemmed versions (eggs→egg)
+    raw_words = normalized.split()
+    stemmed_words = []
+    for w in raw_words:
+        stemmed_words.append(w)
+        if w.endswith('es') and len(w) > 4:
+            stemmed_words.append(w[:-2])   # tomatoes → tomat
+        elif w.endswith('s') and len(w) > 3:
+            stemmed_words.append(w[:-1])   # eggs → egg ✅
+
+    # Remove duplicates while preserving order
+    seen = set()
+    all_words = []
+    for w in stemmed_words:
+        if w not in seen and len(w) > 2:
+            seen.add(w)
+            all_words.append(w)
+
+    result = None
+
+    # Step 1 — exact phrase match
+    cursor.execute(
+        NUTRITION_SELECT + " WHERE LOWER(food_name) LIKE ? ORDER BY LENGTH(food_name) ASC LIMIT 1",
+        (f'%{normalized}%',)
+    )
+    result = cursor.fetchone()
+
+    # Step 2 — all words present
+    if not result and len(all_words) > 1:
+        clause = ' AND '.join(['LOWER(food_name) LIKE ?'] * len(all_words))
+        params = [f'%{w}%' for w in all_words]
+        cursor.execute(
+            NUTRITION_SELECT + f" WHERE {clause} ORDER BY LENGTH(food_name) ASC LIMIT 1",
+            params
+        )
+        result = cursor.fetchone()
+
+    # Step 3 — any single word match (including stemmed)
+    if not result:
+        for word in all_words:
+            cursor.execute(
+                NUTRITION_SELECT + " WHERE LOWER(food_name) LIKE ? ORDER BY LENGTH(food_name) ASC LIMIT 1",
+                (f'%{word}%',)
+            )
+            result = cursor.fetchone()
+            if result:
+                break
+
+    conn.close()
+    return dict(result) if result else None
 
 @app.route('/history', methods=['GET'])
 def history():
@@ -812,20 +1013,1668 @@ def history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# def save_meal_log(meal_data):
+#     log_file = 'meals_log.json'
+#     log = []
+#     try:
+#         if os.path.exists(log_file):
+#             with open(log_file, 'r') as f:
+#                 log = json.load(f)
+#         log.append(meal_data)
+#         with open(log_file, 'w') as f:
+#             json.dump(log, f, indent=2)
+#     except Exception as e:
+#         print(f"Failed to save meal log: {e}")
+
+# ─── ADD THESE TO app.py ─────────────────────────────
+# 
+# 1. Replace save_meal_log with this version
+# 2. Add the new routes below
+# 3. Add DAILY_TARGETS constant near top of file
+
+
+
+# ── Meal time categorization ──────────────────────────
+def get_meal_category(timestamp_str):
+    """
+    Auto-assign meal category based on time of day
+    Breakfast:  05:00 - 10:59
+    Morning Snack: 11:00 - 11:59
+    Lunch:      12:00 - 14:59
+    Afternoon Snack: 15:00 - 17:59
+    Dinner:     18:00 - 21:59
+    Late Snack: 22:00 - 04:59
+    """
+    try:
+        dt = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M")
+        hour = dt.hour
+        if   5  <= hour <= 10: return "Breakfast"
+        elif 11 <= hour <= 11: return "Morning Snack"
+        elif 12 <= hour <= 14: return "Lunch"
+        elif 15 <= hour <= 17: return "Afternoon Snack"
+        elif 18 <= hour <= 21: return "Dinner"
+        else:                  return "Late Snack"
+    except Exception:
+        return "Meal"
+
+# ── Replace existing save_meal_log with this ─────────
 def save_meal_log(meal_data):
     log_file = 'meals_log.json'
     log = []
+    if os.path.exists(log_file):
+        with open('meals_log.json', 'r') as f:
+            log = json.load(f)
+
+    # Auto-assign meal category based on time
+    timestamp = meal_data.get('timestamp', datetime.now().strftime("%Y-%m-%d %H:%M"))
+    meal_data['meal_category'] = get_meal_category(timestamp)
+    meal_data['date'] = timestamp[:10]  # YYYY-MM-DD
+
+    log.append(meal_data)
+    with open(log_file, 'w') as f:
+        json.dump(log, f, indent=2)
+
+# ── Add these new routes to app.py ───────────────────
+
+@app.route('/history/daily', methods=['GET'])
+def history_daily():
+    """
+    Return today's meals grouped by meal category with nutrition gaps.
+    Query param: ?date=YYYY-MM-DD (defaults to today)
+    """
     try:
-        if os.path.exists(log_file):
-            with open(log_file, 'r') as f:
-                log = json.load(f)
-        log.append(meal_data)
-        with open(log_file, 'w') as f:
-            json.dump(log, f, indent=2)
+        target_date = request.args.get('date', get_local_now().strftime("%Y-%m-%d"))
+
+        if not os.path.exists('meals_log.json'):
+            return jsonify(build_empty_daily(target_date))
+
+        with open('meals_log.json', 'r') as f:
+            log = json.load(f)
+
+        # Filter to target date
+        day_meals = [m for m in log if m.get('date') == target_date or
+                     (m.get('timestamp', '').startswith(target_date))]
+
+        # Backfill category for old entries without it
+        for m in day_meals:
+            if 'meal_category' not in m:
+                m['meal_category'] = get_meal_category(m.get('timestamp', ''))
+            if 'date' not in m:
+                m['date'] = m.get('timestamp', '')[:10]
+
+        # Group by category in timeline order
+        timeline_order = [
+            "Breakfast",
+            "Morning Snack",
+            "Lunch",
+            "Afternoon Snack",
+            "Dinner",
+            "Late Snack"
+        ]
+
+        grouped = {cat: [] for cat in timeline_order}
+        for meal in day_meals:
+            cat = meal.get('meal_category', 'Meal')
+            if cat not in grouped:
+                grouped[cat] = []
+            grouped[cat].append(meal)
+
+        # Calculate totals per category and overall
+        daily_totals = {k: 0.0 for k in DAILY_TARGETS}
+        timeline = []
+
+        for cat in timeline_order:
+            meals = grouped[cat]
+            if not meals:
+                continue
+
+            cat_totals = {k: 0.0 for k in DAILY_TARGETS}
+            for meal in meals:
+                for food in meal.get('foods', []):
+                    cat_totals['calories']    += food.get('calories', 0) or 0
+                    cat_totals['protein']     += food.get('protein', 0) or 0
+                    cat_totals['carbs']       += food.get('carbs', food.get('carbohydrates', 0)) or 0
+                    cat_totals['fat']         += food.get('fat', 0) or 0
+                    cat_totals['fibre']       += food.get('fibre', 0) or 0
+                    cat_totals['sodium']      += food.get('sodium', 0) or 0
+                    cat_totals['calcium']     += food.get('calcium', 0) or 0
+                    cat_totals['iron']        += food.get('iron', 0) or 0
+                    cat_totals['potassium']   += food.get('potassium', 0) or 0
+                    cat_totals['vitamin_c']   += food.get('vitamin_c', 0) or 0
+                    cat_totals['cholesterol'] += food.get('cholesterol', 0) or 0
+
+            for k in daily_totals:
+                daily_totals[k] += cat_totals[k]
+
+            timeline.append({
+                "category":   cat,
+                "meals":      meals,
+                "totals":     {k: round(v, 1) for k, v in cat_totals.items()},
+                "meal_count": len(meals)
+            })
+
+        # Calculate nutrition gaps
+        gaps = calculate_nutrition_gaps(daily_totals)
+
+        return jsonify({
+            "date":          target_date,
+            "timeline":      timeline,
+            "daily_totals":  {k: round(v, 1) for k, v in daily_totals.items()},
+            "daily_targets": DAILY_TARGETS,
+            "gaps":          gaps,
+            "meal_count":    len(day_meals)
+        })
+
     except Exception as e:
-        print(f"Failed to save meal log: {e}")
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+
+def calculate_nutrition_gaps(totals):
+    """
+    Calculate deficiencies and generate actionable alerts.
+    Returns list of gap alerts sorted by severity.
+    """
+    alerts = []
+
+    checks = [
+        {
+            "key":      "calories",
+            "label":    "Calories",
+            "unit":     "kcal",
+            "target":   DAILY_TARGETS["calories"],
+            "low_msg":  "You're under your calorie goal. Consider a nutritious snack.",
+            "high_msg": "You've exceeded your daily calorie target.",
+            "low_pct":  0.75,   # alert if below 75% of target
+            "high_pct": 1.10,   # alert if above 110% of target
+        },
+        {
+            "key":      "protein",
+            "label":    "Protein",
+            "unit":     "g",
+            "target":   DAILY_TARGETS["protein"],
+            "low_msg":  "Protein intake is low. Add chicken, fish, eggs, legumes or dairy.",
+            "high_msg": "Protein intake is above target — check if intentional.",
+            "low_pct":  0.70,
+            "high_pct": 2.00,
+        },
+        {
+            "key":      "fibre",
+            "label":    "Fibre",
+            "unit":     "g",
+            "target":   DAILY_TARGETS["fibre"],
+            "low_msg":  "Low fibre today. Add vegetables, wholegrains, legumes or fruit.",
+            "high_msg": None,
+            "low_pct":  0.60,
+            "high_pct": 99,
+        },
+        {
+            "key":      "calcium",
+            "label":    "Calcium",
+            "unit":     "mg",
+            "target":   DAILY_TARGETS["calcium"],
+            "low_msg":  "Calcium is low. Include dairy, leafy greens or fortified foods.",
+            "high_msg": None,
+            "low_pct":  0.50,
+            "high_pct": 99,
+        },
+        {
+            "key":      "iron",
+            "label":    "Iron",
+            "unit":     "mg",
+            "target":   DAILY_TARGETS["iron"],
+            "low_msg":  "Iron intake is low. Include red meat, legumes, spinach or fortified cereals.",
+            "high_msg": None,
+            "low_pct":  0.50,
+            "high_pct": 99,
+        },
+        {
+            "key":      "vitamin_c",
+            "label":    "Vitamin C",
+            "unit":     "mg",
+            "target":   DAILY_TARGETS["vitamin_c"],
+            "low_msg":  "Vitamin C is low. Add citrus fruit, capsicum, broccoli or kiwi.",
+            "high_msg": None,
+            "low_pct":  0.50,
+            "high_pct": 99,
+        },
+        {
+            "key":      "sodium",
+            "label":    "Sodium",
+            "unit":     "mg",
+            "target":   DAILY_TARGETS["sodium"],
+            "low_msg":  None,
+            "high_msg": "Sodium is high. Reduce processed foods, sauces and added salt.",
+            "low_pct":  0,
+            "high_pct": 1.00,
+        },
+        {
+            "key":      "cholesterol",
+            "label":    "Cholesterol",
+            "unit":     "mg",
+            "target":   DAILY_TARGETS["cholesterol"],
+            "low_msg":  None,
+            "high_msg": "Cholesterol is above recommended limit. Limit egg yolks, organ meats and saturated fats.",
+            "low_pct":  0,
+            "high_pct": 1.00,
+        },
+    ]
+
+    for c in checks:
+        consumed = totals.get(c["key"], 0) or 0
+        target   = c["target"]
+        pct      = consumed / target if target else 0
+        gap      = target - consumed  # positive = deficit, negative = excess
+
+        if consumed == 0:
+            # No data recorded — only flag if past breakfast time
+            hour = datetime.now().hour
+            if hour >= 12 and c["key"] in ("calories", "protein", "fibre"):
+                alerts.append({
+                    "key":      c["key"],
+                    "label":    c["label"],
+                    "severity": "warning",
+                    "consumed": 0,
+                    "target":   target,
+                    "gap":      target,
+                    "unit":     c["unit"],
+                    "pct":      0,
+                    "message":  f"No {c['label'].lower()} recorded yet today.",
+                    "type":     "missing"
+                })
+            continue
+
+        if pct < c["low_pct"] and c["low_msg"]:
+            severity = "high" if pct < c["low_pct"] * 0.6 else "medium"
+            alerts.append({
+                "key":      c["key"],
+                "label":    c["label"],
+                "severity": severity,
+                "consumed": round(consumed, 1),
+                "target":   target,
+                "gap":      round(gap, 1),
+                "unit":     c["unit"],
+                "pct":      round(pct * 100, 0),
+                "message":  c["low_msg"],
+                "type":     "deficient"
+            })
+
+        elif pct > c["high_pct"] and c["high_msg"]:
+            alerts.append({
+                "key":      c["key"],
+                "label":    c["label"],
+                "severity": "caution",
+                "consumed": round(consumed, 1),
+                "target":   target,
+                "gap":      round(gap, 1),
+                "unit":     c["unit"],
+                "pct":      round(pct * 100, 0),
+                "message":  c["high_msg"],
+                "type":     "excess"
+            })
+        else:
+            # On track
+            alerts.append({
+                "key":      c["key"],
+                "label":    c["label"],
+                "severity": "good",
+                "consumed": round(consumed, 1),
+                "target":   target,
+                "gap":      round(gap, 1),
+                "unit":     c["unit"],
+                "pct":      round(pct * 100, 0),
+                "message":  f"{c['label']} is on track.",
+                "type":     "ok"
+            })
+
+    # Sort: high severity first, then medium, then caution, then good
+    order = {"high": 0, "medium": 1, "warning": 2, "caution": 3, "good": 4}
+    alerts.sort(key=lambda a: order.get(a["severity"], 5))
+
+    return alerts
+
+
+def build_empty_daily(target_date):
+    return {
+        "date":          target_date,
+        "timeline":      [],
+        "daily_totals":  {k: 0 for k in DAILY_TARGETS},
+        "daily_targets": DAILY_TARGETS,
+        "gaps":          [],
+        "meal_count":    0
+    }
+
+
+#####################################################################################
+
+# Add this global list near the top of your Flask file to hold records temporarily
+stored_health_data = []
+
+@app.route('/api/health-sync', methods=['POST'])
+def receive_health_data():
+    if not request.is_json:
+        return jsonify({"error": "Content-Type must be application/json"}), 400
+    
+    data = request.get_json()
+    print(data)
+    
+    # Save the incoming record to our memory storage
+    stored_health_data.append(data)
+    
+    # Keep only the last 20 entries so memory doesn't bloat
+    if len(stored_health_data) > 20:
+        stored_health_data.pop(0)
+        
+    return jsonify({"status": "success", "message": "Data saved"}), 200
+
+# NEW ROUTE: Fetch the data from your terminal
+@app.route('/api/get-health', methods=['GET'])
+def get_health_data():
+    return jsonify(stored_health_data), 200
+#####################################################################################
+
+try:
+    from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials
+    from googleapiclient.discovery import build
+    GOOGLE_FIT_AVAILABLE = True
+except ImportError:
+    GOOGLE_FIT_AVAILABLE = False
+    print("WARNING: Google Fit libraries not installed. Run: pip install google-auth google-api-python-client")
+
+SCOPES = ['https://www.googleapis.com/auth/fitness.activity.read']
+
+
+def get_fitness_data_retire():
+    if not GOOGLE_FIT_AVAILABLE:
+        return {"available": False, "error": "Google Fit libraries not installed"}
+
+    try:
+        creds, error = get_google_credentials()
+        if error:
+            return {"available": False, "error": error}
+
+        # Setup the Google Fit API service
+        service  = build('fitness', 'v1', credentials=creds)
+        now      = datetime.now(timezone.utc)
+        start    = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_ms = int(start.timestamp() * 1000)
+        end_ms   = int(now.timestamp() * 1000)
+
+        # FIXED: Requesting only the working Steps and Active Calorie streams
+        response = service.users().dataset().aggregate(
+            userId='me',
+            body={
+                "aggregateBy": [
+                    {"dataTypeName": "com.google.step_count.delta"},
+                    {"dataTypeName": "com.google.calories.expended"}
+                ],
+                "bucketByTime": {"durationMillis": max(1, end_ms - start_ms)},
+                "startTimeMillis": start_ms,
+                "endTimeMillis":   end_ms
+            }
+        ).execute()
+
+        steps     = 0
+        total_cal = 0.0
+
+        buckets = response.get('bucket', [])
+        if buckets:
+            datasets = buckets[0].get('dataset', [])
+            
+            # Extract steps safely
+            if len(datasets) > 0:
+                pts = datasets[0].get('point', [])
+                if pts:
+                    steps = pts[-1]['value'][0].get('intVal', 0)
+                    
+            # Extract active calories expended safely
+            if len(datasets) > 1:
+                pts = datasets[1].get('point', [])
+                if pts:
+                    total_cal = pts[-1]['value'][0].get('fpVal', 0.0)
+
+        # Programmatic BMR fallback (Calculates ~1700 kcal baseline split across the day)
+        current_hour = max(1, now.hour)
+        estimated_bmr_so_far = round((1700 / 24) * current_hour, 1)
+
+        active_cal = round(total_cal, 1)
+        display_total_cal = round(estimated_bmr_so_far + active_cal, 1)
+
+        print(f"Fitness Sync: steps={steps}, active_burn={active_cal}, est_bmr={estimated_bmr_so_far}")
+
+        # Assuming you have a helper function to categorize activity levels
+        activity = classify_activity(steps, active_cal, now.hour)
+
+        return {
+            "available":       True,
+            "steps":           steps,
+            "calories_total":  display_total_cal, 
+            "calories_bmr":    estimated_bmr_so_far,
+            "calories_burned": active_cal,          
+            "activity_level":  activity["level"],
+            "activity_label":  activity["label"],
+            "activity_emoji":  activity["emoji"],
+            "timestamp":       now.strftime("%H:%M"),
+        }
+
+    except Exception as e:
+        print(f"Fitness pipeline failure: {e}")
+        return {"available": False, "error": str(e)}
+
+
+
+def classify_activity_retire(steps, cal_burn, hour):
+    """Classify activity level based on steps and calories burned so far today"""
+    # Extrapolate to full day if it's not end of day
+    if hour < 20:
+        projected_steps = int(steps * (24 / max(hour, 1)))
+    else:
+        projected_steps = steps
+
+    if projected_steps >= 15000 or cal_burn >= 600:
+        return {"level": "intense",   "label": "Very Active Day",  "emoji": "🔥"}
+    elif projected_steps >= 10000 or cal_burn >= 400:
+        return {"level": "active",    "label": "Active Day",       "emoji": "⚡"}
+    elif projected_steps >= 6000 or cal_burn >= 250:
+        return {"level": "moderate",  "label": "Moderate Activity","emoji": "🚶"}
+    elif projected_steps >= 3000 or cal_burn >= 100:
+        return {"level": "light",     "label": "Light Activity",   "emoji": "😊"}
+    else:
+        return {"level": "sedentary", "label": "Sedentary Day",    "emoji": "💺"}
+
+
+def get_fitness_data():
+    if not GOOGLE_FIT_AVAILABLE:
+        return {"available": False, "error": "Google Fit libraries not installed"}
+
+    try:
+        creds, error = get_google_credentials()
+        if error:
+            return {"available": False, "error": error}
+
+        # Setup the Google Fit API service
+        service  = build('fitness', 'v1', credentials=creds)
+        now      = datetime.now(timezone.utc)
+        start    = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_ms = int(start.timestamp() * 1000)
+        end_ms   = int(now.timestamp() * 1000)
+
+        # Requesting Steps and Total Expended Calories (which includes native BMR)
+        response = service.users().dataset().aggregate(
+            userId='me',
+            body={
+                "aggregateBy": [
+                    {"dataTypeName": "com.google.step_count.delta"},
+                    {"dataTypeName": "com.google.calories.expended"}
+                ],
+                "bucketByTime": {"durationMillis": max(1, end_ms - start_ms)},
+                "startTimeMillis": start_ms,
+                "endTimeMillis":   end_ms
+            }
+        ).execute()
+
+        steps     = 0
+        total_cal = 0.0
+
+        buckets = response.get('bucket', [])
+        if buckets:
+            datasets = buckets[0].get('dataset', [])
+            
+            # Extract steps safely
+            if len(datasets) > 0:
+                pts = datasets[0].get('point', [])
+                if pts:
+                    steps = pts[-1]['value'][0].get('intVal', 0)
+                    
+            # Extract total calories expended safely
+            if len(datasets) > 1:
+                pts = datasets[1].get('point', [])
+                if pts:
+                    total_cal = pts[-1]['value'][0].get('fpVal', 0.0)
+
+        # ── MATHEMATICAL CORRECTION BLOCK ───────────────────────────────
+        # 1. Calculate background resting BMR split across the day (assuming 1700 baseline)
+        current_hour = max(1, now.hour)
+        estimated_bmr_so_far = round((1700 / 24) * current_hour, 1)
+
+        google_raw_total = round(total_cal, 1)
+
+        # 2. Prevent conversion distortion from Android background cloud sync lag
+        if google_raw_total > estimated_bmr_so_far:
+            # Server is completely synced up. Extract true active movement burn.
+            active_cal = round(google_raw_total - estimated_bmr_so_far, 1)
+            display_total_cal = google_raw_total
+        else:
+            # Server is lagging/empty. Derive realistic active calorie burn from step count.
+            # Standard physiological baseline: ~0.04 kcal burned per step
+            active_cal = round(steps * 0.04, 1)
+            display_total_cal = round(estimated_bmr_so_far + active_cal, 1)
+
+        print(f"Fitness Sync Cleaned: steps={steps}, active_burn={active_cal}, est_bmr={estimated_bmr_so_far}")
+
+        # Classify using the newly corrected active calorie metric
+        activity = classify_activity(steps, active_cal, now.hour)
+
+        return {
+            "available":       True,
+            "steps":           steps,
+            "calories_total":  display_total_cal, 
+            "calories_bmr":    estimated_bmr_so_far,
+            "calories_burned": active_cal,          
+            "activity_level":  activity["level"],
+            "activity_label":  activity["label"],
+            "activity_emoji":  activity["emoji"],
+            "timestamp":       now.strftime("%H:%M"),
+        }
+
+    except Exception as e:
+        print(f"Fitness pipeline failure: {e}")
+        return {"available": False, "error": str(e)}
+
+
+def classify_activity(steps, cal_burn, hour):
+    """Classify activity level based on steps and active calories burned so far today"""
+    # Extrapolate to full day if checked early to prevent false 'sedentary' classifications
+    if hour < 20:
+        projected_steps = int(steps * (24 / max(hour, 1)))
+    else:
+        projected_steps = steps
+
+    # FIXED: Scale boundaries down to isolate active movement metrics explicitly
+    if projected_steps >= 12000 or cal_burn >= 500:
+        return {"level": "intense", "label": "Very Active Day", "emoji": "🔥"}
+    elif projected_steps >= 8000 or cal_burn >= 300:
+        return {"level": "active", "label": "Active Day", "emoji": "⚡"}
+    elif projected_steps >= 5000 or cal_burn >= 150:
+        return {"level": "moderate", "label": "Moderate Activity", "emoji": "🚶"}
+    elif projected_steps >= 2000 or cal_burn >= 50:
+        return {"level": "light", "label": "Light Activity", "emoji": "😊"}
+    else:
+        return {"level": "sedentary", "label": "Sedentary Day", "emoji": "💺"}
+        
+
+# # ── Smart nutrition recommendations ──────────────────
+# def get_smart_recommendations(fitness_data, daily_totals, daily_targets, timeline):
+#     """
+#     Generate personalized recommendations based on:
+#     - Calories burned (Google Fit)
+#     - Calories consumed so far
+#     - Activity level
+#     - Time of day
+#     - Nutrition gaps
+#     """
+#     if not fitness_data.get("available"):
+#         return get_basic_recommendations(daily_totals, daily_targets, timeline)
+
+#     steps        = fitness_data.get("steps", 0)
+#     cal_burn     = fitness_data.get("calories_burned", 0)
+#     level        = fitness_data.get("activity_level", "sedentary")
+#     hour         = datetime.now().hour
+#     cal_consumed = daily_totals.get("calories", 0)
+
+#     # Base metabolic rate (BMR) estimate ~1600-2000 kcal
+#     # Total daily energy = BMR + activity calories
+#     base_target  = daily_targets.get("calories", 2000)
+#     total_target = base_target + cal_burn  # adjust target upward by calories burned
+#     cal_gap      = total_target - cal_consumed
+#     cal_gap      = round(cal_gap, 0)
+
+#     recs = []
+
+#     # ── Activity-based recommendations ───────────────
+#     if level == "intense":
+#         recs.append({
+#             "type":    "activity",
+#             "emoji":   "🔥",
+#             "title":   "Intense Day Detected!",
+#             "message": f"You've burned {cal_burn:.0f} extra calories today ({steps:,} steps). "
+#                        f"Your adjusted calorie target is {total_target:.0f} kcal. "
+#                        f"You still need {cal_gap:.0f} kcal — focus on protein-rich foods for recovery.",
+#             "actions": [
+#                 "🥩 Grilled chicken or fish (high protein recovery)",
+#                 "🥑 Add healthy fats — avocado, nuts or olive oil",
+#                 "🍚 Complex carbs — brown rice or sweet potato to replenish glycogen",
+#                 "💧 Rehydrate — aim for 2-3 more glasses of water"
+#             ],
+#             "priority": "high"
+#         })
+#     elif level == "active":
+#         recs.append({
+#             "type":    "activity",
+#             "emoji":   "⚡",
+#             "title":   "Active Day — Well Done!",
+#             "message": f"You've burned {cal_burn:.0f} calories ({steps:,} steps). "
+#                        f"Adjusted target: {total_target:.0f} kcal. "
+#                        f"Remaining: {cal_gap:.0f} kcal.",
+#             "actions": [
+#                 "🥗 Balanced dinner with protein, veg and wholegrains",
+#                 "🍌 A piece of fruit makes a great post-activity snack",
+#                 "💧 Keep hydrating"
+#             ],
+#             "priority": "medium"
+#         })
+#     elif level == "moderate":
+#         recs.append({
+#             "type":    "activity",
+#             "emoji":   "🚶",
+#             "title":   "Moderate Activity Today",
+#             "message": f"{steps:,} steps · {cal_burn:.0f} kcal burned. "
+#                        f"Remaining calories today: {cal_gap:.0f} kcal.",
+#             "actions": [
+#                 "🥦 Fill half your plate with vegetables at dinner",
+#                 "🍗 Lean protein portion the size of your palm"
+#             ],
+#             "priority": "low"
+#         })
+#     elif level == "sedentary":
+#         recs.append({
+#             "type":    "activity",
+#             "emoji":   "💺",
+#             "title":   "Low Activity Today",
+#             "message": f"Only {steps:,} steps so far. "
+#                        f"Consider a 20-minute walk after dinner — burns ~100 kcal and aids digestion.",
+#             "actions": [
+#                 "🚶 Take a 20-min walk after your next meal",
+#                 "🥗 Light dinner — salad with lean protein",
+#                 "❌ Avoid heavy carbs late in the evening"
+#             ],
+#             "priority": "medium"
+#         })
+
+#     # ── Time-based meal recommendations ──────────────
+#     if hour >= 16 and hour <= 19:
+#         # Pre-dinner window
+#         if cal_gap > 600:
+#             recs.append({
+#                 "type":    "meal_timing",
+#                 "emoji":   "🍽️",
+#                 "title":   "Dinner Recommendation",
+#                 "message": f"You have {cal_gap:.0f} kcal remaining. Based on your activity, "
+#                            f"here are 3 dinner options to optimize recovery:",
+#                 "actions": [
+#                     f"🥩 Option 1: Grilled salmon (150g) + roasted vegetables + brown rice (~550 kcal, 35g protein)",
+#                     f"🍗 Option 2: Chicken stir-fry with broccoli and noodles (~480 kcal, 40g protein)",
+#                     f"🌱 Option 3: Lentil curry with spinach and wholegrain bread (~420 kcal, 22g protein)"
+#                 ],
+#                 "priority": "high"
+#             })
+#         elif cal_gap < 200:
+#             recs.append({
+#                 "type":    "meal_timing",
+#                 "emoji":   "⚠️",
+#                 "title":   "Light Dinner Advised",
+#                 "message": f"You've consumed {cal_consumed:.0f} kcal and only have {cal_gap:.0f} kcal remaining. "
+#                            f"Keep dinner light tonight.",
+#                 "actions": [
+#                     "🥗 Large salad with grilled protein",
+#                     "🍲 Clear soup with vegetables",
+#                     "🚫 Skip the bread and dessert tonight"
+#                 ],
+#                 "priority": "medium"
+#             })
+
+#     elif hour >= 10 and hour <= 13:
+#         # Pre-lunch window
+#         if steps < 3000:
+#             recs.append({
+#                 "type":    "meal_timing",
+#                 "emoji":   "☀️",
+#                 "title":   "Lunch Suggestion",
+#                 "message": "Low morning activity. A light but protein-rich lunch will keep energy stable.",
+#                 "actions": [
+#                     "🥙 Wrap with lean protein and salad",
+#                     "🍜 Soup with lentils or chickpeas",
+#                     "☕ Avoid heavy carb-only meals — they'll cause afternoon energy crash"
+#                 ],
+#                 "priority": "low"
+#             })
+
+#     # ── Nutrient gap recommendations ─────────────────
+#     protein_consumed = daily_totals.get("protein", 0)
+#     protein_target   = daily_targets.get("protein", 50)
+#     if protein_consumed < protein_target * 0.6 and hour >= 14:
+#         recs.append({
+#             "type":    "nutrient",
+#             "emoji":   "💪",
+#             "title":   "Protein Deficit",
+#             "message": f"Only {protein_consumed:.0f}g protein so far (target: {protein_target}g). "
+#                        f"Especially important on an active day for muscle recovery.",
+#             "actions": [
+#                 "🥚 Add eggs, Greek yogurt or cottage cheese",
+#                 "🐟 Fish or chicken at your next meal",
+#                 "🥜 Handful of nuts or a protein-rich snack now"
+#             ],
+#             "priority": "high" if level in ("intense", "active") else "medium"
+#         })
+
+#     fibre_consumed = daily_totals.get("fibre", 0)
+#     if fibre_consumed < 15 and hour >= 16:
+#         recs.append({
+#             "type":    "nutrient",
+#             "emoji":   "🌿",
+#             "title":   "Low Fibre Today",
+#             "message": f"Only {fibre_consumed:.0f}g fibre (target: 30g). "
+#                        f"Low fibre affects gut health and satiety.",
+#             "actions": [
+#                 "🥦 Load up on vegetables at dinner",
+#                 "🍎 Eat a piece of fruit with skin",
+#                 "🌾 Choose wholegrain bread or brown rice"
+#             ],
+#             "priority": "medium"
+#         })
+
+#     # Sort by priority
+#     order = {"high": 0, "medium": 1, "low": 2}
+#     recs.sort(key=lambda r: order.get(r.get("priority", "low"), 2))
+
+#     return {
+#         "available":      True,
+#         "cal_burned":     cal_burn,
+#         "cal_consumed":   round(cal_consumed, 0),
+#         "cal_target_adj": round(total_target, 0),
+#         "cal_remaining":  round(cal_gap, 0),
+#         "steps":          steps,
+#         "activity_level": level,
+#         "activity_label": fitness_data.get("activity_label", ""),
+#         "activity_emoji": fitness_data.get("activity_emoji", ""),
+#         "recommendations": recs
+#     }
+
+
+# def get_basic_recommendations(daily_totals, daily_targets, timeline):
+#     """Fallback recommendations when Google Fit is not available"""
+#     cal_consumed = daily_totals.get("calories", 0)
+#     cal_target   = daily_targets.get("calories", 2000)
+#     cal_gap      = cal_target - cal_consumed
+#     hour         = datetime.now().hour
+#     recs         = []
+
+#     if cal_consumed == 0 and hour >= 12:
+#         recs.append({
+#             "type":    "reminder",
+#             "emoji":   "📝",
+#             "title":   "No meals logged today",
+#             "message": "Start logging your meals to get personalized recommendations.",
+#             "actions": ["📸 Take a photo of your next meal to begin tracking"],
+#             "priority": "high"
+#         })
+#     elif cal_gap > 500:
+#         recs.append({
+#             "type":    "calorie",
+#             "emoji":   "🍽️",
+#             "title":   f"{cal_gap:.0f} kcal remaining today",
+#             "message": "You still have room for a balanced meal.",
+#             "actions": [
+#                 "🥗 Balanced meal with protein, veg and complex carbs",
+#                 "🍎 Healthy snack if it's not meal time yet"
+#             ],
+#             "priority": "medium"
+#         })
+#     elif cal_gap < 0:
+#         recs.append({
+#             "type":    "calorie",
+#             "emoji":   "⚠️",
+#             "title":   f"Over daily target by {abs(cal_gap):.0f} kcal",
+#             "message": "Consider a light activity after dinner.",
+#             "actions": [
+#                 "🚶 20-minute walk after dinner",
+#                 "🚫 Skip dessert or late-night snacks"
+#             ],
+#             "priority": "medium"
+#         })
+
+#     return {
+#         "available":       False,
+#         "cal_consumed":    round(cal_consumed, 0),
+#         "cal_target_adj":  cal_target,
+#         "cal_remaining":   round(cal_gap, 0),
+#         "recommendations": recs
+#     }
+# ─── Recommendation Copy Library ──────────────────────────────────────────────
+
+TIME_SLOT_RECS = {
+    "early_morning": {  # 05:00–08:59
+        "emoji": "🌅",
+        "title": "Morning Activation Window",
+        "message": "Your cortisol is peaking right now — the body's natural alarm system. Use it. This is the highest-leverage window for nutrient absorption and metabolic priming. Don't waste it on empty calories.",
+        "actions": [
+            "💧 Drink 500ml of water before anything else — you just went 7+ hours without hydration.",
+            "🥚 Front-load protein within 60 minutes of waking to blunt the cortisol-muscle breakdown cycle.",
+            "☕ If you're having coffee, delay it 90 minutes post-wake to let cortisol do its job naturally."
+        ]
+    },
+    "mid_morning": {  # 09:00–11:59
+        "emoji": "⚡",
+        "title": "Peak Cognitive Window — Don't Crash It",
+        "message": "Your brain is running at peak capacity right now. What you eat in this window either extends that sharpness or kills it by noon. Choose precision over convenience.",
+        "actions": [
+            "🥜 If hunger hits, opt for nuts or a boiled egg — slow-burn fuel that won't spike insulin.",
+            "🚫 Skip the muffin or fruit juice — the sugar crash arrives exactly when you need focus most.",
+            "💧 Keep water intake consistent — even mild dehydration drops cognitive performance by 10–15%."
+        ]
+    },
+    "pre_lunch": {  # 12:00–13:59
+        "emoji": "☀️",
+        "title": "Midday Refuel Protocol",
+        "message": "Lunch isn't just calories — it's your metabolic mid-point. What you load here dictates your afternoon energy curve. A high-carb lunch is a productivity suicide note.",
+        "actions": [
+            "🥗 Build your plate as: half vegetables, a quarter lean protein, a quarter complex carbs.",
+            "🐟 Fish, legumes, or chicken over red meat — you want alert, not sedated.",
+            "🚫 Avoid fried, heavy, or sauce-loaded meals — the digestive load will steal blood from your brain."
+        ]
+    },
+    "afternoon": {  # 14:00–16:59
+        "emoji": "☀️",
+        "title": "The 3 PM Slump Prevention",
+        "message": "Don't fall into the sugar-trap. The mid-afternoon crash is just a bad carb choice away. Your insulin is sensitive right now — exploit it smartly or pay the price in fog.",
+        "actions": [
+            "🥜 A handful of raw nuts or seeds — high-density, clean-burning fats that don't spike your glucose.",
+            "🚶 Stand up and get 5 minutes of natural sunlight to reset your circadian clock and cortisol baseline.",
+            "🍵 Green tea over coffee if you need a lift — L-theanine keeps you alert without the 4 PM anxiety spiral."
+        ]
+    },
+    "pre_dinner": {  # 17:00–19:59
+        "emoji": "🍽️",
+        "title": "Dinner Engineering Window",
+        "message": "You're heading into the last major fueling event of the day. Your metabolism is slowing. Don't load the tank if you're just parking in the garage — but if you've been active, you've earned the refuel.",
+        "actions": [
+            "🥦 Make vegetables non-negotiable at this meal — they set the fibre baseline for overnight gut work.",
+            "🐟 Prioritise amino acids that support nighttime recovery and growth hormone release — fish, eggs, cottage cheese.",
+            "🕖 Try to eat before 7:30 PM — late eating compresses your overnight fasting window and disrupts sleep quality."
+        ]
+    },
+    "evening": {  # 20:00–22:59
+        "emoji": "🌙",
+        "title": "Night Operations Strategy",
+        "message": "Winding down requires structural macro management. Your insulin sensitivity drops at night — carbs consumed now convert to fat far more readily than earlier in the day.",
+        "actions": [
+            "🍵 Swap dessert for a hot magnesium-rich herbal tea — signals sleep readiness and reduces overnight cortisol.",
+            "🚫 Avoid processed snacks, alcohol, or high-sodium foods — all disrupt sleep architecture.",
+            "🥛 If genuinely hungry, casein protein (cottage cheese, Greek yogurt) feeds muscles through the night without spiking insulin."
+        ]
+    },
+    "late_night": {  # 23:00–04:59
+        "emoji": "🌚",
+        "title": "Overnight Fasting Zone",
+        "message": "This is your metabolic repair window. Every hour of fasting here allows cellular cleanup (autophagy) and fat metabolism. Eating now resets the clock and costs you the benefits.",
+        "actions": [
+            "💧 Water only if you must have something — hunger at this hour is usually dehydration or habit.",
+            "🚫 Hard no to alcohol, sugar, or high-fat snacks — they suppress growth hormone release during deep sleep.",
+            "😴 Focus on sleep quality — melatonin, darkness, and cool temperatures beat any supplement."
+        ]
+    }
+}
+
+ACTIVITY_RECS = {
+    "intense": {
+        "emoji": "🔥",
+        "title": "Intense Output Detected — Rebuild Mode",
+        "message": lambda steps, cal_burn, total_target, cal_gap: (
+            f"You've torched {cal_burn:.0f} active calories today ({steps:,} steps). "
+            f"Your body is in a catabolic state right now — if you don't feed the recovery, "
+            f"you're breaking down muscle for fuel. Adjusted target: {total_target:.0f} kcal. "
+            f"You still need {cal_gap:.0f} kcal to close the gap."
+        ),
+        "actions": [
+            "🥩 Prioritise a complete protein source within 45 minutes of your last activity — the anabolic window is real.",
+            "🍚 Complex carbs are mandatory tonight — brown rice, sweet potato, or oats to replenish glycogen stores.",
+            "🥑 Add healthy fats to slow absorption and sustain overnight recovery — avocado, olive oil, or nuts.",
+            "💧 You're likely still dehydrated — minimum 500ml more water before sleep, electrolytes if you sweated heavily."
+        ]
+    },
+    "active": {
+        "emoji": "⚡",
+        "title": "Solid Active Day — Maintain the Edge",
+        "message": lambda steps, cal_burn, total_target, cal_gap: (
+            f"{steps:,} steps and {cal_burn:.0f} kcal burned — you've earned a proper refuel. "
+            f"Adjusted calorie ceiling: {total_target:.0f} kcal. Remaining: {cal_gap:.0f} kcal. "
+            f"Don't undercut recovery by eating too light."
+        ),
+        "actions": [
+            "🥗 A balanced dinner with protein, colourful vegetables, and wholegrains covers your bases.",
+            "🍌 A piece of fruit makes an ideal post-activity snack — natural sugars replenish liver glycogen fast.",
+            "💧 Hydration window is still open — keep sipping consistently rather than gulping all at once."
+        ]
+    },
+    "moderate": {
+        "emoji": "🚶",
+        "title": "Moderate Day — Steady as She Goes",
+        "message": lambda steps, cal_burn, total_target, cal_gap: (
+            f"{steps:,} steps · {cal_burn:.0f} kcal burned. "
+            f"You're in the maintenance zone. Remaining today: {cal_gap:.0f} kcal. "
+            f"Eat to your actual output — not your ambition."
+        ),
+        "actions": [
+            "🥦 Fill at least half your dinner plate with non-starchy vegetables — density without caloric load.",
+            "🍗 Lean protein portion roughly the size of your palm — adequate but not excessive for this output level.",
+            "🚫 Skip the extra bread, sauce, or dessert tonight — you haven't generated the deficit to absorb it cleanly."
+        ]
+    },
+    "light": {
+        "emoji": "😊",
+        "title": "Light Day — Calibrate Accordingly",
+        "message": lambda steps, cal_burn, total_target, cal_gap: (
+            f"Only {steps:,} steps and {cal_burn:.0f} kcal burned today. "
+            f"Your energy demand is low — eating to a higher target than your output creates a surplus. "
+            f"Remaining: {cal_gap:.0f} kcal."
+        ),
+        "actions": [
+            "🥗 Keep dinner light and nutrient-dense — salads with legumes, grilled fish, or soups with vegetables.",
+            "🚫 Avoid high-carb, high-fat combinations tonight — your muscles aren't primed to absorb the glycogen load.",
+            "🚶 Even a 15-minute post-dinner walk improves insulin sensitivity and helps clear blood glucose."
+        ]
+    },
+    "sedentary": {
+        "emoji": "💺",
+        "title": "Sedentary Day — Don't Eat Like You Weren't",
+        "message": lambda steps, cal_burn, total_target, cal_gap: (
+            f"Only {steps:,} steps so far. Your body hasn't demanded much fuel today — "
+            f"overfeeding a sedentary day is how caloric debt builds quietly. "
+            f"Remaining: {cal_gap:.0f} kcal."
+        ),
+        "actions": [
+            "🚶 Take a 20-minute walk after your next meal — it's the single highest-ROI intervention for metabolic health.",
+            "🥗 Light dinner: leafy greens, lean protein, minimal processed carbs.",
+            "🚫 No heavy pasta, pizza, or alcohol tonight — your insulin sensitivity is already blunted from low movement.",
+            "💧 Drink water before reaching for snacks — sedentary hunger is often just boredom or mild dehydration."
+        ]
+    }
+}
+
+NUTRIENT_GAP_RECS = {
+    "protein_deficit": {
+        "emoji": "💪",
+        "title": "Protein Deficit — Muscle Cannibalism Risk",
+        "message": lambda consumed, target: (
+            f"You're at {consumed:.0f}g protein against a {target}g target. "
+            f"If you don't supply the building blocks, your body will happily cannibalize its own muscle tissue for amino requirements. "
+            f"This compounds especially hard on active days."
+        ),
+        "actions": [
+            "🥚 3 whole eggs, a cup of Greek yogurt, or 150g of cottage cheese — get it in now.",
+            "🍗 Your next major meal needs to double the normal protein footprint.",
+            "🥜 Edamame, lentils, or a quality protein snack as a bridge if mealtime is hours away."
+        ]
+    },
+    "protein_deficit_intense": {  # Combo: intense activity + low protein
+        "emoji": "🚨",
+        "title": "Critical: High Output, No Recovery Fuel",
+        "message": lambda consumed, target: (
+            f"You burned hard today but you're only at {consumed:.0f}g protein (target: {target}g). "
+            f"Without adequate amino acids post-exercise, muscle protein synthesis shuts down and catabolism takes over. "
+            f"This is the scenario that makes training counterproductive."
+        ),
+        "actions": [
+            "🥩 Prioritise a complete protein meal immediately — chicken, fish, steak, or eggs.",
+            "🥛 A casein shake or cottage cheese before bed extends muscle protein synthesis through the night.",
+            "⚠️ Don't go to sleep under-fuelled on a high-output day — recovery happens overnight, not at the gym."
+        ]
+    },
+    "fibre_deficit": {
+        "emoji": "🌿",
+        "title": "Microbiome Running on Empty",
+        "message": lambda consumed, target: (
+            f"Only {consumed:.0f}g fibre against a {target}g target. "
+            f"Your gut bacteria are running out of prebiotics to ferment into short-chain fatty acids — "
+            f"the compounds that regulate inflammation, immunity, and even mood. Fix the plumbing."
+        ),
+        "actions": [
+            "🥦 Load your next meal with broccoli, chia seeds, or lentils — density counts here.",
+            "🍎 Eat whole fruits with the skin intact to capture structural fibres your gut bacteria actually need.",
+            "🌾 Swap white rice or bread for a wholegrain equivalent — one meal change closes a significant gap."
+        ]
+    },
+    "calcium_deficit": {
+        "emoji": "🦴",
+        "title": "Calcium Deficit — Silent Bone Tax",
+        "message": lambda consumed, target: (
+            f"At {consumed:.0f}mg calcium (target: {target}mg), your body will pull what it needs from bone reserves. "
+            f"It's a silent process you won't feel until it matters. Dietary calcium is non-negotiable."
+        ),
+        "actions": [
+            "🥛 A glass of dairy milk or fortified plant milk covers 25–30% of daily needs in one move.",
+            "🥬 Kale, bok choy, and broccoli are surprisingly calcium-dense and come with fibre bonuses.",
+            "🧀 A small serve of hard cheese at your next meal is a calorie-efficient calcium hit."
+        ]
+    },
+    "iron_deficit": {
+        "emoji": "🩸",
+        "title": "Iron Low — Oxygen Delivery Compromised",
+        "message": lambda consumed, target: (
+            f"Iron is at {consumed:.0f}mg against a {target}mg target. "
+            f"Low iron doesn't just cause fatigue — it reduces oxygen-carrying capacity, "
+            f"meaning every physical and cognitive task runs on a throttled engine."
+        ),
+        "actions": [
+            "🥩 Red meat 2–3x per week is the highest-bioavailability iron source available.",
+            "🥬 Spinach and lentils offer plant-based iron, but pair them with vitamin C to triple absorption rate.",
+            "☕ Avoid tea or coffee within an hour of iron-rich meals — tannins block absorption significantly."
+        ]
+    },
+    "vitamin_c_deficit": {
+        "emoji": "🍊",
+        "title": "Vitamin C Gap — Immunity & Collagen at Risk",
+        "message": lambda consumed, target: (
+            f"Only {consumed:.0f}mg vitamin C logged (target: {target}mg). "
+            f"Beyond immunity, vitamin C is the rate-limiting factor in collagen synthesis — "
+            f"which means skin, joint, and tissue integrity all depend on adequate daily intake."
+        ),
+        "actions": [
+            "🥝 One kiwifruit delivers your entire daily C requirement in a 60-calorie package.",
+            "🫑 Raw capsicum (red or yellow) has 3x the vitamin C of an orange — add it to any meal.",
+            "🍓 A cup of strawberries with your next snack closes the gap without touching calorie targets."
+        ]
+    },
+    "sodium_excess": {
+        "emoji": "⚠️",
+        "title": "Sodium Overload — Vascular Pressure Rising",
+        "message": lambda consumed, target: (
+            f"You're at {consumed:.0f}mg sodium against a {target}mg limit. "
+            f"Excess sodium isn't just a blood pressure issue — it actively dehydrates cells, "
+            f"causes water retention, and disrupts sleep quality. The damage compounds daily."
+        ),
+        "actions": [
+            "💧 Increase water intake immediately — helps the kidneys flush excess sodium through urine.",
+            "🚫 No more processed food, sauces, or added salt for the rest of today — you've already hit the ceiling.",
+            "🥦 High-potassium foods (banana, sweet potato, leafy greens) actively counteract sodium's vascular effects."
+        ]
+    },
+    "cholesterol_excess": {
+        "emoji": "💛",
+        "title": "Cholesterol Above Threshold",
+        "message": lambda consumed, target: (
+            f"At {consumed:.0f}mg dietary cholesterol (limit: {target}mg), you're over the recommended ceiling. "
+            f"While dietary cholesterol impact varies individually, consistent excess correlates with elevated LDL in most populations."
+        ),
+        "actions": [
+            "🚫 Limit egg yolks, organ meats, and full-fat dairy for the rest of today.",
+            "🐟 Swap red meat for fish at your next meal — omega-3s actively improve your lipid profile.",
+            "🥑 Monounsaturated fats (avocado, olive oil) help raise HDL to offset LDL elevation."
+        ]
+    },
+    "calories_under": {
+        "emoji": "🔋",
+        "title": "Calorie Deficit — Running Below Threshold",
+        "message": lambda consumed, target: (
+            f"Only {consumed:.0f} of {target} kcal consumed. "
+            f"A moderate deficit is fine — but fall too far below and your body down-regulates metabolism "
+            f"and starts protecting fat stores by burning lean mass instead. Eat enough."
+        ),
+        "actions": [
+            "🥑 Add calorie-dense but nutrient-rich foods — nuts, olive oil, avocado, eggs.",
+            "🍚 A proper carb-protein meal closes a calorie gap fast without relying on junk.",
+            "🚫 Don't solve this with empty calories — the goal is nutrient density, not just filling numbers."
+        ]
+    },
+    "calories_over": {
+        "emoji": "🛑",
+        "title": "Caloric Ceiling Breached",
+        "message": lambda consumed, target: (
+            f"You've consumed {consumed:.0f} kcal against a {target} kcal target — "
+            f"that's {consumed - target:.0f} kcal over. Depending on your output today, "
+            f"this may or may not matter. But the compounding effect of daily surpluses is fat storage."
+        ),
+        "actions": [
+            "🚫 No more high-calorie additions today — snacks, sauces, or alcohol all count.",
+            "🥗 If still hungry, fill up on raw vegetables or clear broth — volume without caloric cost.",
+            "🚶 30 minutes of brisk walking burns ~150–200 kcal and partially offsets the surplus."
+        ]
+    }
+}
+
+MEAL_TIMING_RECS = {
+    "dinner_large_gap": {
+        "emoji": "🍽️",
+        "title": "Dinner Brief — You Have Room to Work With",
+        "message": lambda cal_gap, level: (
+            f"{cal_gap:.0f} kcal remaining. With a {level} activity day, "
+            f"here are three dinner strategies ranked by recovery value:"
+        ),
+        "options": {
+            "intense":  [
+                "🥩 Grilled salmon (180g) + roasted sweet potato + steamed greens — ~620 kcal, 45g protein. Peak recovery meal.",
+                "🍗 Chicken stir-fry with broccoli, capsicum, and brown rice — ~550 kcal, 42g protein. Glycogen + protein combo.",
+                "🥚 4-egg omelette with spinach, feta, and a slice of sourdough — ~480 kcal, 36g protein. Fast and clean."
+            ],
+            "active":   [
+                "🐟 Baked cod + roasted vegetables + quinoa — ~480 kcal, 38g protein. Clean macro split.",
+                "🍗 Grilled chicken with a large salad and tahini dressing — ~440 kcal, 40g protein.",
+                "🌱 Lentil dhal with spinach and wholegrain roti — ~420 kcal, 22g protein. High fibre bonus."
+            ],
+            "moderate": [
+                "🥗 Buddha bowl: brown rice, chickpeas, roasted vegetables, avocado — ~480 kcal, 18g protein.",
+                "🐟 Poached salmon with a green salad and olive oil dressing — ~420 kcal, 35g protein.",
+                "🍜 Vegetable soup with lentils and a slice of multigrain bread — ~350 kcal, 18g protein."
+            ],
+            "default":  [
+                "🥗 A balanced plate: lean protein + vegetables + complex carbs.",
+                "🍲 Soups or stews with legumes — high satiety, controlled calories.",
+                "🌿 Plant-forward meal if you've had animal protein earlier in the day."
+            ]
+        }
+    },
+    "dinner_small_gap": {
+        "emoji": "⚠️",
+        "title": "Light Dinner Only — You're Close to Your Ceiling",
+        "message": lambda cal_gap: (
+            f"Only {cal_gap:.0f} kcal remaining for the day. Keep dinner structured and minimal."
+        ),
+        "actions": [
+            "🥗 Large salad with a palm-sized portion of grilled protein — fills you up without overspending.",
+            "🍲 Clear broth-based soup with vegetables — maximum volume, minimal caloric cost.",
+            "🚫 No bread, rice, pasta, or dessert tonight — you don't have the budget."
+        ]
+    },
+    "no_lunch_logged": {
+        "emoji": "☀️",
+        "title": "No Lunch Recorded — Skipping or Forgot to Log?",
+        "message": "It's past midday and no lunch is logged. Skipping meals tends to produce compensatory overeating later — and the food choices get worse the hungrier you get.",
+        "actions": [
+            "📸 Log what you ate even if you've already finished — back-fill keeps your day accurate.",
+            "🥗 If you genuinely haven't eaten, have a balanced meal now rather than waiting for dinner.",
+            "⏰ Skipping lunch on high-activity days actively impairs afternoon performance and recovery."
+        ]
+    }
+}
+
+
+# ─── Rebuilt Core Recommendation Engine ───────────────────────────────────────
+
+def get_time_slot(hour):
+    if   5  <= hour <= 8:  return "early_morning"
+    elif 9  <= hour <= 11: return "mid_morning"
+    elif 12 <= hour <= 13: return "pre_lunch"
+    elif 14 <= hour <= 16: return "afternoon"
+    elif 17 <= hour <= 19: return "pre_dinner"
+    elif 20 <= hour <= 22: return "evening"
+    else:                  return "late_night"
+
+
+def get_smart_recommendations(fitness_data, daily_totals, daily_targets, timeline):
+    if not fitness_data.get("available"):
+        return get_basic_recommendations(daily_totals, daily_targets, timeline)
+
+    steps        = fitness_data.get("steps", 0)
+    cal_burn     = fitness_data.get("calories_burned", 0)
+    level        = fitness_data.get("activity_level", "sedentary")
+    hour         = datetime.now().hour
+    cal_consumed = daily_totals.get("calories", 0)
+    base_target  = daily_targets.get("calories", 2000)
+    total_target = base_target + cal_burn
+    cal_gap      = round(total_target - cal_consumed, 0)
+    time_slot    = get_time_slot(hour)
+
+    recs = []
+
+    # ── 1. Activity-level card ────────────────────────────────────────────────
+    act = ACTIVITY_RECS[level]
+    recs.append({
+        "type":     "activity",
+        "emoji":    act["emoji"],
+        "title":    act["title"],
+        "message":  act["message"](steps, cal_burn, total_target, cal_gap),
+        "actions":  act["actions"],
+        "priority": "high" if level in ("intense", "sedentary") else "medium"
+    })
+
+    # ── 2. Time-of-day contextual card ───────────────────────────────────────
+    ts = TIME_SLOT_RECS[time_slot]
+    recs.append({
+        "type":     "timing",
+        "emoji":    ts["emoji"],
+        "title":    ts["title"],
+        "message":  ts["message"],
+        "actions":  ts["actions"],
+        "priority": "medium"
+    })
+
+    # ── 3. Meal timing window cards ───────────────────────────────────────────
+    if 16 <= hour <= 20:
+        if cal_gap > 400:
+            mt   = MEAL_TIMING_RECS["dinner_large_gap"]
+            opts = mt["options"].get(level, mt["options"]["default"])
+            recs.append({
+                "type":     "meal_timing",
+                "emoji":    mt["emoji"],
+                "title":    mt["title"],
+                "message":  mt["message"](cal_gap, level),
+                "actions":  opts,
+                "priority": "high"
+            })
+        elif cal_gap < 200:
+            mt = MEAL_TIMING_RECS["dinner_small_gap"]
+            recs.append({
+                "type":     "meal_timing",
+                "emoji":    mt["emoji"],
+                "title":    mt["title"],
+                "message":  mt["message"](cal_gap),
+                "actions":  mt["actions"],
+                "priority": "medium"
+            })
+
+    if hour >= 13 and not any(
+        e.get("category") == "Lunch" for block in timeline for e in [block]
+    ):
+        mt = MEAL_TIMING_RECS["no_lunch_logged"]
+        recs.append({
+            "type":     "meal_timing",
+            "emoji":    mt["emoji"],
+            "title":    mt["title"],
+            "message":  mt["message"],
+            "actions":  mt["actions"],
+            "priority": "medium"
+        })
+
+    # ── 4. Nutrient gap cards ─────────────────────────────────────────────────
+    protein_consumed = daily_totals.get("protein", 0)
+    protein_target   = daily_targets.get("protein", 50)
+    if protein_consumed < protein_target * 0.65 and hour >= 12:
+        # Escalate to critical if also intense activity day
+        key = "protein_deficit_intense" if level == "intense" else "protein_deficit"
+        ng  = NUTRIENT_GAP_RECS[key]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](protein_consumed, protein_target),
+            "actions":  ng["actions"],
+            "priority": "high" if level in ("intense", "active") else "medium"
+        })
+
+    fibre_consumed = daily_totals.get("fibre", 0)
+    if fibre_consumed < 15 and hour >= 14:
+        ng = NUTRIENT_GAP_RECS["fibre_deficit"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](fibre_consumed, daily_targets.get("fibre", 30)),
+            "actions":  ng["actions"],
+            "priority": "medium"
+        })
+
+    calcium_consumed = daily_totals.get("calcium", 0)
+    if calcium_consumed < daily_targets.get("calcium", 1000) * 0.5 and hour >= 15:
+        ng = NUTRIENT_GAP_RECS["calcium_deficit"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](calcium_consumed, daily_targets.get("calcium", 1000)),
+            "actions":  ng["actions"],
+            "priority": "low"
+        })
+
+    iron_consumed = daily_totals.get("iron", 0)
+    if iron_consumed < daily_targets.get("iron", 18) * 0.5 and hour >= 15:
+        ng = NUTRIENT_GAP_RECS["iron_deficit"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](iron_consumed, daily_targets.get("iron", 18)),
+            "actions":  ng["actions"],
+            "priority": "low"
+        })
+
+    vc_consumed = daily_totals.get("vitamin_c", 0)
+    if vc_consumed < daily_targets.get("vitamin_c", 90) * 0.5 and hour >= 15:
+        ng = NUTRIENT_GAP_RECS["vitamin_c_deficit"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](vc_consumed, daily_targets.get("vitamin_c", 90)),
+            "actions":  ng["actions"],
+            "priority": "low"
+        })
+
+    sodium_consumed = daily_totals.get("sodium", 0)
+    if sodium_consumed > daily_targets.get("sodium", 2300):
+        ng = NUTRIENT_GAP_RECS["sodium_excess"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](sodium_consumed, daily_targets.get("sodium", 2300)),
+            "actions":  ng["actions"],
+            "priority": "caution"
+        })
+
+    chol_consumed = daily_totals.get("cholesterol", 0)
+    if chol_consumed > daily_targets.get("cholesterol", 300):
+        ng = NUTRIENT_GAP_RECS["cholesterol_excess"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](chol_consumed, daily_targets.get("cholesterol", 300)),
+            "actions":  ng["actions"],
+            "priority": "caution"
+        })
+
+    # Calorie extremes
+    if cal_consumed > 0:
+        pct = cal_consumed / total_target
+        if pct < 0.55 and hour >= 16:
+            ng = NUTRIENT_GAP_RECS["calories_under"]
+            recs.append({
+                "type":     "nutrient",
+                "emoji":    ng["emoji"],
+                "title":    ng["title"],
+                "message":  ng["message"](cal_consumed, total_target),
+                "actions":  ng["actions"],
+                "priority": "medium"
+            })
+        elif pct > 1.15:
+            ng = NUTRIENT_GAP_RECS["calories_over"]
+            recs.append({
+                "type":     "nutrient",
+                "emoji":    ng["emoji"],
+                "title":    ng["title"],
+                "message":  ng["message"](cal_consumed, total_target),
+                "actions":  ng["actions"],
+                "priority": "caution"
+            })
+
+    # ── Sort: high → medium → caution → low ──────────────────────────────────
+    order = {"high": 0, "medium": 1, "caution": 2, "low": 3}
+    recs.sort(key=lambda r: order.get(r.get("priority", "low"), 4))
+
+    return {
+        "available":        True,
+        "cal_burned":       cal_burn,
+        "cal_consumed":     round(cal_consumed, 0),
+        "cal_target_adj":   round(total_target, 0),
+        "cal_remaining":    round(cal_gap, 0),
+        "steps":            steps,
+        "activity_level":   level,
+        "activity_label":   fitness_data.get("activity_label", ""),
+        "activity_emoji":   fitness_data.get("activity_emoji", ""),
+        "recommendations":  recs
+    }
+
+
+def get_basic_recommendations(daily_totals, daily_targets, timeline):
+    """Fallback when Google Fit is unavailable — still uses the rich copy library."""
+    cal_consumed = daily_totals.get("calories", 0)
+    cal_target   = daily_targets.get("calories", 2000)
+    cal_gap      = cal_target - cal_consumed
+    hour         = datetime.now().hour
+    time_slot    = get_time_slot(hour)
+    recs         = []
+
+    # Always include time-of-day rec
+    ts = TIME_SLOT_RECS[time_slot]
+    recs.append({
+        "type":     "timing",
+        "emoji":    ts["emoji"],
+        "title":    ts["title"],
+        "message":  ts["message"],
+        "actions":  ts["actions"],
+        "priority": "medium"
+    })
+
+    if cal_consumed == 0 and hour >= 12:
+        recs.insert(0, {
+            "type":     "reminder",
+            "emoji":    "📝",
+            "title":    "No Meals Logged Yet Today",
+            "message":  "Start logging your meals to unlock personalised recommendations. Tracking accuracy is the foundation of everything else.",
+            "actions":  ["📸 Take a photo of your next meal to begin tracking."],
+            "priority": "high"
+        })
+    elif cal_gap > 500:
+        ng = NUTRIENT_GAP_RECS["calories_under"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](cal_consumed, cal_target),
+            "actions":  ng["actions"],
+            "priority": "medium"
+        })
+    elif cal_gap < -200:
+        ng = NUTRIENT_GAP_RECS["calories_over"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](cal_consumed, cal_target),
+            "actions":  ng["actions"],
+            "priority": "caution"
+        })
+
+    # Still check nutrient gaps even without Fit data
+    protein_consumed = daily_totals.get("protein", 0)
+    if protein_consumed < daily_targets.get("protein", 50) * 0.65 and hour >= 13:
+        ng = NUTRIENT_GAP_RECS["protein_deficit"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](protein_consumed, daily_targets.get("protein", 50)),
+            "actions":  ng["actions"],
+            "priority": "medium"
+        })
+
+    fibre_consumed = daily_totals.get("fibre", 0)
+    if fibre_consumed < 15 and hour >= 14:
+        ng = NUTRIENT_GAP_RECS["fibre_deficit"]
+        recs.append({
+            "type":     "nutrient",
+            "emoji":    ng["emoji"],
+            "title":    ng["title"],
+            "message":  ng["message"](fibre_consumed, daily_targets.get("fibre", 30)),
+            "actions":  ng["actions"],
+            "priority": "medium"
+        })
+
+    order = {"high": 0, "medium": 1, "caution": 2, "low": 3}
+    recs.sort(key=lambda r: order.get(r.get("priority", "low"), 4))
+
+    return {
+        "available":        False,
+        "cal_consumed":     round(cal_consumed, 0),
+        "cal_target_adj":   cal_target,
+        "cal_remaining":    round(cal_gap, 0),
+        "recommendations":  recs
+    }
+ ###-----------------------
+def get_google_credentials():
+    """
+    Load and auto-refresh Google credentials.
+    Priority: local token file → env variable → error
+    """
+    creds = None
+
+    # Load client secrets
+    secrets_path = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
+    if not os.path.exists(secrets_path):
+        return None, "client_secrets.json not found"
+
+    with open(secrets_path, 'r') as f:
+        secrets_data = json.load(f)
+        client_config = secrets_data.get('web') or secrets_data.get('installed', {})
+
+    def fix_token_data(token_data):
+        """Safely maps fields to match exactly what Google library expects"""
+        # Copy values rather than popping to avoid reference losses
+        if 'token' in token_data:
+            token_data['access_token'] = token_data.get('token')
+        
+        # Ensure scopes format is a space separated string if provided as a list
+        if isinstance(token_data.get('scopes'), list):
+            token_data['scopes'] = ' '.join(token_data['scopes'])
+            
+        # Guarantee client configurations are injected directly from client_secrets.json
+        token_data['client_id']     = client_config.get('client_id')
+        token_data['client_secret'] = client_config.get('client_secret')
+        token_data['token_uri']     = client_config.get('token_uri', 'https://oauth2.googleapis.com/token')
+
+        print(f"DEBUG token_data: has_access={bool(token_data.get('access_token'))}, has_refresh={bool(token_data.get('refresh_token'))}")
+        return token_data
+
+    # Option 1 — Load from local token file (preferred)
+    if os.path.exists(TOKEN_FILE):
+        try:
+            with open(TOKEN_FILE, 'r') as f:
+                token_data = json.load(f)
+            token_data = fix_token_data(token_data)
+            creds = Credentials.from_authorized_user_info(token_data, SCOPES)
+            print("Loaded credentials from google_token.json")
+        except Exception as e:
+            print(f"Token file load failed: {e}")
+            creds = None
+
+    # Option 2 — Fall back to env variable
+    if not creds:
+        raw_env = os.getenv('TOKEN_JSON_ENV', '').strip()
+        if raw_env.startswith(("'", '"')) and raw_env.endswith(("'", '"')):
+            raw_env = raw_env[1:-1]
+        if raw_env:
+            try:
+                token_data = json.loads(raw_env)
+                token_data = fix_token_data(token_data)
+                creds = Credentials.from_authorized_user_info(token_data, SCOPES)
+                print("Loaded credentials from TOKEN_JSON_ENV")
+            except Exception as e:
+                return None, f"Failed to parse TOKEN_JSON_ENV: {e}"
+
+    if not creds:
+        return None, "No credentials found. Set TOKEN_JSON_ENV or google_token.json"
+
+    # Auto-refresh if expired
+    if not creds.valid:
+        if creds.refresh_token:
+            try:
+                print("Access token expired — auto refreshing via token pipeline...")
+                creds.refresh(Request())
+                
+                # Save refreshed token safely back to local storage
+                with open(TOKEN_FILE, 'w') as f:
+                    f.write(creds.to_json())
+                print(f"✅ Token refreshed and written successfully to {TOKEN_FILE}")
+            except Exception as e:
+                print(f"❌ Refresh FAILED: {e}")
+                return None, f"Token refresh failed: {e}"
+        else:
+            print(f"❌ Cannot refresh: expired={creds.expired}, has_refresh={bool(creds.refresh_token)}")
+            return None, "Token missing refresh_token property. Re-run your terminal authentication script."
+
+    return creds, None
+
+@app.route('/fitness', methods=['GET'])
+def fitness():
+    """Return fitness data + smart recommendations"""
+    try:
+        fitness_data = get_fitness_data()
+
+        # Get today's nutrition totals
+        today = datetime.now().strftime("%Y-%m-%d")
+        daily_totals = {k: 0.0 for k in DAILY_TARGETS}
+
+        if os.path.exists('meals_log.json'):
+            with open('meals_log.json') as f:
+                log = json.load(f)
+            day_meals = [m for m in log
+                        if m.get('timestamp','').startswith(today)
+                        or m.get('date','') == today]
+            for meal in day_meals:
+                for food in meal.get('foods', []):
+                    daily_totals['calories']   += food.get('calories', 0) or 0
+                    daily_totals['protein']    += food.get('protein', 0) or 0
+                    daily_totals['carbs']      += food.get('carbs', 0) or 0
+                    daily_totals['fat']        += food.get('fat', 0) or 0
+                    daily_totals['fibre']      += food.get('fibre', 0) or 0
+                    daily_totals['sodium']     += food.get('sodium', 0) or 0
+                    daily_totals['calcium']    += food.get('calcium', 0) or 0
+                    daily_totals['iron']       += food.get('iron', 0) or 0
+                    daily_totals['potassium']  += food.get('potassium', 0) or 0
+                    daily_totals['vitamin_c']  += food.get('vitamin_c', 0) or 0
+                    daily_totals['cholesterol']+= food.get('cholesterol', 0) or 0
+
+        recs = get_smart_recommendations(
+            fitness_data, daily_totals, DAILY_TARGETS, []
+        )
+
+        return jsonify({
+            "fitness":         fitness_data,
+            "recommendations": recs
+        })
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/fitness/debug', methods=['GET'])
+def fitness_debug():
+    """List all available data sources"""
+    try:
+        creds, error = get_google_credentials()
+        if error:
+            return jsonify({"error": error})
+        service = build('fitness', 'v1', credentials=creds)
+        sources = service.users().dataSources().list(userId='me').execute()
+        cal_sources = [
+            {
+                "dataStreamId": s.get("dataStreamId"),
+                "dataTypeName": s.get("dataType", {}).get("name"),
+                "device":       s.get("device", {}).get("model", "unknown")
+            }
+            for s in sources.get("dataSource", [])
+            if "calorie" in s.get("dataType", {}).get("name", "").lower()
+            or "bmr" in s.get("dataType", {}).get("name", "").lower()
+        ]
+        return jsonify({
+            "calorie_sources": cal_sources,
+            "total_sources":   len(sources.get("dataSource", []))
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+# @app.route('/fitness/debug', methods=['GET'])
+# def fitness_debug():
+#     """List all available data sources in your Google Fit account"""
+#     try:
+#         creds, error = get_google_credentials()
+#         if error:
+#             return jsonify({"error": error})
+
+#         service = build('fitness', 'v1', credentials=creds)
+
+#         # List all data sources
+#         sources = service.users().dataSources().list(userId='me').execute()
+
+#         # Filter calorie related ones
+#         cal_sources = [
+#             {
+#                 "dataStreamId": s.get("dataStreamId"),
+#                 "dataTypeName": s.get("dataType", {}).get("name"),
+#                 "device":       s.get("device", {}).get("model", "unknown")
+#             }
+#             for s in sources.get("dataSource", [])
+#             if "calorie" in s.get("dataType", {}).get("name", "").lower()
+#             or "bmr" in s.get("dataType", {}).get("name", "").lower()
+#         ]
+
+#         return jsonify({
+#             "calorie_sources": cal_sources,
+#             "total_sources":   len(sources.get("dataSource", []))
+#         })
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)})
+
+
 
 if __name__ == '__main__':
     # Initialize cache memory pool right before bootup
     load_embeddings_into_cache()
     app.run(host='0.0.0.0', port=5000, debug=True)
+

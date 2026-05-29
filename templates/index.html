@@ -75,6 +75,30 @@
                 🤖 Analyze with AI
             </button>
 
+            <!-- New: keyboard input option -->
+            <div class="voice-or-type">
+                <div class="voice-divider">
+                    <span>or type your meal</span>
+                </div>
+                <div class="type-input-row">
+                    <input 
+                        type="text" 
+                        id="manual-text-input" 
+                        placeholder="e.g. 2 eggs, toast with butter, orange juice"
+                        class="manual-text-input"
+                    />
+                    <button onclick="useTypedText()" class="type-submit-btn">→</button>
+                </div>
+            </div>
+
+            <button id="analyze-voice-btn" 
+                    style="display:none" 
+                    onclick="analyzeVoice()">
+                🔍 Analyze Meal
+            </button>
+
+
+            
             <!-- Loading -->
             <div id="loading" style="display:none" class="loading">
                 <div class="spinner"></div>
@@ -93,6 +117,12 @@
                 <div class="result-actions">
                     <button class="btn-secondary" onclick="recalculateNutrition()">🔁 Recalculate</button>
                     <button class="btn-secondary" onclick="resetApp()">🔄 Analyze Another</button>
+                </div>
+
+                <div class="add-food-row">
+                    <input type="text" id="new-food-name" placeholder="Add food (e.g. boiled egg)" />
+                    <input type="number" id="new-food-grams" placeholder="grams" value="100" min="0" />
+                    <button onclick="addNewFood()" class="add-food-btn">+ Add</button>
                 </div>
 
                 <!-- Macro Summary Cards -->
@@ -185,6 +215,17 @@
                         </tfoot>
                     </table>
                 </div>
+                <div class="confirm-bar">
+                    <button class="confirm-btn confirm-reject" onclick="rejectResults()" title="Retake">
+                        <span class="confirm-icon">✕</span>
+                        <span class="confirm-label">Retake</span>
+                    </button>
+                    <button class="confirm-btn confirm-accept" onclick="confirmResults()" title="Confirm">
+                        <span class="confirm-icon">✓</span>
+                        <span class="confirm-label">Confirm</span>
+                    </button>
+                </div>    
+                
 
             </div>
 
@@ -192,12 +233,35 @@
 
         <!-- History Tab -->
         <div id="tab-history" class="tab-content">
-            <div class="card">
-                <h2>📅 Meal History</h2>
-                <div id="history-list">
-                    <p class="hint">Loading history...</p>
+
+            <!-- Date navigator -->
+            <div class="date-nav-bar">
+                <button class="date-nav-btn" onclick="shiftHistoryDate(-1)" title="Previous day">‹</button>
+                <div class="date-nav-center">
+                    <span class="date-nav-label" id="history-date-label">Today</span>
+                    <span class="date-nav-sub" id="history-date-sub"></span>
+                </div>
+                <button class="date-nav-btn" onclick="shiftHistoryDate(1)" id="date-nav-next" title="Next day">›</button>
+                <button class="date-nav-refresh" onclick="refreshHistory()" title="Refresh">↻</button>
+            </div>
+
+            <!-- Dynamic content injected by app.js -->
+            <div id="history-list">
+                <div class="history-skeleton">
+                    <div class="skeleton-card">
+                        <div class="sk sk-title"></div>
+                        <div class="sk sk-bar"></div>
+                        <div class="sk sk-bar sk-bar-short"></div>
+                        <div class="sk sk-bar"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="sk sk-title"></div>
+                        <div class="sk sk-bar sk-bar-short"></div>
+                        <div class="sk sk-bar"></div>
+                    </div>
                 </div>
             </div>
+
         </div>
 
     </main>

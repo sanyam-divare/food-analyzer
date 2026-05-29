@@ -11,3 +11,5 @@ env/
 test*
 food_vectors/venv/
 ngrok-v3-stable-linux-arm64.tgz
+google_token.json
+client_secrets.json

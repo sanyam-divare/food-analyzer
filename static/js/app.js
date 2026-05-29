@@ -1,4 +1,49 @@
 // ── State ───────────────────────────────────────
+// ── 1. DATE NAV STATE (add near top with other state variables) ─────────────
+let historyDateOffset = 0; // 0 = today, -1 = yesterday, etc.
+
+function getHistoryDate(offset = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d.toISOString().slice(0, 10);
+}
+
+function shiftHistoryDate(delta) {
+    historyDateOffset += delta;
+    // Don't allow future dates
+    if (historyDateOffset > 0) { historyDateOffset = 0; }
+    document.getElementById('date-nav-next').disabled = historyDateOffset >= 0;
+    loadHistory();
+}
+
+function refreshHistory() {
+    const btn = document.querySelector('.date-nav-refresh');
+    if (btn) { btn.classList.add('spinning'); }
+    loadHistory().finally(() => {
+        if (btn) btn.classList.remove('spinning');
+    });
+}
+
+function updateDateNavLabel() {
+    const labelEl = document.getElementById('history-date-label');
+    const subEl   = document.getElementById('history-date-sub');
+    const nextBtn = document.getElementById('date-nav-next');
+    if (!labelEl) return;
+
+    if (historyDateOffset === 0) {
+        labelEl.textContent = 'Today';
+    } else if (historyDateOffset === -1) {
+        labelEl.textContent = 'Yesterday';
+    } else {
+        const d = new Date();
+        d.setDate(d.getDate() + historyDateOffset);
+        labelEl.textContent = d.toLocaleDateString('en-AU', { weekday: 'long' });
+    }
+
+    const dateStr = getHistoryDate(historyDateOffset);
+    if (subEl) subEl.textContent = dateStr;
+    if (nextBtn) nextBtn.disabled = historyDateOffset >= 0;
+}
 let currentImageBase64 = null;
 let currentMimeType = 'image/jpeg';
 let currentImageWidth = 0;
@@ -75,7 +120,48 @@ function handleResultEdit(index, field, value) {
     } else if (field === 'name') {
         currentResults[index].name = value;
     }
-    renderResultRows();
+    // DON'T call renderResultRows() here — it destroys the input!
+    // Instead just update the calculated cells + totals
+    updateRowCells(index);
+    refreshTotals();
+}
+
+// New function — updates only the number cells, not the inputs
+function updateRowCells(index) {
+    const f = currentResults[index];
+    const row = document.querySelector(`#foods-list tr:nth-child(${index + 1})`);
+    if (!row) return;
+
+    const cells = row.querySelectorAll('td');
+    // cells[0]=name input, cells[1]=amount input, then the numbers:
+    if (cells[2]) cells[2].textContent = Math.round(f.calories);
+    if (cells[3]) cells[3].textContent = f.protein.toFixed(1) + 'g';
+    if (cells[4]) cells[4].textContent = f.carbs.toFixed(1) + 'g';
+    if (cells[5]) cells[5].textContent = f.sugars.toFixed(1) + 'g';
+    if (cells[6]) cells[6].textContent = f.fat.toFixed(1) + 'g';
+    if (cells[7]) cells[7].textContent = f.fibre.toFixed(1) + 'g';
+
+    // Update micro table row too
+    const microRow = document.querySelector(`#micro-list tr:nth-child(${index + 1})`);
+    if (microRow) {
+        const m = microRow.querySelectorAll('td');
+        if (m[1]) m[1].textContent = f.sodium.toFixed(1);
+        if (m[2]) m[2].textContent = f.calcium.toFixed(1);
+        if (m[3]) m[3].textContent = f.iron.toFixed(2);
+        if (m[4]) m[4].textContent = f.magnesium.toFixed(1);
+        if (m[5]) m[5].textContent = f.potassium.toFixed(1);
+        if (m[6]) m[6].textContent = f.zinc.toFixed(2);
+        if (m[7]) m[7].textContent = f.vitamin_a.toFixed(1);
+        if (m[8]) m[8].textContent = f.vitamin_c.toFixed(1);
+        if (m[9]) m[9].textContent = f.vitamin_d.toFixed(2);
+        if (m[10]) m[10].textContent = f.vitamin_e.toFixed(2);
+        if (m[11]) m[11].textContent = f.cholesterol.toFixed(1);
+    }
+}
+
+function toggleRecCard(card) {
+    const isOpen = card.classList.toggle('rec-open');
+    card.querySelector('.rec-toggle').textContent = isOpen ? '−' : '+';
 }
 
 async function recalculateNutrition() {
@@ -133,6 +219,53 @@ async function recalculateNutrition() {
     }
 }
 
+function removeFood(index) {
+    currentResults.splice(index, 1);   // remove from array
+    renderResultRows();                 // safe to re-render here (not typing)
+}
+
+async function addNewFood() {
+    const nameInput = document.getElementById('new-food-name');
+    const gramsInput = document.getElementById('new-food-grams');
+    const name = nameInput.value.trim();
+    const grams = Number(gramsInput.value) || 100;
+
+    if (!name) {
+        showError('Please enter a food name');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        // Use your existing /recalculate endpoint to look up the new food!
+        const response = await fetch('/recalculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foods: [{ name, grams }] })
+        });
+        const data = await response.json();
+
+        if (data.foods && data.foods[0]) {
+            const f = data.foods[0];
+            const per100 = f.per100 || {};
+            currentResults.push(calculateRowNutrition({ ...f, grams, per100 }));
+            renderResultRows();
+            nameInput.value = '';
+            gramsInput.value = '100';
+
+            if (!f.found_in_db) {
+                showError(`"${name}" not found in database — added with zero values. Try a simpler name.`);
+            } else {
+                showMessage(`Added: ${f.matched || name}`);
+            }
+        }
+    } catch (err) {
+        showError('Failed to add food: ' + err.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
 function renderResultRows() {
     const foodsHtml = currentResults.map((f, index) => `
         <tr>
@@ -149,6 +282,7 @@ function renderResultRows() {
             <td>${f.sugars.toFixed(1)}g</td>
             <td>${f.fat.toFixed(1)}g</td>
             <td>${f.fibre.toFixed(1)}g</td>
+            <td><button class="remove-food-btn" data-index="${index}" title="Remove">✕</button></td>
         </tr>
     `).join('');
 
@@ -180,7 +314,51 @@ function renderResultRows() {
         });
     });
 
+    // Wire up remove buttons
+    document.querySelectorAll('.remove-food-btn').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            const idx = Number(event.target.dataset.index);
+            removeFood(idx);
+        });
+    });
+
+    // document.querySelectorAll('.food-edit, .amount-edit').forEach(input => {
+    //     input.addEventListener('input', (event) => {
+    //         const idx = Number(event.target.dataset.index);
+    //         const field = event.target.dataset.field;
+    //         handleResultEdit(idx, field, event.target.value);
+    //     });
+    // });
+
     refreshTotals();
+}
+
+function confirmResults() {
+    showMessage('✓ Meal saved!');
+    setTimeout(() => {
+        resetApp();
+        // Scroll back to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Click the first tab (Analyze tab)
+        document.querySelector('.tab')?.click();
+    }, 1000);
+}
+
+function rejectResults() {
+    currentResults = [];
+    document.getElementById('results').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('.tab')?.click();
+    resetApp();
+}
+
+function rejectResults() {
+    // User not happy — reset and let them retake
+    if (confirm('Discard these results and start over?')) {
+        currentResults = [];
+        resetApp();
+        showTab('camera');
+    }
 }
 
 function refreshTotals() {
@@ -235,15 +413,27 @@ function refreshTotals() {
     document.getElementById('total-cholesterol').textContent = totals.cholesterol.toFixed(1);
 }
 
-// ── Tabs ────────────────────────────────────────
+// // ── Tabs ────────────────────────────────────────
+// function showTab(tab) {
+//     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+//     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+//     document.getElementById(`tab-${tab}`).classList.add('active');
+//     event.target.classList.add('active');
+//     if (tab === 'history') loadHistory();
+// }
+// ── 5. UPDATE showTab() to reset date offset when switching to history ───────
+// Replace existing showTab():
 function showTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.getElementById(`tab-${tab}`).classList.add('active');
     event.target.classList.add('active');
-    if (tab === 'history') loadHistory();
-}
 
+    if (tab === 'history') {
+        historyDateOffset = 0; // reset to today on each visit
+        loadHistory();
+    }
+}
 // ── Camera ──────────────────────────────────────
 async function startCamera() {
     try {
@@ -563,6 +753,31 @@ async function analyzePhoto() {
     } finally { showLoading(false); }
 }
 
+// ── Text ────────────────────────────────────────
+function useTypedText() {
+    const input = document.getElementById('manual-text-input');
+    const text = input.value.trim();
+    if (!text) {
+        showError('Please type your meal description first.');
+        return;
+    }
+    // Set voiceText same as if user had spoken it
+    voiceText = text;
+    document.getElementById('voice-text').textContent = text;
+    document.getElementById('analyze-voice-btn').style.display = 'block';
+    input.value = '';
+}
+
+// Allow pressing Enter in the text input
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('manual-text-input');
+    if (input) {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') useTypedText();
+        });
+    }
+});
+
 // ── Voice ────────────────────────────────────────
 function toggleVoice() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -670,26 +885,524 @@ function showResults(data) {
 }
 
 // ── History ──────────────────────────────────────
-async function loadHistory() {
+// async function loadHistory() {
+//     try {
+//         const response = await fetch('/history');
+//         const data = await response.json();
+//         const container = document.getElementById('history-list');
+//         if (data.length === 0) {
+//             container.innerHTML = '<p class="hint">No meals logged yet!</p>';
+//             return;
+//         }
+//         container.innerHTML = data.reverse().map(meal => `
+//             <div class="history-item">
+//                 <div class="history-date">📅 ${meal.timestamp}</div>
+//                 <div class="history-desc">${meal.meal_description}</div>
+//                 <div class="history-foods">${meal.foods.map(f => `${f.name} (${f.grams}g)`).join(' · ')}</div>
+//                 <div class="history-cal">🔥 ${meal.total_calories} kcal</div>
+//             </div>
+//         `).join('');
+//     } catch (err) {
+//         document.getElementById('history-list').innerHTML = '<p class="hint">Could not load history.</p>';
+//     }
+// }
+// ── Replace loadHistory() in app.js with this ────────
+
+// async function loadHistory() {
+//     const container = document.getElementById('history-list');
+//     container.innerHTML = '<p class="hint">Loading…</p>';
+//     try {
+//         // Load daily view (today)
+//         const today = new Date().toISOString().slice(0, 10);
+//         const [dailyRes, allRes] = await Promise.all([
+//             fetch(`/history/daily?date=${today}`),
+//             fetch('/history')
+//         ]);
+//         const daily = await dailyRes.json();
+//         const all   = await allRes.json();
+
+//         if (daily.error) {
+//             container.innerHTML = `<p class="hint">Error: ${daily.error}</p>`;
+//             return;
+//         }
+
+//         container.innerHTML = `
+//             ${buildDailyGaps(daily)}
+//             ${buildTimeline(daily)}
+//             ${buildPastMeals(all, today)}
+//         `;
+//     } catch (e) {
+//         container.innerHTML = `<p class="hint">Could not load history: ${e.message}</p>`;
+//     }
+// }
+// ── Add to app.js ─────────────────────────────────────
+// Call this inside loadHistory() after buildDailyGaps()
+// e.g. container.innerHTML = buildFitnessPanel(fitness) + buildDailyGaps(daily) + ...
+
+// ── 4. NEW buildRecCard() ────────────────────────────────────────────────────
+// Type-aware card renderer. Handles: activity, timing, meal_timing, nutrient, reminder
+
+const REC_TYPE_META = {
+    activity:    { accent: 'rec-activity',    badge: 'Activity'    },
+    timing:      { accent: 'rec-timing',      badge: 'Right Now'   },
+    meal_timing: { accent: 'rec-meal-timing', badge: 'Meal Plan'   },
+    nutrient:    { accent: 'rec-nutrient',    badge: 'Nutrition'   },
+    reminder:    { accent: 'rec-reminder',    badge: 'Reminder'    },
+    calorie:     { accent: 'rec-nutrient',    badge: 'Calories'    },
+};
+
+const PRIORITY_DOT = {
+    high:   '<span class="rec-dot dot-high"></span>',
+    medium: '<span class="rec-dot dot-medium"></span>',
+    caution:'<span class="rec-dot dot-caution"></span>',
+    low:    '<span class="rec-dot dot-low"></span>',
+};
+function buildRecCard(r) {
+    const meta   = REC_TYPE_META[r.type] || REC_TYPE_META.nutrient;
+    const dot    = PRIORITY_DOT[r.priority] || PRIORITY_DOT.low;
+    const isMeal = r.type === 'meal_timing';
+    const actions = r.actions || [];
+
+    const actionsHtml = actions.length === 0 ? '' :
+        isMeal
+            ? `<div class="rec-options">
+                ${actions.map((a, i) => `
+                    <div class="rec-option">
+                        <span class="rec-option-num">${i + 1}</span>
+                        <span class="rec-option-text">${a}</span>
+                    </div>`).join('')}
+               </div>`
+            : `<ul class="rec-actions">
+                ${actions.map(a => `<li>${a}</li>`).join('')}
+               </ul>`;
+
+    return `
+        <div class="rec-card ${meta.accent} rec-priority-${r.priority || 'low'}"
+             onclick="toggleRecCard(this)">
+            <div class="rec-header">
+                <span class="rec-emoji">${r.emoji || ''}</span>
+                <div class="rec-header-text">
+                    <span class="rec-title">${r.title}</span>
+                    <span class="rec-badge">${meta.badge}</span>
+                </div>
+                ${dot}
+                <span class="rec-toggle">+</span>
+            </div>
+            <div class="rec-body">
+                <p class="rec-message">${r.message}</p>
+                ${actionsHtml}
+            </div>
+        </div>
+    `;
+}
+// function buildRecCard(r) {
+//     const meta     = REC_TYPE_META[r.type] || REC_TYPE_META.nutrient;
+//     const dot      = PRIORITY_DOT[r.priority] || PRIORITY_DOT.low;
+//     const isMeal   = r.type === 'meal_timing';
+//     const actions  = r.actions || [];
+
+//     // Dinner options (meal_timing) → numbered choice cards
+//     const actionsHtml = actions.length === 0 ? '' :
+//         isMeal
+//             ? `<div class="rec-options">
+//                 ${actions.map((a, i) => `
+//                     <div class="rec-option">
+//                         <span class="rec-option-num">${i + 1}</span>
+//                         <span class="rec-option-text">${a}</span>
+//                     </div>`).join('')}
+//                </div>`
+//             : `<ul class="rec-actions">
+//                 ${actions.map(a => `<li>${a}</li>`).join('')}
+//                </ul>`;
+
+//     return `
+//         <div class="rec-card ${meta.accent} rec-priority-${r.priority || 'low'}">
+//             <div class="rec-header">
+//                 <span class="rec-emoji">${r.emoji || ''}</span>
+//                 <div class="rec-header-text">
+//                     <span class="rec-title">${r.title}</span>
+//                     <span class="rec-badge">${meta.badge}</span>
+//                 </div>
+//                 ${dot}
+//             </div>
+//             <p class="rec-message">${r.message}</p>
+//             ${actionsHtml}
+//         </div>
+//     `;
+// }
+
+// ── Load fitness data ─────────────────────────────────
+async function loadFitnessData() {
     try {
-        const response = await fetch('/history');
-        const data = await response.json();
-        const container = document.getElementById('history-list');
-        if (data.length === 0) {
-            container.innerHTML = '<p class="hint">No meals logged yet!</p>';
+        const res  = await fetch('/fitness');
+        const data = await res.json();
+        if (data.error) return null;
+        return data;
+    } catch (e) {
+        return null;
+    }
+}
+
+// ── 3. REPLACE buildFitnessPanel() ──────────────────────────────────────────
+function buildFitnessPanel(data) {
+    if (!data) return '';
+
+    const fit  = data.fitness          || {};
+    const recs = data.recommendations  || {};
+
+    const statsHtml = fit.available ? `
+        <div class="fitness-stats-row">
+            <div class="fitness-stat">
+                <span class="fitness-stat-val">${(fit.steps || 0).toLocaleString()}</span>
+                <span class="fitness-stat-lbl">Steps</span>
+            </div>
+            <div class="fitness-stat">
+                <span class="fitness-stat-val">${fit.calories_burned || 0}</span>
+                <span class="fitness-stat-lbl">kcal Active</span>
+            </div>
+            <div class="fitness-stat activity-stat">
+                <span class="fitness-stat-val">${fit.activity_emoji || '—'}</span>
+                <span class="fitness-stat-lbl">${fit.activity_label || 'Unknown'}</span>
+            </div>
+        </div>
+        <div class="fitness-calorie-bar">
+            <div class="fitness-calorie-row">
+                <span>🍽️ Consumed</span>
+                <span class="fitness-cal-num">${recs.cal_consumed || 0} kcal</span>
+            </div>
+            <div class="fitness-calorie-row">
+                <span>🔥 Active Burn</span>
+                <span class="fitness-cal-num">${fit.calories_burned || 0} kcal</span>
+            </div>
+            <div class="fitness-calorie-row" style="font-size:0.70rem;opacity:0.55">
+                <span>&nbsp;&nbsp;↳ Total incl. BMR</span>
+                <span class="fitness-cal-num">${fit.calories_total || 0} kcal</span>
+            </div>
+            <div class="fitness-calorie-divider"></div>
+            <div class="fitness-calorie-row fitness-calorie-remaining">
+                <span>⚡ Remaining</span>
+                <span class="fitness-cal-num ${(recs.cal_remaining || 0) < 0 ? 'cal-over' : 'cal-ok'}">
+                    ${(recs.cal_remaining || 0) >= 0
+                        ? `${recs.cal_remaining} kcal to go`
+                        : `${Math.abs(recs.cal_remaining)} kcal over`}
+                </span>
+            </div>
+        </div>
+    ` : `
+        <div class="fitness-unavailable">
+            <span>📱</span>
+            <span>Connect Google Fit to see activity data</span>
+        </div>
+    `;
+
+    const recsHtml = (recs.recommendations || [])
+        .map(r => buildRecCard(r))
+        .join('');
+
+    return `
+        <div class="fitness-card">
+            <div class="gap-card-title">🏃 Activity & Smart Recommendations</div>
+            ${statsHtml}
+        </div>
+        ${recsHtml ? `
+            <div class="recs-section">
+                <div class="recs-section-label">💡 Personalised Recommendations</div>
+                ${recsHtml}
+            </div>
+        ` : ''}
+    `;
+}
+
+// // ── Build fitness + recommendations panel ─────────────
+// function buildFitnessPanel(data) {
+//     if (!data) return '';
+
+//     const fit  = data.fitness || {};
+//     const recs = data.recommendations || {};
+
+//     // Fitness stats row
+//     const statsHtml = fit.available ? `
+//         <div class="fitness-stats-row">
+//             <div class="fitness-stat">
+//                 <span class="fitness-stat-val">${(fit.steps || 0).toLocaleString()}</span>
+//                 <span class="fitness-stat-lbl">Steps</span>
+//             </div>
+//             <div class="fitness-stat">
+//                 <span class="fitness-stat-val">${fit.calories_burned || 0}</span>
+//                 <span class="fitness-stat-lbl">kcal Burned</span>
+//             </div>
+//             <div class="fitness-stat activity-stat">
+//                 <span class="fitness-stat-val">${fit.activity_emoji || ''}</span>
+//                 <span class="fitness-stat-lbl">${fit.activity_label || ''}</span>
+//             </div>
+//         </div>
+//         <div class="fitness-calorie-bar">
+//             <div class="fitness-calorie-row">
+//                 <span>🍽️ Eaten</span>
+//                 <span class="fitness-cal-num">${recs.cal_consumed || 0} kcal</span>
+//             </div>
+//             <div class="fitness-calorie-row">
+//                 <span>🔥 Active Burned</span>
+//                 <span class="fitness-cal-num">${fit.calories_burned || 0} kcal</span>
+//             </div>
+//             <div class="fitness-calorie-row" style="font-size:0.72rem;opacity:0.65">
+//                 <span>&nbsp;&nbsp;↳ Total incl. BMR</span>
+//                 <span class="fitness-cal-num">${fit.calories_total || 0} kcal</span>
+//             </div>
+
+//             <div class="fitness-calorie-divider"></div>
+//             <div class="fitness-calorie-row fitness-calorie-remaining">
+//                 <span>⚡ Remaining</span>
+//                 <span class="fitness-cal-num ${(recs.cal_remaining || 0) < 0 ? 'cal-over' : 'cal-ok'}">
+//                     ${recs.cal_remaining >= 0
+//                         ? `${recs.cal_remaining} kcal to go`
+//                         : `${Math.abs(recs.cal_remaining)} kcal over`}
+//                 </span>
+//             </div>
+//         </div>
+//     ` : `
+//         <div class="fitness-unavailable">
+//             <span>📱</span>
+//             <span>Connect Google Fit to see activity data</span>
+//         </div>
+//     `;
+
+//     // Recommendations
+//     const recsHtml = (recs.recommendations || []).map(r => `
+//         <div class="rec-card rec-${r.priority || 'low'}">
+//             <div class="rec-header">
+//                 <span class="rec-emoji">${r.emoji}</span>
+//                 <span class="rec-title">${r.title}</span>
+//             </div>
+//             <p class="rec-message">${r.message}</p>
+//             ${r.actions && r.actions.length ? `
+//                 <ul class="rec-actions">
+//                     ${r.actions.map(a => `<li>${a}</li>`).join('')}
+//                 </ul>
+//             ` : ''}
+//         </div>
+//     `).join('');
+
+//     return `
+//         <div class="fitness-card">
+//             <div class="gap-card-title">🏃 Activity & Smart Recommendations</div>
+//             ${statsHtml}
+//         </div>
+//         ${recsHtml ? `
+//             <div class="recs-section">
+//                 <div class="gap-card-title" style="padding:0 4px 8px">💡 Personalized Recommendations</div>
+//                 ${recsHtml}
+//             </div>
+//         ` : ''}
+//     `;
+// }
+
+// ── Update loadHistory to include fitness ─────────────
+// Replace your existing loadHistory with this:
+// ── 2. REPLACE loadHistory() ────────────────────────────────────────────────
+async function loadHistory() {
+    const container = document.getElementById('history-list');
+    container.innerHTML = `
+        <div class="history-skeleton">
+            <div class="skeleton-card">
+                <div class="sk sk-title"></div>
+                <div class="sk sk-bar"></div>
+                <div class="sk sk-bar sk-bar-short"></div>
+            </div>
+        </div>`;
+
+    updateDateNavLabel();
+
+    try {
+        const targetDate = getHistoryDate(historyDateOffset);
+        const isToday    = historyDateOffset === 0;
+
+        const fetches = [
+            fetch(`/history/daily?date=${targetDate}`),
+            fetch('/history'),
+        ];
+        if (isToday) fetches.push(loadFitnessData());
+
+        const results  = await Promise.all(fetches);
+        const daily    = await results[0].json();
+        const all      = await results[1].json();
+        const fitnessData = isToday ? results[2] : null;
+
+        if (daily.error) {
+            container.innerHTML = `<p class="hint" style="padding:16px">Error: ${daily.error}</p>`;
             return;
         }
-        container.innerHTML = data.reverse().map(meal => `
-            <div class="history-item">
-                <div class="history-date">📅 ${meal.timestamp}</div>
-                <div class="history-desc">${meal.meal_description}</div>
-                <div class="history-foods">${meal.foods.map(f => `${f.name} (${f.grams}g)`).join(' · ')}</div>
-                <div class="history-cal">🔥 ${meal.total_calories} kcal</div>
+
+        container.innerHTML = [
+            isToday ? buildFitnessPanel(fitnessData) : '',
+            buildDailyGaps(daily),
+            buildTimeline(daily),
+            buildPastMeals(all, targetDate),
+        ].filter(Boolean).join('');
+
+    } catch (e) {
+        container.innerHTML = `<p class="hint" style="padding:16px">Could not load: ${e.message}</p>`;
+    }
+}
+
+
+// ── Daily nutrition gap summary ───────────────────────
+function buildDailyGaps(daily) {
+    const gaps   = daily.gaps || [];
+    const totals = daily.daily_totals || {};
+    const targets = daily.daily_targets || {};
+
+    if (!gaps.length) {
+        return `<div class="gap-card gap-card-empty">
+            <div class="gap-card-title">📊 Today's Nutrition</div>
+            <p class="hint">No meals logged today yet.</p>
+        </div>`;
+    }
+
+    // Progress bars for key macros
+    const macros = ['calories','protein','carbs','fat','fibre'];
+    const macroLabels = {
+        calories:'Calories', protein:'Protein', carbs:'Carbs', fat:'Fat', fibre:'Fibre'
+    };
+    const macroUnits = {
+        calories:'kcal', protein:'g', carbs:'g', fat:'g', fibre:'g'
+    };
+
+    const progressBars = macros.map(key => {
+        const consumed = totals[key] || 0;
+        const target   = targets[key] || 1;
+        const pct      = Math.min(100, Math.round(consumed / target * 100));
+        const color    = pct >= 90 ? '#2d8f58' : pct >= 60 ? '#e8762a' : '#dc2626';
+        return `
+            <div class="macro-progress-row">
+                <div class="macro-progress-label">
+                    <span>${macroLabels[key]}</span>
+                    <span class="macro-progress-val">${Math.round(consumed)} / ${target} ${macroUnits[key]}</span>
+                </div>
+                <div class="macro-progress-bar-bg">
+                    <div class="macro-progress-bar-fill" style="width:${pct}%;background:${color}"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Alert messages (non-good)
+    const alerts = gaps.filter(g => g.severity !== 'good');
+    const alertsHtml = alerts.length ? alerts.map(a => `
+        <div class="gap-alert gap-alert-${a.severity}">
+            <span class="gap-alert-icon">${severityIcon(a.severity)}</span>
+            <div>
+                <strong>${a.label}</strong>
+                ${a.consumed > 0
+                    ? `<span class="gap-alert-nums">${a.consumed}${a.unit} / ${a.target}${a.unit} (${a.pct}%)</span>`
+                    : ''}
+                <p class="gap-alert-msg">${a.message}</p>
+            </div>
+        </div>
+    `).join('') : '<p class="hint" style="margin-top:8px">✅ All nutrients on track today!</p>';
+
+    return `
+        <div class="gap-card">
+            <div class="gap-card-title">📊 Today's Progress — ${daily.date}</div>
+            <div class="gap-meal-count">${daily.meal_count} meal${daily.meal_count !== 1 ? 's' : ''} logged</div>
+            <div class="macro-progress-stack">${progressBars}</div>
+            <div class="gap-alerts-section">
+                <div class="gap-alerts-title">⚡ Nutrition Alerts</div>
+                ${alertsHtml}
+            </div>
+        </div>
+    `;
+}
+
+function severityIcon(s) {
+    if (s === 'high')    return '🔴';
+    if (s === 'medium')  return '🟠';
+    if (s === 'warning') return '⚠️';
+    if (s === 'caution') return '🟡';
+    return '✅';
+}
+
+// ── Today's timeline ──────────────────────────────────
+function buildTimeline(daily) {
+    const timeline = daily.timeline || [];
+    if (!timeline.length) return '';
+
+    const categoryIcons = {
+        'Breakfast':       '🌅',
+        'Morning Snack':   '☕',
+        'Lunch':           '☀️',
+        'Afternoon Snack': '🍎',
+        'Dinner':          '🌙',
+        'Late Snack':      '🌚',
+    };
+
+    const sections = timeline.map(cat => {
+        const icon  = categoryIcons[cat.category] || '🍽️';
+        const meals = cat.meals.map(meal => `
+            <div class="timeline-meal">
+                <div class="timeline-meal-time">${meal.timestamp ? meal.timestamp.slice(11,16) : ''}</div>
+                <div class="timeline-meal-body">
+                    <div class="timeline-meal-desc">${meal.meal_description || 'Meal'}</div>
+                    <div class="timeline-meal-foods">
+                        ${(meal.foods || []).map(f => `${f.name} (${f.grams}g)`).join(' · ')}
+                    </div>
+                    <div class="timeline-meal-cal">🔥 ${meal.total_calories || 0} kcal</div>
+                </div>
             </div>
         `).join('');
-    } catch (err) {
-        document.getElementById('history-list').innerHTML = '<p class="hint">Could not load history.</p>';
-    }
+
+        const t = cat.totals;
+        return `
+            <div class="timeline-section">
+                <div class="timeline-section-header">
+                    <span class="timeline-icon">${icon}</span>
+                    <span class="timeline-cat-name">${cat.category}</span>
+                    <span class="timeline-cat-cal">${Math.round(t.calories || 0)} kcal</span>
+                </div>
+                <div class="timeline-meals">${meals}</div>
+                <div class="timeline-section-totals">
+                    P: ${(t.protein||0).toFixed(1)}g &nbsp;|&nbsp;
+                    C: ${(t.carbs||0).toFixed(1)}g &nbsp;|&nbsp;
+                    F: ${(t.fat||0).toFixed(1)}g &nbsp;|&nbsp;
+                    Fibre: ${(t.fibre||0).toFixed(1)}g
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    return `
+        <div class="timeline-card">
+            <div class="gap-card-title">🕐 Today's Timeline</div>
+            ${sections}
+        </div>
+    `;
+}
+
+// ── Past meals (previous days) ────────────────────────
+function buildPastMeals(all, today) {
+    const past = [...all].reverse().filter(m =>
+        !m.timestamp || !m.timestamp.startsWith(today)
+    ).slice(0, 10);
+
+    if (!past.length) return '';
+
+    const items = past.map(m => `
+        <div class="history-item">
+            <div class="history-date">📅 ${m.timestamp || ''} · ${m.meal_category || 'Meal'}</div>
+            <div class="history-desc">${m.meal_description || 'Meal'}</div>
+            <div class="history-foods">${(m.foods||[]).map(f=>`${f.name} (${f.grams}g)`).join(' · ')}</div>
+            <div class="history-meta">
+                <span class="history-cal">🔥 ${m.total_calories || 0} kcal</span>
+            </div>
+        </div>
+    `).join('');
+
+    return `
+        <div class="card" style="margin-top:12px">
+            <div class="card-label">📆 Previous Meals</div>
+            ${items}
+        </div>
+    `;
 }
 
 // ── Helpers ──────────────────────────────────────
