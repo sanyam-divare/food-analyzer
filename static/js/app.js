@@ -1,11 +1,55 @@
 // ── State ───────────────────────────────────────
 // ── 1. DATE NAV STATE (add near top with other state variables) ─────────────
 let historyDateOffset = 0; // 0 = today, -1 = yesterday, etc.
+// Add these global variables near the top of app.js
+// ── Extra globals for meal confirmation ──────────
+let currentMealTimestamp = null;
+let currentCuisineType = null;
+let currentGutScore = 0;
+let currentGutNotes = '';
+
+// ── Timezone helper ──────────────────────────────
+function getUserTimezone() {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+// ── Format timestamp in user's local time ────────
+function formatLocalTime(timestampStr) {
+    if (!timestampStr) return '';
+    try {
+        const date = new Date(timestampStr.replace(' ', 'T'));
+        return date.toLocaleString(undefined, {
+            year:   'numeric',
+            month:  '2-digit',
+            day:    '2-digit',
+            hour:   '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch (e) {
+        return timestampStr;
+    }
+}
+
+// In showResults() function, add these lines:
+function showResults(data) {
+    clearError();
+
+    // Store for confirmation later
+    currentMealTimestamp = data.timestamp || null;
+    currentCuisineType = data.cuisine_type || '';
+    currentGutScore = data.overall_gut_health_score || 0;
+    currentGutNotes = data.overall_gut_notes || '';
+
+    // ... rest of your existing showResults code
+}
 
 function getHistoryDate(offset = 0) {
     const d = new Date();
     d.setDate(d.getDate() + offset);
-    return d.toISOString().slice(0, 10);
+    // 'en-CA' gives YYYY-MM-DD format using the USER'S local timezone
+    return d.toLocaleDateString('en-CA');  // no timeZone = browser
+    // return d.toISOString().slice(0, 10);
 }
 
 function shiftHistoryDate(delta) {
@@ -24,6 +68,11 @@ function refreshHistory() {
     });
 }
 
+function getUserTimezone() {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Returns e.g. "Australia/Melbourne", "America/New_York", "Asia/Kolkata"
+}
+
 function updateDateNavLabel() {
     const labelEl = document.getElementById('history-date-label');
     const subEl   = document.getElementById('history-date-sub');
@@ -37,7 +86,9 @@ function updateDateNavLabel() {
     } else {
         const d = new Date();
         d.setDate(d.getDate() + historyDateOffset);
-        labelEl.textContent = d.toLocaleDateString('en-AU', { weekday: 'long' });
+        labelEl.textContent = d.toLocaleDateString(undefined, {
+            weekday: 'long'  // no timeZone = browser local ✅
+        });
     }
 
     const dateStr = getHistoryDate(historyDateOffset);
@@ -333,18 +384,65 @@ function renderResultRows() {
     refreshTotals();
 }
 
-function confirmResults() {
-    showMessage('✓ Meal saved!');
-    setTimeout(() => {
-        resetApp();
-        // Scroll back to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        // Click the first tab (Analyze tab)
-        document.querySelector('.tab')?.click();
-    }, 1000);
+// function confirmResults() {
+//     showMessage('✓ Meal saved!');
+//     setTimeout(() => {
+//         resetApp();
+//         // Scroll back to top
+//         window.scrollTo({ top: 0, behavior: 'smooth' });
+//         // Click the first tab (Analyze tab)
+//         document.querySelector('.tab')?.click();
+//     }, 1000);
+// }
+
+// function rejectResults() {
+//     currentResults = [];
+//     document.getElementById('results').style.display = 'none';
+//     window.scrollTo({ top: 0, behavior: 'smooth' });
+//     document.querySelector('.tab')?.click();
+//     resetApp();
+// }
+
+async function confirmResults() {
+    try {
+        const mealData = {
+            meal_description:         document.getElementById('meal-description').textContent,
+            foods:                    currentResults,
+            total_calories:           currentResults.reduce((sum, f) => sum + (f.calories || 0), 0),
+            timestamp:                currentMealTimestamp,
+            cuisine_type:             currentCuisineType,
+            overall_gut_health_score: currentGutScore,
+            overall_gut_notes:        currentGutNotes,
+            timezone:                 getUserTimezone()   // ← add this
+        };
+
+        const response = await fetch('/confirm-meal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mealData)
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            showError('Failed to save: ' + result.error);
+            return;
+        }
+
+        showMessage('✓ Meal saved to your history!');
+        setTimeout(() => {
+            resetApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.querySelector('.tab')?.click();
+        }, 1000);
+
+    } catch (err) {
+        showError('Failed to save meal: ' + err.message);
+    }
 }
 
 function rejectResults() {
+    // Just discard — nothing to undo since we no longer auto-save
     currentResults = [];
     document.getElementById('results').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -352,14 +450,15 @@ function rejectResults() {
     resetApp();
 }
 
-function rejectResults() {
-    // User not happy — reset and let them retake
-    if (confirm('Discard these results and start over?')) {
-        currentResults = [];
-        resetApp();
-        showTab('camera');
-    }
-}
+
+// function rejectResults() {
+//     // User not happy — reset and let them retake
+//     if (confirm('Discard these results and start over?')) {
+//         currentResults = [];
+//         resetApp();
+//         showTab('camera');
+//     }
+// }
 
 function refreshTotals() {
     let totals = {
@@ -735,7 +834,7 @@ async function analyzePhoto() {
         }
 
         // build body and estimate tokens (approx 1 token ≈ 4 chars)
-        const bodyObj = { image: sendBase64, mime_type: currentMimeType, provider: getSelectedProvider(), image_width: currentImageWidth, image_height: currentImageHeight };
+        const bodyObj = { image: sendBase64, mime_type: currentMimeType, provider: getSelectedProvider(), image_width: currentImageWidth, image_height: currentImageHeight,timezone: getUserTimezone() };
         const bodyStr = JSON.stringify(bodyObj);
         const estimatedTokens = Math.ceil(bodyStr.length / 4);
         bodyObj.client_estimated_tokens = estimatedTokens;
@@ -829,7 +928,7 @@ async function analyzeVoice() {
         const response = await fetch('/analyze-voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: voiceText, provider: getSelectedProvider() })
+            body: JSON.stringify({ text: voiceText, provider: getSelectedProvider(),timezone: getUserTimezone() })
         });
         const data = await response.json();
         if (data.error) { showError('Error: ' + data.error); }

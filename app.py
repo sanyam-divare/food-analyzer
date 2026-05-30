@@ -111,8 +111,20 @@ def get_local_now():
         # Fallback if zoneinfo not available
         return datetime.now()
 
-def get_local_timestamp():
-    return get_local_now().strftime("%Y-%m-%d %H:%M")
+# def get_local_timestamp():
+#     return get_local_now().strftime("%Y-%m-%d %H:%M")
+
+def get_local_timestamp(timezone_str=None):
+    """Get current timestamp in user's local timezone"""
+    try:
+        if timezone_str:
+            from zoneinfo import ZoneInfo
+            tz = ZoneInfo(timezone_str)
+            return datetime.now(tz).strftime("%Y-%m-%d %H:%M")
+    except Exception as e:
+        print(f"Timezone error for '{timezone_str}': {e}")
+    # Fallback to server time
+    return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 # ─── Logging ─────────────────────────────────────────
 def request_log(msg):
@@ -736,6 +748,7 @@ def index():
 def analyze_v1():
     try:
         data = request.get_json() or {}
+        timezone_str = data.get('timezone', '')
         g.request_log = []
         request_log("Received /analyze request")
 
@@ -763,30 +776,55 @@ def analyze_v1():
             "overall_gut_notes": ai_result.get('overall_gut_notes', ''),
             "foods": foods,
             "total_calories": total_calories,
-            "timestamp": get_local_timestamp(),
+            "timestamp": get_local_timestamp(timezone_str),
             "debug_log": g.request_log
         }
-
-        save_meal_log(result)
+        # we don't want to save before confirmation    
+        # save_meal_log(result)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": f"Server processing breakdown: {str(e)}"}), 500
 
-def save_meal_log(meal_data):
-    log_file = 'meals_log.json'
-    log = []
-    if os.path.exists(log_file):
-        with open('meals_log.json', 'r') as f:
-            log = json.load(f)
+@app.route('/confirm-meal', methods=['POST'])
+def confirm_meal():
+    """Save meal only when user explicitly confirms."""
+    try:
+        data = request.get_json() or {}
+        timezone_str = data.get('timezone', '')
 
-    # Fix timezone here too
-    timestamp = meal_data.get('timestamp', get_local_timestamp())
-    meal_data['meal_category'] = get_meal_category(timestamp)
-    meal_data['date'] = timestamp[:10]
+        meal_data = {
+            "meal_description":         data.get('meal_description', ''),
+            "cuisine_type":             data.get('cuisine_type', ''),
+            "foods":                    data.get('foods', []),
+            "total_calories":           data.get('total_calories', 0),
+            "timestamp":                data.get('timestamp') or get_local_timestamp(timezone_str),
+            "overall_gut_health_score": data.get('overall_gut_health_score', 0),
+            "overall_gut_notes":        data.get('overall_gut_notes', ''),
+        }
 
-    log.append(meal_data)
-    with open(log_file, 'w') as f:
-        json.dump(log, f, indent=2)
+        save_meal_log(meal_data)
+        return jsonify({"status": "saved", "timestamp": meal_data['timestamp']})
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+# def save_meal_log(meal_data):
+#     log_file = 'meals_log.json'
+#     log = []
+#     if os.path.exists(log_file):
+#         with open('meals_log.json', 'r') as f:
+#             log = json.load(f)
+
+#     # Fix timezone here too
+#     timestamp = meal_data.get('timestamp', get_local_timestamp())
+#     meal_data['meal_category'] = get_meal_category(timestamp)
+#     meal_data['date'] = timestamp[:10]
+
+#     log.append(meal_data)
+#     with open(log_file, 'w') as f:
+#         json.dump(log, f, indent=2)
 
 
         
@@ -821,8 +859,8 @@ def analyze_voice():
             "timestamp": get_local_timestamp(),
             "debug_log": g.request_log
         }
-
-        save_meal_log(result)
+        # we don't want to save before confirmation - sanyam
+        # save_meal_log(result)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
