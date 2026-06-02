@@ -10,6 +10,7 @@
     <link rel="manifest" href="/static/manifest.json">
     <title>🍽️ Food Analyzer</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/gut_style.css">
 </head>
 <body>
 
@@ -20,248 +21,280 @@
 
     <main>
 
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('analyze')">📸 Analyze</button>
-            <button class="tab" onclick="showTab('history')">📅 History</button>
+        <!-- Mode Selector -->
+        <div class="mode-selector" id="mode-selector">
+            <label class="mode-option">
+                <input type="radio" name="app-mode" value="health" checked>
+                <div class="mode-card">
+                    <span class="mode-icon">🥗</span>
+                    <span class="mode-title">Health Tracker</span>
+                    <span class="mode-desc">Calories, macros & nutrients</span>
+                </div>
+            </label>
+            <label class="mode-option">
+                <input type="radio" name="app-mode" value="gut">
+                <div class="mode-card">
+                    <span class="mode-icon">🦠</span>
+                    <span class="mode-title">Gut Health Tracker</span>
+                    <span class="mode-desc">Microbiome & bacteria tracking</span>
+                </div>
+            </label>
         </div>
 
+        <!-- Error banner — shared by both modes -->
         <div id="error-message" class="error-banner" style="display:none"></div>
 
-        <div class="card">
-            <h2>🧠 AI Provider</h2>
-            <p class="hint">Choose which model to use for analysis.</p>
-            <select id="provider-select" class="provider-select">
-                <option value="gemini" selected>Gemini</option>
-                <option value="claude">Claude (voice/text only)</option>
-                <option value="openai">OpenAI (vision)</option>
-            </select>
-        </div>
+        <!-- ══════════════════════════════════════════
+             PERSONA 1 — HEALTH TRACKER
+             Everything below is wrapped and hidden
+             when gut mode is selected
+        ══════════════════════════════════════════ -->
+        <div id="health-mode-content">
 
-        <!-- Analyze Tab -->
-        <div id="tab-analyze" class="tab-content active">
-
-            <!-- Camera -->
             <div class="card">
-                <h2>📷 Take a Photo</h2>
-                <div class="camera-container">
-                    <video id="camera-preview" autoplay playsinline style="display:none"></video>
-                    <canvas id="canvas" style="display:none"></canvas>
-                    <img id="photo-preview" style="display:none" alt="Food photo">
-                    <div class="camera-placeholder" id="camera-placeholder">🍽️</div>
-                </div>
-                <div class="button-group">
-                    <button class="btn-primary" onclick="startCamera()">📷 Camera</button>
-                    <button class="btn-success" onclick="capturePhoto()" id="capture-btn" style="display:none">✅ Capture</button>
-                    <button class="btn-secondary" onclick="uploadPhoto()">📁 Upload</button>
-                    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
-                </div>
+                <h2>🧠 AI Provider</h2>
+                <p class="hint">Choose which model to use for analysis.</p>
+                <select id="provider-select" class="provider-select">
+                    <option value="gemini" selected>Gemini</option>
+                    <option value="claude">Claude (voice/text only)</option>
+                    <option value="openai">OpenAI (vision)</option>
+                </select>
             </div>
 
-            <!-- Voice -->
-            <div class="card">
-                <h2>🎤 Voice Input</h2>
-                <p class="hint">Say what you ate — e.g. "I had rice and chicken curry with salad"</p>
-                <div class="voice-container">
-                    <button class="btn-voice" id="voice-btn" onclick="toggleVoice()">🎤 Tap to Speak</button>
-                    <div id="voice-text" class="voice-text"></div>
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('analyze')">📸 Analyze</button>
+                <button class="tab" onclick="showTab('history')">📅 History</button>
+            </div>
+
+            <!-- Analyze Tab -->
+            <div id="tab-analyze" class="tab-content active">
+
+                <!-- Camera -->
+                <div class="card">
+                    <h2>📷 Take a Photo</h2>
+                    <div class="camera-container">
+                        <video id="camera-preview" autoplay playsinline style="display:none"></video>
+                        <canvas id="canvas" style="display:none"></canvas>
+                        <img id="photo-preview" style="display:none" alt="Food photo">
+                        <div class="camera-placeholder" id="camera-placeholder">🍽️</div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="startCamera()">📷 Camera</button>
+                        <button class="btn-success" onclick="capturePhoto()" id="capture-btn" style="display:none">✅ Capture</button>
+                        <button class="btn-secondary" onclick="uploadPhoto()">📁 Upload</button>
+                        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
+                    </div>
                 </div>
-                <button class="btn-primary" onclick="analyzeVoice()" id="analyze-voice-btn" style="display:none">
-                    🔍 Analyze Food
+
+                <!-- Voice -->
+                <div class="card">
+                    <h2>🎤 Voice Input</h2>
+                    <p class="hint">Say what you ate — e.g. "I had rice and chicken curry with salad"</p>
+                    <div class="voice-container">
+                        <button class="btn-voice" id="voice-btn" onclick="toggleVoice()">🎤 Tap to Speak</button>
+                        <div id="voice-text" class="voice-text"></div>
+                    </div>
+                    <button class="btn-primary" onclick="analyzeVoice()" id="analyze-voice-btn" style="display:none">
+                        🔍 Analyze Food
+                    </button>
+                </div>
+
+                <!-- Analyze Button -->
+                <button class="btn-analyze" onclick="analyzePhoto()" id="analyze-btn" style="display:none">
+                    🤖 Analyze with AI
                 </button>
-            </div>
 
-            <!-- Analyze Button -->
-            <button class="btn-analyze" onclick="analyzePhoto()" id="analyze-btn" style="display:none">
-                🤖 Analyze with AI
-            </button>
-
-            <!-- New: keyboard input option -->
-            <div class="voice-or-type">
-                <div class="voice-divider">
-                    <span>or type your meal</span>
-                </div>
-                <div class="type-input-row">
-                    <input 
-                        type="text" 
-                        id="manual-text-input" 
-                        placeholder="e.g. 2 eggs, toast with butter, orange juice"
-                        class="manual-text-input"
-                    />
-                    <button onclick="useTypedText()" class="type-submit-btn">→</button>
-                </div>
-            </div>
-
-            <button id="analyze-voice-btn" 
-                    style="display:none" 
-                    onclick="analyzeVoice()">
-                🔍 Analyze Meal
-            </button>
-
-
-            
-            <!-- Loading -->
-            <div id="loading" style="display:none" class="loading">
-                <div class="spinner"></div>
-                <p>AI is analyzing your food...</p>
-            </div>
-
-            <!-- Results -->
-            <div id="results" style="display:none" class="card results">
-                <h2>📊 Nutrition Results</h2>
-                <p id="meal-description" class="meal-desc"></p>
-                <div class="debug-panel">
-                    <button class="btn-small" id="toggle-debug" onclick="document.getElementById('debug-log').classList.toggle('visible')">Toggle Debug Log</button>
-                    <pre id="debug-log" class="debug-log" style="display:none; white-space:pre-wrap; max-height:200px; overflow:auto"></pre>
-                </div>
-
-                <div class="result-actions">
-                    <button class="btn-secondary" onclick="recalculateNutrition()">🔁 Recalculate</button>
-                    <button class="btn-secondary" onclick="resetApp()">🔄 Analyze Another</button>
-                </div>
-
-                <div class="add-food-row">
-                    <input type="text" id="new-food-name" placeholder="Add food (e.g. boiled egg)" />
-                    <input type="number" id="new-food-grams" placeholder="grams" value="100" min="0" />
-                    <button onclick="addNewFood()" class="add-food-btn">+ Add</button>
-                </div>
-
-                <!-- Macro Summary Cards -->
-                <div class="macro-summary">
-                    <div class="macro-card calories">
-                        <span class="macro-label">Calories</span>
-                        <span class="macro-value" id="summary-cal">—</span>
+                <!-- Type your meal -->
+                <div class="voice-or-type">
+                    <div class="voice-divider">
+                        <span>or type your meal</span>
                     </div>
-                    <div class="macro-card">
-                        <span class="macro-label">Protein</span>
-                        <span class="macro-value" id="summary-protein">—</span>
-                    </div>
-                    <div class="macro-card">
-                        <span class="macro-label">Carbs</span>
-                        <span class="macro-value" id="summary-carbs">—</span>
-                    </div>
-                    <div class="macro-card">
-                        <span class="macro-label">Fat</span>
-                        <span class="macro-value" id="summary-fat">—</span>
+                    <div class="type-input-row">
+                        <input
+                            type="text"
+                            id="manual-text-input"
+                            placeholder="e.g. 2 eggs, toast with butter, orange juice"
+                            class="manual-text-input"
+                        />
+                        <button onclick="useTypedText()" class="type-submit-btn">→</button>
                     </div>
                 </div>
 
-                <!-- Macro Table -->
-                <p class="section-label">📦 Macronutrients</p>
-                <div class="table-container">
-                    <table class="nutrition-table">
-                        <thead>
-                            <tr>
-                                <th>Food Item</th>
-                                <th>Amt (g)</th>
-                                <th>Kcal</th>
-                                <th>Protein</th>
-                                <th>Carbs</th>
-                                <th>Sugars</th>
-                                <th>Fat</th>
-                                <th>Fibre</th>
-                            </tr>
-                        </thead>
-                        <tbody id="foods-list"></tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td colspan="2">🔥 Total</td>
-                                <td id="total-cal" class="kcal-cell"></td>
-                                <td id="total-protein"></td>
-                                <td id="total-carbs"></td>
-                                <td id="total-sugars"></td>
-                                <td id="total-fat"></td>
-                                <td id="total-fibre"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                <!-- Loading -->
+                <div id="loading" style="display:none" class="loading">
+                    <div class="spinner"></div>
+                    <p>AI is analyzing your food...</p>
                 </div>
 
-                <!-- Micronutrient Table -->
-                <p class="section-label">💊 Micronutrients & Minerals</p>
-                <div class="table-container">
-                    <table class="nutrition-table">
-                        <thead>
-                            <tr>
-                                <th>Food Item</th>
-                                <th>Na(mg)</th>
-                                <th>Ca(mg)</th>
-                                <th>Fe(mg)</th>
-                                <th>Mg(mg)</th>
-                                <th>K(mg)</th>
-                                <th>Zn(mg)</th>
-                                <th>VitA(ug)</th>
-                                <th>VitC(mg)</th>
-                                <th>VitD(ug)</th>
-                                <th>VitE(mg)</th>
-                                <th>Chol(mg)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="micro-list"></tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td>🔢 Total</td>
-                                <td id="total-sodium"></td>
-                                <td id="total-calcium"></td>
-                                <td id="total-iron"></td>
-                                <td id="total-magnesium"></td>
-                                <td id="total-potassium"></td>
-                                <td id="total-zinc"></td>
-                                <td id="total-vitamin-a"></td>
-                                <td id="total-vitamin-c"></td>
-                                <td id="total-vitamin-d"></td>
-                                <td id="total-vitamin-e"></td>
-                                <td id="total-cholesterol"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                <!-- Results -->
+                <div id="results" style="display:none" class="card results">
+                    <h2>📊 Nutrition Results</h2>
+                    <p id="meal-description" class="meal-desc"></p>
+
+                    <div class="debug-panel">
+                        <button class="btn-small" onclick="document.getElementById('debug-log').classList.toggle('visible')">Toggle Debug Log</button>
+                        <pre id="debug-log" class="debug-log" style="display:none; white-space:pre-wrap; max-height:200px; overflow:auto"></pre>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="btn-secondary" onclick="recalculateNutrition()">🔁 Recalculate</button>
+                        <button class="btn-secondary" onclick="resetApp()">🔄 Analyze Another</button>
+                    </div>
+
+                    <div class="add-food-row">
+                        <input type="text" id="new-food-name" placeholder="Add food (e.g. boiled egg)" />
+                        <input type="number" id="new-food-grams" placeholder="grams" value="100" min="0" />
+                        <button onclick="addNewFood()" class="add-food-btn">+ Add</button>
+                    </div>
+
+                    <!-- Macro Summary Cards -->
+                    <div class="macro-summary">
+                        <div class="macro-card calories">
+                            <span class="macro-label">Calories</span>
+                            <span class="macro-value" id="summary-cal">—</span>
+                        </div>
+                        <div class="macro-card">
+                            <span class="macro-label">Protein</span>
+                            <span class="macro-value" id="summary-protein">—</span>
+                        </div>
+                        <div class="macro-card">
+                            <span class="macro-label">Carbs</span>
+                            <span class="macro-value" id="summary-carbs">—</span>
+                        </div>
+                        <div class="macro-card">
+                            <span class="macro-label">Fat</span>
+                            <span class="macro-value" id="summary-fat">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Macro Table -->
+                    <p class="section-label">📦 Macronutrients</p>
+                    <div class="table-container">
+                        <table class="nutrition-table">
+                            <thead>
+                                <tr>
+                                    <th>Food Item</th>
+                                    <th>Amt (g)</th>
+                                    <th>Kcal</th>
+                                    <th>Protein</th>
+                                    <th>Carbs</th>
+                                    <th>Sugars</th>
+                                    <th>Fat</th>
+                                    <th>Fibre</th>
+                                </tr>
+                            </thead>
+                            <tbody id="foods-list"></tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="2">🔥 Total</td>
+                                    <td id="total-cal" class="kcal-cell"></td>
+                                    <td id="total-protein"></td>
+                                    <td id="total-carbs"></td>
+                                    <td id="total-sugars"></td>
+                                    <td id="total-fat"></td>
+                                    <td id="total-fibre"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Micronutrient Table -->
+                    <p class="section-label">💊 Micronutrients & Minerals</p>
+                    <div class="table-container">
+                        <table class="nutrition-table">
+                            <thead>
+                                <tr>
+                                    <th>Food Item</th>
+                                    <th>Na(mg)</th>
+                                    <th>Ca(mg)</th>
+                                    <th>Fe(mg)</th>
+                                    <th>Mg(mg)</th>
+                                    <th>K(mg)</th>
+                                    <th>Zn(mg)</th>
+                                    <th>VitA(ug)</th>
+                                    <th>VitC(mg)</th>
+                                    <th>VitD(ug)</th>
+                                    <th>VitE(mg)</th>
+                                    <th>Chol(mg)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="micro-list"></tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>🔢 Total</td>
+                                    <td id="total-sodium"></td>
+                                    <td id="total-calcium"></td>
+                                    <td id="total-iron"></td>
+                                    <td id="total-magnesium"></td>
+                                    <td id="total-potassium"></td>
+                                    <td id="total-zinc"></td>
+                                    <td id="total-vitamin-a"></td>
+                                    <td id="total-vitamin-c"></td>
+                                    <td id="total-vitamin-d"></td>
+                                    <td id="total-vitamin-e"></td>
+                                    <td id="total-cholesterol"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Confirm / Retake -->
+                    <div class="confirm-bar">
+                        <button class="confirm-btn confirm-reject" onclick="rejectResults()" title="Retake">
+                            <span class="confirm-icon">✕</span>
+                            <span class="confirm-label">Retake</span>
+                        </button>
+                        <button class="confirm-btn confirm-accept" onclick="confirmResults()" title="Confirm">
+                            <span class="confirm-icon">✓</span>
+                            <span class="confirm-label">Confirm</span>
+                        </button>
+                    </div>
+
                 </div>
-                <div class="confirm-bar">
-                    <button class="confirm-btn confirm-reject" onclick="rejectResults()" title="Retake">
-                        <span class="confirm-icon">✕</span>
-                        <span class="confirm-label">Retake</span>
-                    </button>
-                    <button class="confirm-btn confirm-accept" onclick="confirmResults()" title="Confirm">
-                        <span class="confirm-icon">✓</span>
-                        <span class="confirm-label">Confirm</span>
-                    </button>
-                </div>    
-                
 
             </div>
+            <!-- end tab-analyze -->
+
+            <!-- History Tab -->
+            <div id="tab-history" class="tab-content">
+                <div class="date-nav-bar">
+                    <button class="date-nav-btn" onclick="shiftHistoryDate(-1)" title="Previous day">‹</button>
+                    <div class="date-nav-center">
+                        <span class="date-nav-label" id="history-date-label">Today</span>
+                        <span class="date-nav-sub" id="history-date-sub"></span>
+                    </div>
+                    <button class="date-nav-btn" onclick="shiftHistoryDate(1)" id="date-nav-next" title="Next day">›</button>
+                    <button class="date-nav-refresh" onclick="refreshHistory()" title="Refresh">↻</button>
+                </div>
+                <div id="history-list">
+                    <div class="history-skeleton">
+                        <div class="skeleton-card">
+                            <div class="sk sk-title"></div>
+                            <div class="sk sk-bar"></div>
+                            <div class="sk sk-bar sk-bar-short"></div>
+                            <div class="sk sk-bar"></div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="sk sk-title"></div>
+                            <div class="sk sk-bar sk-bar-short"></div>
+                            <div class="sk sk-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end tab-history -->
 
         </div>
+        <!-- end health-mode-content -->
 
-        <!-- History Tab -->
-        <div id="tab-history" class="tab-content">
-
-            <!-- Date navigator -->
-            <div class="date-nav-bar">
-                <button class="date-nav-btn" onclick="shiftHistoryDate(-1)" title="Previous day">‹</button>
-                <div class="date-nav-center">
-                    <span class="date-nav-label" id="history-date-label">Today</span>
-                    <span class="date-nav-sub" id="history-date-sub"></span>
-                </div>
-                <button class="date-nav-btn" onclick="shiftHistoryDate(1)" id="date-nav-next" title="Next day">›</button>
-                <button class="date-nav-refresh" onclick="refreshHistory()" title="Refresh">↻</button>
-            </div>
-
-            <!-- Dynamic content injected by app.js -->
-            <div id="history-list">
-                <div class="history-skeleton">
-                    <div class="skeleton-card">
-                        <div class="sk sk-title"></div>
-                        <div class="sk sk-bar"></div>
-                        <div class="sk sk-bar sk-bar-short"></div>
-                        <div class="sk sk-bar"></div>
-                    </div>
-                    <div class="skeleton-card">
-                        <div class="sk sk-title"></div>
-                        <div class="sk sk-bar sk-bar-short"></div>
-                        <div class="sk sk-bar"></div>
-                    </div>
-                </div>
-            </div>
-
+        <!-- ══════════════════════════════════════════
+             PERSONA 2 — GUT HEALTH TRACKER
+             Rendered by gut_app.js when selected
+        ══════════════════════════════════════════ -->
+        <div id="gut-mode-content" style="display:none">
+            <p style="text-align:center; padding:40px; color:#666">
+                🦠 Loading...
+            </p>
         </div>
 
     </main>

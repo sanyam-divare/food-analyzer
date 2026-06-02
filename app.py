@@ -21,6 +21,11 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
+
+# Register gut health blueprint
+from gut_routes import gut_bp
+
+
 TOKEN_FILE = os.path.join(os.path.dirname(__file__), 'google_token.json')
 
 try:
@@ -43,6 +48,8 @@ print("DEBUG: AI_PROVIDER:", AI_PROVIDER)
 GOOGLE_FIT_AVAILABLE = True  # since you import directly at top
 
 app = Flask(__name__)
+# register gut app
+app.register_blueprint(gut_bp)
 
 # Global Cache to turn the slow DB loop into a lightning-fast memory scan
 AFCD_EMBEDDING_CACHE = []
@@ -2715,4 +2722,3 @@ if __name__ == '__main__':
     # Initialize cache memory pool right before bootup
     load_embeddings_into_cache()
     app.run(host='0.0.0.0', port=5000, debug=True)
-

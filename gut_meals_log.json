@@ -1,0 +1,323 @@
+[
+  {
+    "patient_id": "guest",
+    "meal_description": "A breakfast plate featuring two fried eggs, a bowl of diced avocado, and two slices of toasted artisanal bread.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "fried",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Eggs are a rich source of high-quality protein, choline, and essential vitamins (e.g., Vitamin D) and minerals (e.g., selenium). While not a direct source of prebiotics or probiotics, their nutritional profile supports overall host health, which indirectly contributes to a balanced gut environment. The gut health impact can be influenced by the type of oil used for frying.",
+        "name": "Fried eggs",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "The soluble and insoluble fibers, including pectin, and polyphenols in avocado serve as fermentable substrates, promoting the growth and metabolic activity of Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Avocado's fiber and phytonutrient content supports the growth of beneficial lactic acid bacteria, including Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Fiber fermentation by these beneficial bacteria leads to the production of short-chain fatty acids (SCFAs), particularly butyrate, crucial for gut barrier integrity.",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 120,
+        "fodmap": "medium",
+        "gut_notes": "An excellent source of monounsaturated fats, vitamins, minerals, and potent anti-inflammatory compounds. Its fiber content, including pectin, effectively feeds beneficial gut bacteria, contributing to microbial diversity and SCFA production. However, this portion size may be medium FODMAP for individuals sensitive to polyols (sorbitol).",
+        "name": "Diced avocado",
+        "prebiotic_fibres": [
+          "pectin"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Fructans (FOS) and resistant starch present in wheat bread can be fermented by Bifidobacterium species, contributing to SCFA production.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "Resistant starch, formed during the toasting and cooling process, provides a substrate for butyrate-producing bacteria like Faecalibacterium prausnitzii.",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "toasted",
+        "estimated_grams": 100,
+        "fodmap": "high",
+        "gut_notes": "Primarily provides carbohydrates for energy. If made from refined flour, it offers limited diverse prebiotic fibers compared to whole grains. The high content of fructans (a type of FOS) makes it a high FODMAP food, potentially causing gastrointestinal discomfort in individuals with IBS or FODMAP sensitivities. While some resistant starch forms upon cooling after toasting, its overall prebiotic contribution is modest compared to other food sources.",
+        "name": "Toasted artisanal bread",
+        "prebiotic_fibres": [
+          "FOS",
+          "resistant starch"
+        ],
+        "prebiotic_score": 3,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-02 22:44",
+    "overall_gut_score": 6.8,
+    "gut_notes": "",
+    "date": "2026-06-02"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A classic Western breakfast plate featuring fried eggs, grilled sausages, bacon, saut\u00e9ed mushrooms, grilled tomato, and grilled white bread.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "grilled",
+        "estimated_grams": 35,
+        "fodmap": "medium",
+        "gut_notes": "Refined grain with low fiber content, offering minimal prebiotic benefit. Can be moderate in fructans, potentially triggering symptoms in sensitive individuals. May contribute to a less diverse gut microbiome due to lack of diverse fibers and promotion of general carbohydrate fermenters rather than selective beneficial species.",
+        "name": "Grilled White Bread",
+        "prebiotic_fibres": [
+          "resistant starch"
+        ],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "fried",
+        "estimated_grams": 110,
+        "fodmap": "low",
+        "gut_notes": "Excellent source of high-quality protein and essential nutrients like choline and vitamin D. Low in FODMAPs and generally well-tolerated. Has a neutral impact on gut bacteria directly, but provides essential building blocks for overall health, including gut integrity.",
+        "name": "Fried Eggs",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Diets high in processed meats, saturated fats, and potentially nitrates/nitrites, and low in fiber, may indirectly decrease the abundance and activity of butyrate-producing bacteria like Roseburia.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "grilled",
+        "estimated_grams": 80,
+        "fodmap": "high",
+        "gut_notes": "Processed meat often contains additives like onion/garlic powder, making it high in FODMAPs. High in saturated fat and potentially Advanced Glycation End products (AGEs) from grilling, which can promote gut inflammation and negatively impact gut barrier integrity. Lacks beneficial fiber and may contribute to a less favorable gut environment.",
+        "name": "Grilled Breakfast Sausages",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 1,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "High intake of saturated fats and nitrates/nitrites, common in processed bacon, can negatively impact gut microbial diversity and potentially inhibit growth of beneficial species like F. prausnitzii over time.",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "grilled",
+        "estimated_grams": 25,
+        "fodmap": "low",
+        "gut_notes": "Very high in saturated fat and sodium, and often cured with nitrates/nitrites. Grilling promotes AGE formation, all contributing to oxidative stress and inflammation in the gut lining. Offers no prebiotic benefits and may foster a less diverse and potentially pro-inflammatory gut microbiome.",
+        "name": "Grilled Bacon Strips",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Beta-glucans in mushrooms selectively promote the growth of Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Beta-glucans can also support the growth and activity of various Lactobacillus species.",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "saut\u00e9ed",
+        "estimated_grams": 90,
+        "fodmap": "high",
+        "gut_notes": "Excellent source of prebiotic beta-glucans that nourish beneficial gut bacteria like Bifidobacterium and Lactobacillus. Rich in antioxidants and anti-inflammatory compounds. However, a significant portion like this is high in mannitol (a FODMAP), which can cause digestive discomfort (gas, bloating, pain) in sensitive individuals.",
+        "name": "Saut\u00e9ed Mushrooms (Cremini)",
+        "prebiotic_fibres": [
+          "beta-glucan"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Dietary polyphenols and fiber (pectin) in tomatoes can indirectly support mucin-degrading bacteria like Akkermansia, contributing to gut barrier health.",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "grilled",
+        "estimated_grams": 90,
+        "fodmap": "low",
+        "gut_notes": "An excellent anti-inflammatory food, high in lycopene and other antioxidants; grilling can increase lycopene bioavailability. Provides moderate prebiotic fibers like pectin and some resistant starch. Low FODMAP and generally beneficial for gut health, promoting a healthy gut lining and supporting a balanced microbiota.",
+        "name": "Grilled Tomato Half",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 4,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-02 23:08",
+    "overall_gut_score": 6,
+    "gut_notes": "",
+    "date": "2026-06-02"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Three bottles of Yakult fermented milk drinks: Yakult Balance (blue cap), Yakult Original (red cap), and Yakult Plus (green cap).",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Contains a high concentration of the specific probiotic strain Shirota, contributing directly to its population.",
+            "name": "Lacticaseibacillus paracasei"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "The fermented milk matrix and small amounts of fermentable sugars may mildly support other beneficial lactic acid bacteria.",
+            "name": "Lactobacillus acidophilus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 65,
+        "fodmap": "low",
+        "gut_notes": "A probiotic-rich fermented dairy drink providing *Lacticaseibacillus paracasei* strain Shirota, beneficial for gut microbiota balance and immune function. It is generally low in FODMAPs due to its small serving size and fermentation process, and contains less sugar than the original variant. Its primary benefit is probiotic delivery.",
+        "name": "Yakult Balance",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": true
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Contains a high concentration of the specific probiotic strain Shirota, contributing directly to its population.",
+            "name": "Lacticaseibacillus paracasei"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "The fermented milk matrix and small amounts of fermentable sugars may mildly support other beneficial lactic acid bacteria.",
+            "name": "Lactobacillus acidophilus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 65,
+        "fodmap": "low",
+        "gut_notes": "A concentrated source of the probiotic *Lacticaseibacillus paracasei* strain Shirota, which supports intestinal health and modulates immune responses. While it contains some sugar, the small serving size and probiotic content make its overall gut impact positive. It is considered low FODMAP in this typical serving.",
+        "name": "Yakult Original",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": true
+      },
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Contains a high concentration of the specific probiotic strain Shirota, contributing directly to its population.",
+            "name": "Lacticaseibacillus paracasei"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "The added prebiotic fiber (dextrin) selectively ferments, supporting the growth of beneficial Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "The combination of the fermented milk matrix and prebiotic fiber provides a favorable environment for the growth of various beneficial lactic acid bacteria.",
+            "name": "Lactobacillus acidophilus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 65,
+        "fodmap": "low",
+        "gut_notes": "This variant offers the probiotic benefits of *Lacticaseibacillus paracasei* strain Shirota alongside added prebiotic fiber (dextrin), which further supports the growth of other beneficial gut bacteria like Bifidobacteria. The synergy between probiotics and prebiotics (synbiotic effect) enhances its positive impact on gut health and anti-inflammatory pathways. It has less sugar and is suitable for a low FODMAP diet in this serving size.",
+        "name": "Yakult Plus",
+        "prebiotic_fibres": [
+          "dextrin"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": true
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-03 00:00",
+    "overall_gut_score": 7.5,
+    "gut_notes": "",
+    "date": "2026-06-03"
+  }
+]

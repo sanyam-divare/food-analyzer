@@ -1,0 +1,557 @@
+/* ── Gut Health Tracker Styles ──────────────────── */
+
+/* Disclaimer banner */
+.gut-disclaimer {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    color: #f59e0b;
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* Overall gut score block */
+.gut-overall-score {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border: 2px solid #22c55e;
+    border-radius: 12px;
+    margin: 16px 0;
+}
+
+.gut-score-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    color: white;
+}
+
+.gut-score-num {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.gut-score-label {
+    font-size: 0.65rem;
+    opacity: 0.85;
+}
+
+.gut-score-info {
+    flex: 1;
+}
+
+.gut-score-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.gut-score-notes {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    line-height: 1.4;
+}
+
+/* Individual food cards */
+.gut-food-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 14px;
+    margin: 10px 0;
+}
+
+.gut-food-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.gut-food-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: white;
+}
+
+.gut-food-grams {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+/* Score pills row */
+.gut-scores-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.gut-score-pill {
+    background: rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    color: #d1d5db;
+}
+
+.probiotic-badge {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+}
+
+/* Prebiotic fibre tags */
+.fibre-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.fibre-tag {
+    background: rgba(139,92,246,0.15);
+    color: #a78bfa;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+}
+
+/* Bacteria section */
+.bacteria-section {
+    margin-top: 8px;
+}
+
+.bacteria-group {
+    margin-bottom: 6px;
+}
+
+.bacteria-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.bacteria-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.bacteria-positive .bacteria-name { color: #86efac; }
+.bacteria-negative .bacteria-name { color: #fca5a5; }
+
+.bacteria-strength {
+    font-size: 0.72rem;
+    color: #6b7280;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+
+.bacteria-mech {
+    width: 100%;
+    font-size: 0.72rem;
+    color: #6b7280;
+    font-style: italic;
+    padding-left: 20px;
+}
+
+/* Food notes */
+.gut-food-notes {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    border-left: 3px solid #4b5563;
+}
+
+/* History items reuse existing style */
+/* ── Scorecard ──────────────────────────────────── */
+.gut-scorecard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.scorecard-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 3px;
+}
+
+.scorecard-tab {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.scorecard-tab.active {
+    background: #22c55e;
+    color: white;
+}
+
+/* Gut sections */
+.gut-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.gut-section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 12px;
+}
+
+/* Score grid */
+.gut-scores-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.gut-score-tile {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gut-tile-label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.gut-tile-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Progress bars */
+.gut-bar-bg {
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+
+.gut-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* Bacteria rows */
+.bacteria-row {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.bacteria-row-harm {
+    opacity: 0.85;
+}
+
+.bacteria-row-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.bacteria-row-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: white;
+    flex: 1;
+}
+
+.bacteria-row-count {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.bacteria-strength-badge {
+    font-size: 0.72rem;
+    background: rgba(255,255,255,0.08);
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: #d1d5db;
+}
+
+.bacteria-row-foods {
+    font-size: 0.72rem;
+    color: #6b7280;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Plant diversity */
+.plant-diversity-section {
+    margin-top: 8px;
+}
+
+.plant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    color: white;
+}
+
+.plant-target-label {
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-top: 4px;
+    margin-bottom: 10px;
+}
+
+.plant-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.plant-tag {
+    background: rgba(139,92,246,0.15);
+    color: #a78bfa;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+}
+
+/* Day bars (weekly) */
+.day-bars-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    height: 120px;
+    padding: 8px 0;
+}
+
+.day-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+}
+
+.day-bar-today .day-bar-label {
+    color: #22c55e;
+    font-weight: 700;
+}
+
+.day-bar-score {
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.day-bar-track {
+    flex: 1;
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+.day-bar-fill {
+    width: 100%;
+    border-radius: 4px;
+    transition: height 0.5s ease;
+}
+
+.day-bar-label {
+    font-size: 0.65rem;
+    color: #9ca3af;
+}
+
+/* Bacteria league */
+.bacteria-league-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.league-medal { font-size: 1rem; }
+
+.league-name {
+    flex: 1;
+    font-size: 0.78rem;
+    color: #d1d5db;
+}
+
+.league-count {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    width: 30px;
+    text-align: right;
+}
+
+.league-bar-bg {
+    width: 60px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.league-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+}
+
+/* Top foods (monthly) */
+.top-food-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.82rem;
+}
+
+.top-food-rank {
+    width: 20px;
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+.top-food-name {
+    flex: 1;
+    color: #d1d5db;
+    text-transform: capitalize;
+}
+
+.top-food-count {
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+/* History items */
+.gut-history-item {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.gut-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.gut-history-time {
+    font-size: 0.78rem;
+    color: #9ca3af;
+}
+
+.gut-history-score {
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.gut-history-desc {
+    font-size: 0.82rem;
+    color: #d1d5db;
+    margin-bottom: 4px;
+}
+
+.gut-history-foods {
+    font-size: 0.72rem;
+    color: #6b7280;
+    font-style: italic;
+}
+/* ── Tap to expand ──────────────────────────────── */
+.bacteria-expand {
+    display: none;
+    padding-top: 6px;
+}
+
+.bacteria-expand.open {
+    display: block;
+}
+
+.bacteria-row {
+    cursor: pointer;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.1s;
+}
+
+.bacteria-row:active {
+    background: rgba(255,255,255,0.03);
+}
+
+.bacteria-row-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.expand-arrow {
+    font-size: 1rem;
+    color: #6b7280;
+    transition: transform 0.2s;
+    width: 16px;
+    text-align: center;
+}
+
+.bacteria-bar-row {
+    margin-top: 6px;
+    margin-bottom: 2px;
+}
+
+/* Section hint */
+.gut-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gut-section-hint {
+    font-size: 0.68rem;
+    color: #6b7280;
+    font-weight: 400;
+    font-style: italic;
+}

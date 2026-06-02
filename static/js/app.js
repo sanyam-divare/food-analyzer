@@ -1530,3 +1530,54 @@ window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
 });
+
+
+// ── Mode Selector ─────────────────────────────
+// Switches between Health and Gut personas
+
+function initModeSelector() {
+    const radios = document.querySelectorAll('input[name="app-mode"]');
+    
+    // Restore saved mode
+    const savedMode = localStorage.getItem('appMode') || 'health';
+    document.querySelector(`input[value="${savedMode}"]`).checked = true;
+    applyMode(savedMode);
+
+    // Listen for changes
+    radios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            applyMode(e.target.value);
+            localStorage.setItem('appMode', e.target.value);
+        });
+    });
+}
+
+function applyMode(mode) {
+    const healthContent = document.getElementById('health-mode-content');
+    const gutContent = document.getElementById('gut-mode-content');
+
+    if (mode === 'gut') {
+        healthContent.style.display = 'none';
+        gutContent.style.display = 'block';
+        // Load gut JS if not already loaded
+        if (!window.gutAppLoaded) loadGutApp();
+    } else {
+        healthContent.style.display = 'block';
+        gutContent.style.display = 'none';
+    }
+}
+
+function loadGutApp() {
+    // Dynamically load gut_app.js only when needed
+    // Keeps initial load fast for health mode users
+    const script = document.createElement('script');
+    script.src = '/static/js/gut_app.js';
+    script.onload = () => {
+        window.gutAppLoaded = true;
+        if (typeof initGutMode === 'function') initGutMode();
+    };
+    document.head.appendChild(script);
+}
+
+// Initialise on page load
+document.addEventListener('DOMContentLoaded', initModeSelector);
