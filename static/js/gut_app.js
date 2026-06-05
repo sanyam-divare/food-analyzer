@@ -1,11 +1,16 @@
-// ── Gut Health Tracker ──────────────────────────
-// Persona 2: Gut Health Mode
+// ══════════════════════════════════════════════════
+// gut_app.js  —  Gut Health Tracker (Persona 2)
+// Loaded dynamically when gut mode is selected.
+// Reuses shared camera/voice from index.html.
+// ══════════════════════════════════════════════════
 
-let gutCurrentResults  = null;
-let gutMealTimestamp   = null;
-let gutPatientId       = localStorage.getItem('gutPatientId') || 'guest';
+// ── State ─────────────────────────────────────────
+let gutCurrentResults = null;
+let gutMealTimestamp  = null;
+let gutPatientId      = localStorage.getItem('gutPatientId') || 'guest';
+let gutScorecardView  = 'daily';
 
-// ── Initialise Gut Mode ───────────────────────────
+// ── Init ──────────────────────────────────────────
 function initGutMode() {
     console.log('🦠 Gut mode initialised');
     renderGutDashboard();
@@ -26,55 +31,24 @@ function renderGutDashboard() {
             </div>
         </div>
 
-        <!-- Camera card -->
-        <div class="card">
-            <h2>📷 Take a Photo</h2>
-            <div class="camera-container">
-                <video id="gut-camera-preview" autoplay playsinline style="display:none"></video>
-                <canvas id="gut-canvas" style="display:none"></canvas>
-                <img id="gut-photo-preview" style="display:none" alt="Food photo">
-                <div class="camera-placeholder" id="gut-camera-placeholder">🍽️</div>
-            </div>
-            <div class="button-group">
-                <button class="btn-primary" onclick="gutStartCamera()">📷 Camera</button>
-                <button class="btn-success" onclick="gutCapturePhoto()"
-                        id="gut-capture-btn" style="display:none">✅ Capture</button>
-                <button class="btn-secondary" onclick="gutUploadPhoto()">📁 Upload</button>
-                <input type="file" id="gut-file-input" accept="image/*"
-                       style="display:none" onchange="gutHandleFileUpload(event)">
-            </div>
-        </div>
-
-        <!-- Analyze Button -->
-        <button class="btn-analyze" onclick="gutAnalyzePhoto()"
-                id="gut-analyze-btn" style="display:none">
-            🦠 Analyze Gut Impact
-        </button>
-
-        <!-- Loading -->
-        <div id="gut-loading" style="display:none" class="loading">
-            <div class="spinner"></div>
-            <p>Analysing gut bacteria impact...</p>
-        </div>
-
-        <!-- Results -->
+        <!-- Gut Results injected here after analysis -->
         <div id="gut-results" style="display:none"></div>
 
-        <!-- ── SCORECARD ───────────────────────── -->
+        <!-- Scorecard -->
         <div class="card" style="margin-top:16px">
             <div class="gut-scorecard-header">
                 <h2>📊 Gut Scorecard</h2>
                 <div class="scorecard-tabs">
                     <button class="scorecard-tab active"
-                            onclick="switchScorecardView('daily', this)">
+                            onclick="switchScorecardView('daily',this)">
                         Daily
                     </button>
                     <button class="scorecard-tab"
-                            onclick="switchScorecardView('weekly', this)">
+                            onclick="switchScorecardView('weekly',this)">
                         Weekly
                     </button>
                     <button class="scorecard-tab"
-                            onclick="switchScorecardView('monthly', this)">
+                            onclick="switchScorecardView('monthly',this)">
                         Monthly
                     </button>
                 </div>
@@ -82,7 +56,7 @@ function renderGutDashboard() {
             <div id="gut-scorecard"></div>
         </div>
 
-        <!-- History -->
+        <!-- Gut Meal History -->
         <div class="card" style="margin-top:16px">
             <h2>📅 Gut Meal History</h2>
             <div id="gut-history-list">
@@ -103,97 +77,15 @@ function switchScorecardView(view, btn) {
     loadGutScorecard();
 }
 
-// ── Camera Functions (mirrors health mode) ────────
-let gutImageBase64 = null;
-let gutMimeType    = 'image/jpeg';
-let gutImageW      = 0;
-let gutImageH      = 0;
-
-async function gutStartCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-        });
-        const video = document.getElementById('gut-camera-preview');
-        video.srcObject = stream;
-        video.style.display = 'block';
-        document.getElementById('gut-photo-preview').style.display     = 'none';
-        document.getElementById('gut-camera-placeholder').style.display = 'none';
-        document.getElementById('gut-capture-btn').style.display        = 'block';
-        document.getElementById('gut-analyze-btn').style.display        = 'none';
-        gutImageBase64 = null;
-    } catch (err) {
-        alert('Camera access denied. Please use Upload Photo instead.');
-    }
-}
-
-function gutCapturePhoto() {
-    const video  = document.getElementById('gut-camera-preview');
-    const canvas = document.getElementById('gut-canvas');
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.style.display = 'none';
-
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    const preview   = document.getElementById('gut-photo-preview');
-    preview.src     = imageData;
-    preview.style.display = 'block';
-
-    gutImageBase64 = imageData.split(',')[1];
-    gutMimeType    = 'image/jpeg';
-    gutImageW      = canvas.width;
-    gutImageH      = canvas.height;
-
-    document.getElementById('gut-capture-btn').style.display = 'none';
-    document.getElementById('gut-analyze-btn').style.display = 'block';
-}
-
-function gutUploadPhoto() {
-    document.getElementById('gut-file-input').click();
-}
-
-function gutHandleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    gutMimeType = file.type || 'image/jpeg';
-
-    if (window.createImageBitmap) {
-        createImageBitmap(file).then(async (bitmap) => {
-            const maxW = 1200, maxH = 900;
-            const ratio = Math.min(maxW / bitmap.width, maxH / bitmap.height, 1);
-            const tw = Math.max(1, Math.round(bitmap.width  * ratio));
-            const th = Math.max(1, Math.round(bitmap.height * ratio));
-
-            const canvas = document.createElement('canvas');
-            canvas.width  = tw;
-            canvas.height = th;
-            canvas.getContext('2d').drawImage(bitmap, 0, 0, tw, th);
-            if (bitmap.close) bitmap.close();
-
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            gutImageBase64 = dataUrl.split(',')[1];
-            gutImageW = tw;
-            gutImageH = th;
-
-            document.getElementById('gut-photo-preview').src           = dataUrl;
-            document.getElementById('gut-photo-preview').style.display = 'block';
-            document.getElementById('gut-camera-placeholder').style.display = 'none';
-            document.getElementById('gut-analyze-btn').style.display   = 'block';
-        });
-    }
-}
-
-// ── Analyze ────────────────────────────────────────
+// ── Analyze photo (uses shared currentImageBase64) ─
 async function gutAnalyzePhoto() {
-    if (!gutImageBase64) {
-        alert('Please take or upload a photo first!');
+    if (!currentImageBase64) {
+        showError('Please take or upload a photo first!');
         return;
     }
 
-    document.getElementById('gut-loading').style.display  = 'block';
-    document.getElementById('gut-results').style.display  = 'none';
+    document.getElementById('gut-loading').style.display    = 'block';
+    document.getElementById('gut-results').style.display    = 'none';
     document.getElementById('gut-analyze-btn').style.display = 'none';
 
     try {
@@ -201,20 +93,21 @@ async function gutAnalyzePhoto() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                image:       gutImageBase64,
-                mime_type:   gutMimeType,
-                provider:    document.getElementById('provider-select')?.value || 'claude',
-                timezone:    getUserTimezone(),
-                patient_id:  gutPatientId,
-                image_width: gutImageW,
-                image_height: gutImageH
+                image:        currentImageBase64,
+                mime_type:    currentMimeType,
+                provider:     document.getElementById('provider-select')?.value || 'claude',
+                timezone:     getUserTimezone(),
+                patient_id:   gutPatientId,
+                image_width:  currentImageWidth,
+                image_height: currentImageHeight
             })
         });
 
         const data = await response.json();
 
         if (data.error) {
-            alert('Error: ' + data.error);
+            showError('Error: ' + data.error);
+            document.getElementById('gut-analyze-btn').style.display = 'block';
             return;
         }
 
@@ -223,50 +116,100 @@ async function gutAnalyzePhoto() {
         renderGutResults(data);
 
     } catch (err) {
-        alert('Analysis failed: ' + err.message);
+        showError('Analysis failed: ' + err.message);
+        document.getElementById('gut-analyze-btn').style.display = 'block';
     } finally {
         document.getElementById('gut-loading').style.display = 'none';
     }
 }
 
-// ── Render Results ─────────────────────────────────
-function renderGutResults(data) {
-    const foods          = data.foods || [];
-    const overallScore   = data.overall_gut_score || 0;
-    const overallNotes   = data.overall_gut_notes || '';
-    const scoreColor     = overallScore >= 7 ? '#22c55e'
-                         : overallScore >= 5 ? '#f59e0b' : '#ef4444';
-    const scoreEmoji     = overallScore >= 7 ? '✅' : overallScore >= 5 ? '⚠️' : '❌';
+// ── Analyze voice / text ──────────────────────────
+async function gutAnalyzeVoice(text) {
+    if (!text) {
+        showError('Please speak or type your meal first.');
+        return;
+    }
 
-    // Build food rows
+    // Hide both voice buttons, show gut loading
+    const hVoice = document.getElementById('analyze-voice-btn');
+    const gVoice = document.getElementById('gut-analyze-voice-btn');
+    if (hVoice) hVoice.style.display = 'none';
+    if (gVoice) gVoice.style.display = 'none';
+
+    document.getElementById('gut-loading').style.display = 'block';
+    document.getElementById('gut-results').style.display = 'none';
+
+    try {
+        const response = await fetch('/gut/analyze-voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text:       text,
+                provider:   document.getElementById('provider-select')?.value || 'claude',
+                timezone:   getUserTimezone(),
+                patient_id: gutPatientId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            showError('Error: ' + data.error);
+            if (gVoice) gVoice.style.display = 'block';
+            return;
+        }
+
+        gutCurrentResults = data;
+        gutMealTimestamp  = data.timestamp;
+        renderGutResults(data);
+
+    } catch (err) {
+        showError('Analysis failed: ' + err.message);
+        if (gVoice) gVoice.style.display = 'block';
+    } finally {
+        document.getElementById('gut-loading').style.display = 'none';
+    }
+}
+
+// ── Render gut results ────────────────────────────
+function renderGutResults(data) {
+    const foods        = data.foods || [];
+    const score        = data.overall_gut_score || 0;
+    const notes        = data.overall_gut_notes || '';
+    const scoreColor   = score >= 7 ? '#22c55e' : score >= 5 ? '#f59e0b' : '#ef4444';
+    const scoreEmoji   = score >= 7 ? '✅' : score >= 5 ? '⚠️' : '❌';
+
     const foodRows = foods.map(f => {
         const fodmapColor = f.fodmap === 'high'   ? '#ef4444'
                           : f.fodmap === 'medium' ? '#f59e0b' : '#22c55e';
 
         const bacteriaFed = (f.bacteria_fed || []).map(b => {
-            const name     = typeof b === 'object' ? b.name      : b;
+            const name     = typeof b === 'object' ? b.name           : b;
             const strength = typeof b === 'object' ? b.impact_strength : '';
-            const mech     = typeof b === 'object' ? b.mechanism : '';
-            return `<div class="bacteria-item bacteria-positive">
-                        <span class="bacteria-name">✅ ${name}</span>
-                        ${strength ? `<span class="bacteria-strength">${strength}/10</span>` : ''}
-                        ${mech ? `<div class="bacteria-mech">${mech}</div>` : ''}
-                    </div>`;
+            const mech     = typeof b === 'object' ? b.mechanism       : '';
+            return `
+                <div class="bacteria-item bacteria-positive">
+                    <span class="bacteria-name">✅ ${name}</span>
+                    ${strength
+                        ? `<span class="bacteria-strength">${strength}/10</span>` : ''}
+                    ${mech
+                        ? `<div class="bacteria-mech">${mech}</div>` : ''}
+                </div>`;
         }).join('');
 
         const bacteriaHarmed = (f.bacteria_harmed || []).map(b => {
             const name = typeof b === 'object' ? b.name : b;
-            return `<div class="bacteria-item bacteria-negative">
-                        <span class="bacteria-name">❌ ${name}</span>
-                    </div>`;
+            return `
+                <div class="bacteria-item bacteria-negative">
+                    <span class="bacteria-name">❌ ${name}</span>
+                </div>`;
         }).join('');
 
-        const prebioticFibres = (f.prebiotic_fibres || []).length
+        const fibres = (f.prebiotic_fibres || []).length
             ? `<div class="fibre-tags">
-                   ${f.prebiotic_fibres.map(fib =>
-                       `<span class="fibre-tag">${fib}</span>`).join('')}
-               </div>`
-            : '';
+                ${f.prebiotic_fibres.map(fib =>
+                    `<span class="fibre-tag">${fib}</span>`).join('')}
+               </div>` : '';
 
         return `
             <div class="gut-food-card">
@@ -274,35 +217,36 @@ function renderGutResults(data) {
                     <div class="gut-food-name">${f.name}</div>
                     <div class="gut-food-grams">${f.estimated_grams}g</div>
                 </div>
-
                 <div class="gut-scores-row">
                     <div class="gut-score-pill">
-                        🌱 Prebiotic: <strong>${f.prebiotic_score || 0}/10</strong>
+                        🌱 Prebiotic:
+                        <strong>${f.prebiotic_score || 0}/10</strong>
                     </div>
                     <div class="gut-score-pill">
-                        🔥 Anti-inflam: <strong>${f.anti_inflammatory_score || 0}/10</strong>
+                        🔥 Anti-inflam:
+                        <strong>${f.anti_inflammatory_score || 0}/10</strong>
                     </div>
-                    <div class="gut-score-pill" style="color:${fodmapColor}">
-                        FODMAP: <strong>${(f.fodmap || 'low').toUpperCase()}</strong>
+                    <div class="gut-score-pill"
+                         style="color:${fodmapColor}">
+                        FODMAP:
+                        <strong>${(f.fodmap || 'low').toUpperCase()}</strong>
                     </div>
                     ${f.probiotic
-                        ? `<div class="gut-score-pill probiotic-badge">🦠 Probiotic</div>`
-                        : ''}
+                        ? `<div class="gut-score-pill probiotic-badge">
+                               🦠 Probiotic
+                           </div>` : ''}
                 </div>
-
-                ${prebioticFibres}
-
+                ${fibres}
                 ${bacteriaFed || bacteriaHarmed ? `
                     <div class="bacteria-section">
-                        ${bacteriaFed    ? `<div class="bacteria-group">${bacteriaFed}</div>`    : ''}
-                        ${bacteriaHarmed ? `<div class="bacteria-group">${bacteriaHarmed}</div>` : ''}
+                        ${bacteriaFed
+                            ? `<div class="bacteria-group">${bacteriaFed}</div>` : ''}
+                        ${bacteriaHarmed
+                            ? `<div class="bacteria-group">${bacteriaHarmed}</div>` : ''}
                     </div>` : ''}
-
                 ${f.gut_notes
-                    ? `<div class="gut-food-notes">💬 ${f.gut_notes}</div>`
-                    : ''}
-            </div>
-        `;
+                    ? `<div class="gut-food-notes">💬 ${f.gut_notes}</div>` : ''}
+            </div>`;
     }).join('');
 
     const html = `
@@ -310,30 +254,28 @@ function renderGutResults(data) {
             <h2>🦠 Gut Impact Results</h2>
             <p class="meal-desc">${data.meal_description || ''}</p>
 
-            <!-- Overall gut score -->
-            <div class="gut-overall-score" style="border-color:${scoreColor}">
-                <div class="gut-score-circle" style="background:${scoreColor}">
-                    <span class="gut-score-num">${overallScore}</span>
+            <div class="gut-overall-score"
+                 style="border-color:${scoreColor}">
+                <div class="gut-score-circle"
+                     style="background:${scoreColor}">
+                    <span class="gut-score-num">${score}</span>
                     <span class="gut-score-label">/ 10</span>
                 </div>
                 <div class="gut-score-info">
                     <div class="gut-score-title">
                         ${scoreEmoji} Overall Gut Score
                     </div>
-                    <div class="gut-score-notes">${overallNotes}</div>
+                    <div class="gut-score-notes">${notes}</div>
                 </div>
             </div>
 
-            <!-- Disclaimer -->
             <div class="gut-disclaimer">
                 ⚠️ AI-powered estimates — validate with your practitioner
             </div>
 
-            <!-- Food breakdown -->
             <div class="section-label">🥗 Food Breakdown</div>
             ${foodRows}
 
-            <!-- Confirm / Retake -->
             <div class="confirm-bar">
                 <button class="confirm-btn confirm-reject"
                         onclick="gutRejectResults()" title="Retake">
@@ -346,16 +288,15 @@ function renderGutResults(data) {
                     <span class="confirm-label">Confirm</span>
                 </button>
             </div>
-        </div>
-    `;
+        </div>`;
 
-    const resultsEl = document.getElementById('gut-results');
-    resultsEl.innerHTML = html;
-    resultsEl.style.display = 'block';
-    resultsEl.scrollIntoView({ behavior: 'smooth' });
+    const el    = document.getElementById('gut-results');
+    el.innerHTML = html;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth' });
 }
 
-// ── Confirm / Retake ───────────────────────────────
+// ── Confirm / Retake ──────────────────────────────
 async function gutConfirmResults() {
     if (!gutCurrentResults) return;
 
@@ -372,28 +313,35 @@ async function gutConfirmResults() {
 
         const result = await response.json();
         if (result.error) {
-            alert('Failed to save: ' + result.error);
-            return;
+            alert('Failed to save: ' + result.error); return;
         }
 
+        // Reset state
         gutCurrentResults = null;
-        document.getElementById('gut-results').style.display = 'none';
-        document.getElementById('gut-photo-preview').style.display     = 'none';
-        document.getElementById('gut-camera-placeholder').style.display = 'block';
-        document.getElementById('gut-analyze-btn').style.display        = 'none';
-        gutImageBase64 = null;
+        document.getElementById('gut-results').style.display    = 'none';
+        document.getElementById('gut-analyze-btn').style.display = 'none';
 
+        // Reset shared camera
+        const photoPreview  = document.getElementById('photo-preview');
+        const placeholder   = document.getElementById('camera-placeholder');
+        if (photoPreview) photoPreview.style.display  = 'none';
+        if (placeholder)  placeholder.style.display   = 'block';
+
+        // Hide all voice/analyze buttons
+        hideAllAnalyzeButtons();
+
+        // Reset shared voice state (defined in app.js)
+        voiceText = '';
+        const vt = document.getElementById('voice-text');
+        if (vt) vt.textContent = '';
+
+        loadGutScorecard();
         loadGutHistory();
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // Show success briefly
-        const container = document.getElementById('gut-mode-content');
-        const msg = document.createElement('div');
-        msg.className   = 'error-banner';
-        msg.textContent = '✓ Gut meal saved!';
-        msg.style.cssText = 'background:#ecfdf5;color:#166534;border-color:#a7f3d0;display:block';
-        container.prepend(msg);
-        setTimeout(() => msg.remove(), 2000);
+        // Show brief success message
+        showMessage('✓ Gut meal saved!');
+        setTimeout(() => clearError(), 2000);
 
     } catch (err) {
         alert('Save failed: ' + err.message);
@@ -402,24 +350,28 @@ async function gutConfirmResults() {
 
 function gutRejectResults() {
     gutCurrentResults = null;
-    document.getElementById('gut-results').style.display           = 'none';
-    document.getElementById('gut-photo-preview').style.display     = 'none';
-    document.getElementById('gut-camera-placeholder').style.display = 'block';
-    document.getElementById('gut-analyze-btn').style.display        = 'none';
-    gutImageBase64 = null;
+    document.getElementById('gut-results').style.display    = 'none';
+    document.getElementById('gut-analyze-btn').style.display = 'none';
+
+    // Reset shared camera
+    const photoPreview = document.getElementById('photo-preview');
+    const placeholder  = document.getElementById('camera-placeholder');
+    if (photoPreview) photoPreview.style.display = 'none';
+    if (placeholder)  placeholder.style.display  = 'block';
+
+    hideAllAnalyzeButtons();
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Gut History ────────────────────────────────────
+// ── Gut History ───────────────────────────────────
 async function loadGutHistory() {
     const container = document.getElementById('gut-history-list');
     if (!container) return;
 
     try {
-        const response = await fetch(
-            `/gut/history?patient_id=${gutPatientId}`
-        );
-        const data = await response.json();
+        const res  = await fetch(`/gut/history?patient_id=${gutPatientId}`);
+        const data = await res.json();
 
         if (!data.length) {
             container.innerHTML = '<p class="hint">No gut meals logged yet.</p>';
@@ -427,38 +379,30 @@ async function loadGutHistory() {
         }
 
         container.innerHTML = [...data].reverse().map(meal => {
-            const score      = meal.overall_gut_score || 0;
-            const scoreColor = score >= 7 ? '#22c55e'
-                             : score >= 5 ? '#f59e0b' : '#ef4444';
-            const foods      = (meal.foods || [])
-                .map(f => f.name).join(' · ');
-
+            const s     = meal.overall_gut_score || 0;
+            const color = s >= 7 ? '#22c55e' : s >= 5 ? '#f59e0b' : '#ef4444';
+            const foods = (meal.foods || []).map(f => f.name).join(' · ');
             return `
                 <div class="history-item">
-                    <div class="history-date">
-                        📅 ${meal.timestamp || ''}
-                    </div>
+                    <div class="history-date">📅 ${meal.timestamp || ''}</div>
                     <div class="history-desc">
                         ${meal.meal_description || ''}
                     </div>
                     <div class="history-foods">${foods}</div>
                     <div class="history-meta">
-                        <span style="color:${scoreColor};font-weight:600">
-                            🦠 Gut Score: ${score}/10
+                        <span style="color:${color};font-weight:600">
+                            🦠 Gut Score: ${s}/10
                         </span>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
 
     } catch (err) {
         container.innerHTML = '<p class="hint">Could not load gut history.</p>';
     }
 }
-// ── Gut Scorecard ──────────────────────────────────
 
-let gutScorecardView = 'daily'; // 'daily' | 'weekly' | 'monthly'
-
+// ── Scorecard loader ──────────────────────────────
 async function loadGutScorecard() {
     const container = document.getElementById('gut-scorecard');
     if (!container) return;
@@ -470,13 +414,12 @@ async function loadGutScorecard() {
         </div>`;
 
     try {
-        let url = '';
         const today = new Date().toLocaleDateString('en-CA');
+        let url = '';
 
         if (gutScorecardView === 'daily') {
             url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${today}`;
         } else if (gutScorecardView === 'weekly') {
-            // Get Monday of current week
             const now    = new Date();
             const monday = new Date(now);
             monday.setDate(now.getDate() - now.getDay() + 1);
@@ -487,8 +430,8 @@ async function loadGutScorecard() {
             url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${now.getFullYear()}&month=${now.getMonth()+1}`;
         }
 
-        const response = await fetch(url);
-        const data     = await response.json();
+        const res  = await fetch(url);
+        const data = await res.json();
 
         if (data.error) {
             container.innerHTML = `<p class="hint">Error: ${data.error}</p>`;
@@ -500,11 +443,12 @@ async function loadGutScorecard() {
         if (gutScorecardView === 'monthly') renderMonthlyScorecard(container, data);
 
     } catch (err) {
-        container.innerHTML = `<p class="hint">Could not load scorecard: ${err.message}</p>`;
+        container.innerHTML =
+            `<p class="hint">Could not load scorecard: ${err.message}</p>`;
     }
 }
 
-// ── Score color helper ─────────────────────────────
+// ── Score helpers ─────────────────────────────────
 function gutScoreColor(score) {
     if (score >= 7) return '#22c55e';
     if (score >= 5) return '#f59e0b';
@@ -523,7 +467,6 @@ function fodmapColor(level) {
     return '#22c55e';
 }
 
-// ── Score bar helper ───────────────────────────────
 function scoreBar(score, max = 10) {
     const pct   = Math.min(100, (score / max) * 100);
     const color = gutScoreColor(score);
@@ -535,33 +478,27 @@ function scoreBar(score, max = 10) {
         </div>`;
 }
 
-// ── Compact bacteria row with tap-to-expand ────────
+// ── Bacteria renderers ────────────────────────────
 function renderBacteriaFed(bacteria_fed) {
     const entries = Object.entries(bacteria_fed);
-    if (!entries.length) {
+    if (!entries.length)
         return '<p class="hint">No bacteria fed recorded.</p>';
-    }
 
     entries.sort((a, b) => b[1].count - a[1].count);
 
     return entries.map(([name, data], idx) => {
-        const strengthColor = gutScoreColor(data.avg_strength);
-        const pct = Math.min(100, (data.avg_strength / 10) * 100);
+        const color    = gutScoreColor(data.avg_strength);
+        const pct      = Math.min(100, (data.avg_strength / 10) * 100);
         const expandId = `bact-fed-${idx}`;
-
         return `
             <div class="bacteria-row"
                  onclick="toggleExpand('${expandId}')">
                 <div class="bacteria-row-header">
-                    <span class="bacteria-row-name">
-                        ✅ ${name}
-                    </span>
+                    <span class="bacteria-row-name">✅ ${name}</span>
                     <div class="bacteria-row-right">
-                        <span class="bacteria-row-count">
-                            ${data.count}x
-                        </span>
+                        <span class="bacteria-row-count">${data.count}x</span>
                         <span class="bacteria-strength-badge"
-                              style="color:${strengthColor}">
+                              style="color:${color}">
                             ${data.avg_strength}/10
                         </span>
                         <span class="expand-arrow">›</span>
@@ -570,8 +507,7 @@ function renderBacteriaFed(bacteria_fed) {
                 <div class="bacteria-bar-row">
                     <div class="gut-bar-bg">
                         <div class="gut-bar-fill"
-                             style="width:${pct}%;
-                                    background:${strengthColor}">
+                             style="width:${pct}%;background:${color}">
                         </div>
                     </div>
                 </div>
@@ -579,10 +515,10 @@ function renderBacteriaFed(bacteria_fed) {
                     <div class="bacteria-row-foods">
                         🌿 via: ${data.from_foods.join(', ')}
                     </div>
-                    ${data.mechanism ? `
-                        <div class="bacteria-mech">
-                            💬 ${data.mechanism}
-                        </div>` : ''}
+                    ${data.mechanism
+                        ? `<div class="bacteria-mech">
+                               💬 ${data.mechanism}
+                           </div>` : ''}
                 </div>
             </div>`;
     }).join('');
@@ -590,11 +526,8 @@ function renderBacteriaFed(bacteria_fed) {
 
 function renderBacteriaHarmed(bacteria_harmed) {
     const entries = Object.entries(bacteria_harmed);
-    if (!entries.length) {
-        return `<p class="hint" style="color:#22c55e">
-                    ✅ None harmed today
-                </p>`;
-    }
+    if (!entries.length)
+        return `<p class="hint" style="color:#22c55e">✅ None harmed</p>`;
 
     return entries.map(([name, data], idx) => {
         const expandId = `bact-harm-${idx}`;
@@ -607,9 +540,7 @@ function renderBacteriaHarmed(bacteria_harmed) {
                         ⚠️ ${name}
                     </span>
                     <div class="bacteria-row-right">
-                        <span class="bacteria-row-count">
-                            ${data.count}x
-                        </span>
+                        <span class="bacteria-row-count">${data.count}x</span>
                         <span class="expand-arrow">›</span>
                     </div>
                 </div>
@@ -622,25 +553,19 @@ function renderBacteriaHarmed(bacteria_harmed) {
     }).join('');
 }
 
-// ── Toggle expand ──────────────────────────────────
 function toggleExpand(id) {
-    const el  = document.getElementById(id);
-    const row = el?.closest('.bacteria-row');
+    const el    = document.getElementById(id);
+    const row   = el?.closest('.bacteria-row');
     if (!el) return;
     const isOpen = el.classList.toggle('open');
     const arrow  = row?.querySelector('.expand-arrow');
     if (arrow) arrow.textContent = isOpen ? '↓' : '›';
 }
 
-// ── Plant diversity helper ─────────────────────────
 function renderPlantDiversity(plants, count, target = 30) {
     const pct   = Math.min(100, Math.round((count / target) * 100));
     const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
-
-    const tags = plants.map(p =>
-        `<span class="plant-tag">${p}</span>`
-    ).join('');
-
+    const tags  = plants.map(p => `<span class="plant-tag">${p}</span>`).join('');
     return `
         <div class="plant-diversity-section">
             <div class="plant-header">
@@ -655,22 +580,19 @@ function renderPlantDiversity(plants, count, target = 30) {
                 </div>
             </div>
             <div class="plant-target-label">
-                Target: 30 different plants per week
+                Target: ${target} different plants per week
             </div>
             <div class="plant-tags">${tags}</div>
-        </div>
-    `;
+        </div>`;
 }
 
-// ── DAILY SCORECARD ────────────────────────────────
+// ── Daily scorecard ───────────────────────────────
 function renderDailyScorecard(container, data) {
     const score      = data.daily_gut_score || 0;
     const scoreColor = gutScoreColor(score);
     const scoreEmoji = gutScoreEmoji(score);
 
     container.innerHTML = `
-
-        <!-- Overall Score -->
         <div class="gut-overall-score"
              style="border-color:${scoreColor}">
             <div class="gut-score-circle"
@@ -693,7 +615,6 @@ function renderDailyScorecard(container, data) {
             </div>
         </div>
 
-        <!-- 4 Score Tiles -->
         <div class="gut-scores-grid">
             <div class="gut-score-tile">
                 <span class="gut-tile-label">🌱 Prebiotic</span>
@@ -728,7 +649,6 @@ function renderDailyScorecard(container, data) {
             </div>
         </div>
 
-        <!-- Bacteria Fed -->
         <div class="gut-section">
             <div class="gut-section-title">
                 🦠 Bacteria Nourished
@@ -737,7 +657,6 @@ function renderDailyScorecard(container, data) {
             ${renderBacteriaFed(data.bacteria_fed || {})}
         </div>
 
-        <!-- Bacteria Harmed -->
         <div class="gut-section">
             <div class="gut-section-title">
                 ⚠️ Bacteria Harmed
@@ -746,74 +665,61 @@ function renderDailyScorecard(container, data) {
             ${renderBacteriaHarmed(data.bacteria_harmed || {})}
         </div>
 
-        <!-- Plant Diversity -->
         <div class="gut-section">
             ${renderPlantDiversity(
                 data.plant_diversity || [],
                 data.plant_count     || 0,
                 30
             )}
-        </div>
-    `;
+        </div>`;
 }
 
-
-// ── WEEKLY SCORECARD ───────────────────────────────
+// ── Weekly scorecard ──────────────────────────────
 function renderWeeklyScorecard(container, data) {
     const avg        = data.avg_gut_score || 0;
     const scoreColor = gutScoreColor(avg);
     const dayNames   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const dailyCards = data.daily_scorecards || [];
+    const today      = new Date().toLocaleDateString('en-CA');
 
-    // Day bars
     const dayBars = dailyCards.map((day, i) => {
-        const score = day.daily_gut_score || 0;
-        const pct   = Math.min(100, (score / 10) * 100);
-        const color = score > 0 ? gutScoreColor(score) : '#374151';
-        const today = new Date().toLocaleDateString('en-CA');
-        const isToday = day.date === today;
-
+        const s     = day.daily_gut_score || 0;
+        const pct   = Math.min(100, (s / 10) * 100);
+        const color = s > 0 ? gutScoreColor(s) : '#374151';
         return `
             <div class="day-bar-col
-                 ${isToday ? 'day-bar-today' : ''}">
-                <div class="day-bar-score"
-                     style="color:${color}">
-                    ${score > 0 ? score : '—'}
+                 ${day.date === today ? 'day-bar-today' : ''}">
+                <div class="day-bar-score" style="color:${color}">
+                    ${s > 0 ? s : '—'}
                 </div>
                 <div class="day-bar-track">
                     <div class="day-bar-fill"
-                         style="height:${pct}%;
-                                background:${color}">
+                         style="height:${pct}%;background:${color}">
                     </div>
                 </div>
                 <div class="day-bar-label">${dayNames[i]}</div>
             </div>`;
     }).join('');
 
-    // Bacteria league
-    const bacteriaEntries = Object.entries(data.bacteria_fed || {})
-        .sort((a, b) => b[1].count - a[1].count);
-
-    const bacteriaRows = bacteriaEntries.map(([name, d], i) => {
-        const medal = ['🥇','🥈','🥉'][i] || '';
-        const pct   = Math.min(100, (d.count / 14) * 100);
-        return `
-            <div class="bacteria-league-row">
-                <span class="league-medal">${medal}</span>
-                <span class="league-name">${name}</span>
-                <span class="league-count">${d.count}x</span>
-                <div class="league-bar-bg">
-                    <div class="league-bar-fill"
-                         style="width:${pct}%;
-                                background:${gutScoreColor(d.avg_strength)}">
+    const bacteriaRows = Object.entries(data.bacteria_fed || {})
+        .sort((a, b) => b[1].count - a[1].count)
+        .map(([name, d], i) => {
+            const medal = ['🥇','🥈','🥉'][i] || '';
+            return `
+                <div class="bacteria-league-row">
+                    <span class="league-medal">${medal}</span>
+                    <span class="league-name">${name}</span>
+                    <span class="league-count">${d.count}x</span>
+                    <div class="league-bar-bg">
+                        <div class="league-bar-fill"
+                             style="width:${Math.min(100,(d.count/14)*100)}%;
+                                    background:${gutScoreColor(d.avg_strength)}">
+                        </div>
                     </div>
-                </div>
-            </div>`;
-    }).join('');
+                </div>`;
+        }).join('');
 
     container.innerHTML = `
-
-        <!-- Weekly Score -->
         <div class="gut-overall-score"
              style="border-color:${scoreColor}">
             <div class="gut-score-circle"
@@ -826,8 +732,8 @@ function renderWeeklyScorecard(container, data) {
                     ${gutScoreEmoji(avg)} Weekly Avg
                 </div>
                 <div class="gut-score-notes">
-                    ${data.total_meals || 0} meals ·
-                    ${data.plant_count || 0} unique plants
+                    ${data.total_meals||0} meals ·
+                    ${data.plant_count||0} unique plants
                 </div>
                 ${data.best_day ? `
                     <div class="gut-score-notes">
@@ -837,22 +743,17 @@ function renderWeeklyScorecard(container, data) {
             </div>
         </div>
 
-        <!-- Day Bars -->
         <div class="gut-section">
             <div class="gut-section-title">📊 Daily Scores</div>
             <div class="day-bars-row">${dayBars}</div>
         </div>
 
-        <!-- Bacteria League -->
         <div class="gut-section">
-            <div class="gut-section-title">
-                🦠 Bacteria League
-            </div>
+            <div class="gut-section-title">🦠 Bacteria League</div>
             ${bacteriaRows ||
               '<p class="hint">No data this week yet.</p>'}
         </div>
 
-        <!-- Plant Diversity -->
         <div class="gut-section">
             ${renderPlantDiversity(
                 data.plant_diversity || [],
@@ -861,16 +762,14 @@ function renderWeeklyScorecard(container, data) {
             )}
         </div>
 
-        <!-- Bacteria Harmed -->
         ${Object.keys(data.bacteria_harmed || {}).length ? `
             <div class="gut-section">
                 <div class="gut-section-title">⚠️ Bacteria Harmed</div>
                 ${renderBacteriaHarmed(data.bacteria_harmed)}
-            </div>` : ''}
-    `;
+            </div>` : ''}`;
 }
 
-// ── MONTHLY SCORECARD ──────────────────────────────
+// ── Monthly scorecard ─────────────────────────────
 function renderMonthlyScorecard(container, data) {
     const avg        = data.avg_gut_score || 0;
     const scoreColor = gutScoreColor(avg);
@@ -878,9 +777,7 @@ function renderMonthlyScorecard(container, data) {
                         'Jul','Aug','Sep','Oct','Nov','Dec'];
     const monthLabel = `${monthNames[(data.month||1)-1]} ${data.year}`;
 
-    // Top foods
-    const topFoodsHtml = (data.top_foods || [])
-        .slice(0, 5)
+    const topFoodsHtml = (data.top_foods || []).slice(0, 5)
         .map(([name, count], i) => `
             <div class="top-food-row">
                 <span class="top-food-rank">${i+1}</span>
@@ -888,7 +785,6 @@ function renderMonthlyScorecard(container, data) {
                 <span class="top-food-count">${count}x</span>
             </div>`).join('');
 
-    // Bacteria this month
     const bacteriaHtml = Object.entries(data.bacteria_fed || {})
         .sort((a, b) => b[1].count - a[1].count)
         .slice(0, 8)
@@ -905,8 +801,6 @@ function renderMonthlyScorecard(container, data) {
             </div>`).join('');
 
     container.innerHTML = `
-
-        <!-- Monthly Score -->
         <div class="gut-overall-score"
              style="border-color:${scoreColor}">
             <div class="gut-score-circle"
@@ -919,34 +813,26 @@ function renderMonthlyScorecard(container, data) {
                     ${gutScoreEmoji(avg)} ${monthLabel}
                 </div>
                 <div class="gut-score-notes">
-                    ${data.total_meals || 0} meals ·
-                    ${data.plant_count || 0} plants ·
-                    ${data.fried_meals || 0} fried
-                    ${(data.fried_meals || 0) > 5
-                        ? '⚠️' : '✅'}
+                    ${data.total_meals||0} meals ·
+                    ${data.plant_count||0} plants ·
+                    ${data.fried_meals||0} fried
+                    ${(data.fried_meals||0) > 5 ? '⚠️' : '✅'}
                 </div>
             </div>
         </div>
 
-        <!-- Bacteria This Month -->
         <div class="gut-section">
             <div class="gut-section-title">
                 🦠 Bacteria Fed This Month
             </div>
-            ${bacteriaHtml ||
-              '<p class="hint">No data yet.</p>'}
+            ${bacteriaHtml || '<p class="hint">No data yet.</p>'}
         </div>
 
-        <!-- Top Foods -->
         <div class="gut-section">
-            <div class="gut-section-title">
-                🥗 Most Eaten Foods
-            </div>
-            ${topFoodsHtml ||
-              '<p class="hint">No meals logged yet.</p>'}
+            <div class="gut-section-title">🥗 Most Eaten Foods</div>
+            ${topFoodsHtml || '<p class="hint">No meals logged yet.</p>'}
         </div>
 
-        <!-- Plant Diversity -->
         <div class="gut-section">
             ${renderPlantDiversity(
                 data.plant_diversity || [],
@@ -955,13 +841,9 @@ function renderMonthlyScorecard(container, data) {
             )}
         </div>
 
-        <!-- Bacteria Harmed -->
         ${Object.keys(data.bacteria_harmed || {}).length ? `
             <div class="gut-section">
-                <div class="gut-section-title">
-                    ⚠️ Bacteria Harmed
-                </div>
+                <div class="gut-section-title">⚠️ Bacteria Harmed</div>
                 ${renderBacteriaHarmed(data.bacteria_harmed)}
-            </div>` : ''}
-    `;
+            </div>` : ''}`;
 }

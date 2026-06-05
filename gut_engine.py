@@ -146,7 +146,43 @@ def analyze_gut_with_gemini(image_base64, mime_type="image/jpeg"):
     except Exception as e:
         return {"error": f"Gemini gut analysis failed: {e}"}
 
+def analyze_gut_with_claude_text(voice_text):
+    """Analyze text/voice description with gut-specific prompt"""
+    if not CLAUDE_API_KEY:
+        return {"error": "Missing CLAUDE_API_KEY"}
+    try:
+        response = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": CLAUDE_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 4000,
+                "messages": [{
+                    "role": "user",
+                    "content": f"Extract food items from this description: '{voice_text}'. "
+                               f"Then analyse the gut health impact of each item.\n\n"
+                               f"{GUT_PROMPT}"
+                }]
+            },
+            timeout=30
+        )
+        if response.status_code != 200:
+            return {"error": f"Claude error {response.status_code}"}
 
+        text = response.json()['content'][0]['text'].strip()
+        if '```' in text:
+            text = text.split('```')[1]
+            if text.startswith('json'):
+                text = text[4:]
+        return json.loads(text.strip())
+    except Exception as e:
+        return {"error": f"Claude gut text analysis failed: {e}"}
+
+        
 def save_gut_meal_log(meal_data):
     """Save gut meal to separate gut log file"""
     log_file = 'gut_meals_log.json'

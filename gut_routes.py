@@ -8,6 +8,7 @@ import os
 from gut_engine import (
     analyze_gut_with_claude,
     analyze_gut_with_gemini,
+    analyze_gut_with_claude_text,
     save_gut_meal_log,
     get_local_timestamp,
     build_daily_gut_scorecard,    # ← add these
@@ -45,6 +46,34 @@ def gut_analyze():
         result['timestamp'] = get_local_timestamp(timezone_str)
         result['patient_id'] = patient_id
         result['mode'] = 'gut'
+
+        return jsonify(result)
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+@gut_bp.route('/analyze-voice', methods=['POST'])
+def gut_analyze_voice():
+    """Analyze voice/text with gut-specific prompt"""
+    try:
+        data         = request.get_json() or {}
+        text         = data.get('text', '')
+        timezone_str = data.get('timezone', '')
+        patient_id   = data.get('patient_id', 'guest')
+
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+
+        result = analyze_gut_with_claude_text(text)
+
+        if isinstance(result, dict) and result.get('error'):
+            return jsonify({"error": result['error']}), 500
+
+        result['timestamp']  = get_local_timestamp(timezone_str)
+        result['patient_id'] = patient_id
+        result['mode']       = 'gut'
 
         return jsonify(result)
 

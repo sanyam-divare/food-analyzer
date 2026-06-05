@@ -21,7 +21,7 @@
 
     <main>
 
-        <!-- Mode Selector -->
+        <!-- ══ MODE SELECTOR ══════════════════════════════ -->
         <div class="mode-selector" id="mode-selector">
             <label class="mode-option">
                 <input type="radio" name="app-mode" value="health" checked>
@@ -41,14 +41,124 @@
             </label>
         </div>
 
-        <!-- Error banner — shared by both modes -->
+        <!-- ══ ERROR BANNER — shared ══════════════════════ -->
         <div id="error-message" class="error-banner" style="display:none"></div>
 
-        <!-- ══════════════════════════════════════════
-             PERSONA 1 — HEALTH TRACKER
-             Everything below is wrapped and hidden
-             when gut mode is selected
-        ══════════════════════════════════════════ -->
+        <!-- ══ SHARED INPUT — visible in BOTH modes ═══════
+             Camera, voice, type input, analyze buttons
+             and loading spinners all live here so they
+             are never hidden when mode switches.
+        ══════════════════════════════════════════════════ -->
+        <div id="shared-input-section">
+
+            <!-- Camera card -->
+            <div class="card">
+                <h2>📷 Take a Photo</h2>
+                <div class="camera-container">
+                    <video id="camera-preview" autoplay playsinline
+                           style="display:none"></video>
+                    <canvas id="canvas" style="display:none"></canvas>
+                    <img id="photo-preview" style="display:none"
+                         alt="Food photo">
+                    <div class="camera-placeholder"
+                         id="camera-placeholder">🍽️</div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary"
+                            onclick="startCamera()">📷 Camera</button>
+                    <button class="btn-success"
+                            onclick="capturePhoto()"
+                            id="capture-btn"
+                            style="display:none">✅ Capture</button>
+                    <button class="btn-secondary"
+                            onclick="uploadPhoto()">📁 Upload</button>
+                    <input type="file" id="file-input"
+                           accept="image/*" style="display:none"
+                           onchange="handleFileUpload(event)">
+                </div>
+            </div>
+
+            <!-- Voice card -->
+            <div class="card">
+                <h2>🎤 Voice Input</h2>
+                <p class="hint">
+                    Say what you ate — e.g. "I had rice and
+                    chicken curry with salad"
+                </p>
+                <div class="voice-container">
+                    <button class="btn-voice" id="voice-btn"
+                            onclick="toggleVoice()">
+                        🎤 Tap to Speak
+                    </button>
+                    <div id="voice-text" class="voice-text"></div>
+                </div>
+                <!-- Health voice analyze button -->
+                <button class="btn-primary"
+                        onclick="analyzeVoice()"
+                        id="analyze-voice-btn"
+                        style="display:none">
+                    🔍 Analyze Food
+                </button>
+                <!-- Gut voice analyze button -->
+                <button class="btn-primary"
+                        onclick="gutAnalyzeVoice(voiceText)"
+                        id="gut-analyze-voice-btn"
+                        style="display:none">
+                    🦠 Analyze Gut Impact
+                </button>
+            </div>
+
+            <!-- Type your meal -->
+            <div class="voice-or-type">
+                <div class="voice-divider">
+                    <span>or type your meal</span>
+                </div>
+                <div class="type-input-row">
+                    <input type="text"
+                           id="manual-text-input"
+                           placeholder="e.g. 2 eggs, toast with butter, orange juice"
+                           class="manual-text-input"/>
+                    <button onclick="useTypedText()"
+                            class="type-submit-btn">→</button>
+                </div>
+            </div>
+
+            <!-- Health photo analyze button -->
+            <button class="btn-analyze"
+                    onclick="analyzePhoto()"
+                    id="analyze-btn"
+                    style="display:none">
+                🤖 Analyze with AI
+            </button>
+
+            <!-- Gut photo analyze button -->
+            <button class="btn-analyze"
+                    onclick="gutAnalyzePhoto()"
+                    id="gut-analyze-btn"
+                    style="display:none">
+                🦠 Analyze Gut Impact
+            </button>
+
+            <!-- Health loading -->
+            <div id="loading" style="display:none" class="loading">
+                <div class="spinner"></div>
+                <p>AI is analyzing your food...</p>
+            </div>
+
+            <!-- Gut loading -->
+            <div id="gut-loading" style="display:none" class="loading">
+                <div class="spinner"></div>
+                <p>Analysing gut bacteria impact...</p>
+            </div>
+
+        </div>
+        <!-- ══ END SHARED INPUT ══ -->
+
+
+        <!-- ══ PERSONA 1 — HEALTH TRACKER ══════════════════
+             Provider selector, tabs, results, history.
+             Hidden when gut mode is active.
+        ══════════════════════════════════════════════════ -->
         <div id="health-mode-content">
 
             <div class="card">
@@ -62,69 +172,14 @@
             </div>
 
             <div class="tabs">
-                <button class="tab active" onclick="showTab('analyze')">📸 Analyze</button>
-                <button class="tab" onclick="showTab('history')">📅 History</button>
+                <button class="tab active"
+                        onclick="showTab('analyze')">📸 Analyze</button>
+                <button class="tab"
+                        onclick="showTab('history')">📅 History</button>
             </div>
 
             <!-- Analyze Tab -->
             <div id="tab-analyze" class="tab-content active">
-
-                <!-- Camera -->
-                <div class="card">
-                    <h2>📷 Take a Photo</h2>
-                    <div class="camera-container">
-                        <video id="camera-preview" autoplay playsinline style="display:none"></video>
-                        <canvas id="canvas" style="display:none"></canvas>
-                        <img id="photo-preview" style="display:none" alt="Food photo">
-                        <div class="camera-placeholder" id="camera-placeholder">🍽️</div>
-                    </div>
-                    <div class="button-group">
-                        <button class="btn-primary" onclick="startCamera()">📷 Camera</button>
-                        <button class="btn-success" onclick="capturePhoto()" id="capture-btn" style="display:none">✅ Capture</button>
-                        <button class="btn-secondary" onclick="uploadPhoto()">📁 Upload</button>
-                        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
-                    </div>
-                </div>
-
-                <!-- Voice -->
-                <div class="card">
-                    <h2>🎤 Voice Input</h2>
-                    <p class="hint">Say what you ate — e.g. "I had rice and chicken curry with salad"</p>
-                    <div class="voice-container">
-                        <button class="btn-voice" id="voice-btn" onclick="toggleVoice()">🎤 Tap to Speak</button>
-                        <div id="voice-text" class="voice-text"></div>
-                    </div>
-                    <button class="btn-primary" onclick="analyzeVoice()" id="analyze-voice-btn" style="display:none">
-                        🔍 Analyze Food
-                    </button>
-                </div>
-
-                <!-- Analyze Button -->
-                <button class="btn-analyze" onclick="analyzePhoto()" id="analyze-btn" style="display:none">
-                    🤖 Analyze with AI
-                </button>
-
-                <!-- Type your meal -->
-                <div class="voice-or-type">
-                    <div class="voice-divider">
-                        <span>or type your meal</span>
-                    </div>
-                    <div class="type-input-row">
-                        <input
-                            type="text"
-                            id="manual-text-input"
-                            placeholder="e.g. 2 eggs, toast with butter, orange juice"
-                            class="manual-text-input"
-                        />
-                        <button onclick="useTypedText()" class="type-submit-btn">→</button>
-                    </div>
-                </div>
-
-                <!-- Loading -->
-                <div id="loading" style="display:none" class="loading">
-                    <div class="spinner"></div>
-                    <p>AI is analyzing your food...</p>
-                </div>
 
                 <!-- Results -->
                 <div id="results" style="display:none" class="card results">
@@ -132,19 +187,33 @@
                     <p id="meal-description" class="meal-desc"></p>
 
                     <div class="debug-panel">
-                        <button class="btn-small" onclick="document.getElementById('debug-log').classList.toggle('visible')">Toggle Debug Log</button>
-                        <pre id="debug-log" class="debug-log" style="display:none; white-space:pre-wrap; max-height:200px; overflow:auto"></pre>
+                        <button class="btn-small"
+                                onclick="document.getElementById('debug-log').classList.toggle('visible')">
+                            Toggle Debug Log
+                        </button>
+                        <pre id="debug-log" class="debug-log"
+                             style="display:none; white-space:pre-wrap;
+                                    max-height:200px; overflow:auto"></pre>
                     </div>
 
                     <div class="result-actions">
-                        <button class="btn-secondary" onclick="recalculateNutrition()">🔁 Recalculate</button>
-                        <button class="btn-secondary" onclick="resetApp()">🔄 Analyze Another</button>
+                        <button class="btn-secondary"
+                                onclick="recalculateNutrition()">
+                            🔁 Recalculate
+                        </button>
+                        <button class="btn-secondary"
+                                onclick="resetApp()">
+                            🔄 Analyze Another
+                        </button>
                     </div>
 
                     <div class="add-food-row">
-                        <input type="text" id="new-food-name" placeholder="Add food (e.g. boiled egg)" />
-                        <input type="number" id="new-food-grams" placeholder="grams" value="100" min="0" />
-                        <button onclick="addNewFood()" class="add-food-btn">+ Add</button>
+                        <input type="text" id="new-food-name"
+                               placeholder="Add food (e.g. boiled egg)"/>
+                        <input type="number" id="new-food-grams"
+                               placeholder="grams" value="100" min="0"/>
+                        <button onclick="addNewFood()"
+                                class="add-food-btn">+ Add</button>
                     </div>
 
                     <!-- Macro Summary Cards -->
@@ -240,11 +309,13 @@
 
                     <!-- Confirm / Retake -->
                     <div class="confirm-bar">
-                        <button class="confirm-btn confirm-reject" onclick="rejectResults()" title="Retake">
+                        <button class="confirm-btn confirm-reject"
+                                onclick="rejectResults()" title="Retake">
                             <span class="confirm-icon">✕</span>
                             <span class="confirm-label">Retake</span>
                         </button>
-                        <button class="confirm-btn confirm-accept" onclick="confirmResults()" title="Confirm">
+                        <button class="confirm-btn confirm-accept"
+                                onclick="confirmResults()" title="Confirm">
                             <span class="confirm-icon">✓</span>
                             <span class="confirm-label">Confirm</span>
                         </button>
@@ -258,13 +329,22 @@
             <!-- History Tab -->
             <div id="tab-history" class="tab-content">
                 <div class="date-nav-bar">
-                    <button class="date-nav-btn" onclick="shiftHistoryDate(-1)" title="Previous day">‹</button>
+                    <button class="date-nav-btn"
+                            onclick="shiftHistoryDate(-1)"
+                            title="Previous day">‹</button>
                     <div class="date-nav-center">
-                        <span class="date-nav-label" id="history-date-label">Today</span>
-                        <span class="date-nav-sub" id="history-date-sub"></span>
+                        <span class="date-nav-label"
+                              id="history-date-label">Today</span>
+                        <span class="date-nav-sub"
+                              id="history-date-sub"></span>
                     </div>
-                    <button class="date-nav-btn" onclick="shiftHistoryDate(1)" id="date-nav-next" title="Next day">›</button>
-                    <button class="date-nav-refresh" onclick="refreshHistory()" title="Refresh">↻</button>
+                    <button class="date-nav-btn"
+                            onclick="shiftHistoryDate(1)"
+                            id="date-nav-next"
+                            title="Next day">›</button>
+                    <button class="date-nav-refresh"
+                            onclick="refreshHistory()"
+                            title="Refresh">↻</button>
                 </div>
                 <div id="history-list">
                     <div class="history-skeleton">
@@ -287,10 +367,11 @@
         </div>
         <!-- end health-mode-content -->
 
-        <!-- ══════════════════════════════════════════
-             PERSONA 2 — GUT HEALTH TRACKER
-             Rendered by gut_app.js when selected
-        ══════════════════════════════════════════ -->
+
+        <!-- ══ PERSONA 2 — GUT HEALTH TRACKER ══════════════
+             Rendered dynamically by gut_app.js.
+             Hidden when health mode is active.
+        ══════════════════════════════════════════════════ -->
         <div id="gut-mode-content" style="display:none">
             <p style="text-align:center; padding:40px; color:#666">
                 🦠 Loading...

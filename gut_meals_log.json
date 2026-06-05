@@ -319,5 +319,491 @@
     "overall_gut_score": 7.5,
     "gut_notes": "",
     "date": "2026-06-03"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A child is holding a single-scoop waffle cone filled with a two-toned frozen dessert, appearing to be mixed berry/candy flavored ice cream or sorbet. The colors are bright blue and pink.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 0,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "High sugar content provides readily fermentable carbohydrates, which can fuel the growth of opportunistic bacteria like E. coli.",
+            "name": "Escherichia coli"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 70,
+        "fodmap": "high",
+        "gut_notes": "High in sugar, saturated fat, and potentially artificial additives. The high sugar content can contribute to gut dysbiosis by favoring opportunistic bacteria. Lactose (a disaccharide) is high FODMAP and can cause digestive symptoms like bloating and gas in lactose-intolerant individuals if it reaches the colon where it is fermented by various bacteria. It lacks beneficial fibers and anti-inflammatory compounds.",
+        "name": "Mixed Flavored Ice Cream",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 0,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 20,
+        "fodmap": "medium",
+        "gut_notes": "Made from refined wheat flour and sugar, the waffle cone offers minimal nutritional value and fiber. Refined carbohydrates can contribute to blood sugar spikes and provide readily available energy for a range of gut bacteria without selectively supporting beneficial species. The fructans present in wheat flour are classified as medium FODMAP and can cause symptoms in sensitive individuals.",
+        "name": "Waffle Cone",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-04 22:51",
+    "overall_gut_score": 1,
+    "gut_notes": "",
+    "date": "2026-06-04"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Sabudana khichadi with yogurt - a light Indian preparation of tapioca pearls with yogurt",
+    "foods": [
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Minimal resistant starch in processed tapioca; limited butyrate production",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Low mucin-stimulating compounds; refined carbohydrate may reduce mucus-layer quality",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 80,
+        "fodmap": "low",
+        "gut_notes": "Highly processed, easily digestible but minimal prebiotic value. May cause rapid glucose spikes. Poor for microbial diversity.",
+        "name": "Sabudana (tapioca pearls)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Primary probiotic strain in yogurt; directly colonizes and survives transit",
+            "name": "Lactobacillus bulgaricus"
+          },
+          {
+            "impact_strength": 9,
+            "mechanism": "Secondary starter culture in yogurt; survives passage through GI tract",
+            "name": "Streptococcus thermophilus"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Lactose and organic acids in yogurt provide modest bifidogenic effect",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Lactic acid production and competitive exclusion by Lactobacillus species",
+            "name": "Clostridioides difficile"
+          }
+        ],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Excellent source of live probiotics. Supports beneficial lactobacilli colonization. Contains lactose which may affect sensitive individuals. Modest anti-inflammatory compounds from lactobacilli metabolites.",
+        "name": "Yogurt (plain, unsweetened)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": true
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-04 23:03",
+    "overall_gut_score": 5.8,
+    "gut_notes": "",
+    "date": "2026-06-04"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Single ripe banana",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch and inulin provide selective substrate for bifidogenic fermentation",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Prebiotic fibres support growth of this beneficial species",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Short-chain fatty acid production from pectin fermentation supports this butyrate-producer",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 120,
+        "fodmap": "low",
+        "gut_notes": "Ripe banana is an excellent prebiotic fruit with minimal FODMAP content suitable for sensitive guts. Pectin promotes mucus layer integrity. Resistant starch content supports commensal bacteria diversity. Anti-inflammatory polyphenols present.",
+        "name": "Banana (ripe)",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch",
+          "inulin"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-04 23:05",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-04"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Milk coffee with biscuits",
+    "foods": [
+      {
+        "anti_inflammatory_score": 5.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Lactose in milk provides minimal fermentation substrate",
+            "name": "Bifidobacterium adolescentis"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 2,
+            "mechanism": "Heat treatment reduces any beneficial bacterial viability",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "heated",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Low prebiotic value. Contains lactose which may cause issues in lactose-sensitive individuals. No probiotics present due to heating.",
+        "name": "Milk (in coffee)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Polyphenols and caffeine have antimicrobial properties against pathogenic species",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "brewed",
+        "estimated_grams": 5,
+        "fodmap": "low",
+        "gut_notes": "Contains polyphenols with mild anti-inflammatory properties. May suppress pathogenic bacteria but minimal prebiotic benefit. Caffeine can increase gut motility.",
+        "name": "Coffee",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [
+          {
+            "impact_strength": 2,
+            "mechanism": "Refined grains provide minimal substrate; negligible impact",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Refined carbohydrates lack resistant starch and fibre needed by butyrate producers",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "Low polysaccharide content provides insufficient mucus layer substrate",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "baked",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Refined wheat biscuits lack fibre and prebiotics. Ultra-processed nature may promote dysbiosis. No resistant starch or complex carbohydrates. Potential contributor to reduced microbial diversity with regular consumption.",
+        "name": "Biscuits (wheat-based, commercial)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-04 23:08",
+    "overall_gut_score": 4.8,
+    "gut_notes": "",
+    "date": "2026-06-04"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Haldiram sev with coffee",
+    "foods": [
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "High salt and oxidative stress from frying reduce butyrate-producing capacity",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Inflammatory lipid peroxides from deep frying inhibit short-chain fatty acid production",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "fried",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Refined chickpea flour lacks intact fiber. Deep frying creates oxidative stress and lipopolysaccharide endotoxemia risk. High sodium disrupts osmotic balance and mucus layer.",
+        "name": "Haldiram sev (fried chickpea noodles)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Polyphenols (chlorogenic acid, caffeic acid) show modest prebiotic potential",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Caffeine may increase intestinal permeability and dysbiosis in sensitive individuals",
+            "name": "Bifidobacterium adolescentis"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 240,
+        "fodmap": "low",
+        "gut_notes": "Coffee contains polyphenols with modest anti-inflammatory benefits but caffeine can increase tight junction permeability. Mixed impact depending on individual tolerance.",
+        "name": "Coffee (black, brewed)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 3,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-05 12:13",
+    "overall_gut_score": 4.1,
+    "gut_notes": "",
+    "date": "2026-06-05"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Biscuits with coffee",
+    "foods": [
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Refined carbohydrates rapidly fermented, may promote pathogenic gram-negative bacteria overgrowth",
+            "name": "Escherichia coli"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Simple sugars and lack of resistant starch favour proteolytic species",
+            "name": "Clostridium perfringens"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Lacks butyrate-generating substrates needed by this beneficial species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Refined grains lack resistant starch required for short-chain fatty acid production",
+            "name": "Roseburia species"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Refined biscuits lack fibre and prebiotic compounds. Rapid glycemic spike may promote dysbiosis and reduce beneficial Faecalibacterium prausnitzii abundance.",
+        "name": "Biscuits (refined grain)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Polyphenols in coffee may modestly promote growth of this species",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 240,
+        "fodmap": "low",
+        "gut_notes": "Coffee provides polyphenols with anti-inflammatory properties and may have modest prebiotic effects via polyphenol metabolism. However, caffeine may increase intestinal permeability in sensitive individuals.",
+        "name": "Coffee",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-05 12:16",
+    "overall_gut_score": 3.8,
+    "gut_notes": "",
+    "date": "2026-06-05"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Fried pomfret 2-3 cutlets with lettuce",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Omega-3 fatty acids (EPA/DHA) provide weak substrate; frying reduces beneficial effect",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "High-temperature frying produces oxidative compounds and advanced glycation end products (AGEs) that damage gut barrier",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Oxidative stress from fried preparation inhibits butyrate-producing capacity",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "fried",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "Pomfret contains beneficial omega-3 fatty acids (EPA/DHA ~200-300mg/100g), but deep frying significantly reduces anti-inflammatory benefits and generates harmful compounds. Creates pro-inflammatory environment despite fish's inherent benefits.",
+        "name": "Fried pomfret cutlets",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Minimal dietary fiber; small amounts of pectin and cellulose provide weak substrate",
+            "name": "Bacteroides vulgatus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 30,
+        "fodmap": "low",
+        "gut_notes": "Lettuce is very low in fermentable fiber and provides minimal prebiotic benefit. Primary value is water content and phytonutrients. Portion too small (30g) to meaningfully impact microbiota. Contains minimal polyphenols due to pale variety assumption.",
+        "name": "Lettuce",
+        "prebiotic_fibres": [
+          "pectin"
+        ],
+        "prebiotic_score": 2,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-05 13:23",
+    "overall_gut_score": 5.8,
+    "gut_notes": "",
+    "date": "2026-06-05"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A packet of Peckish Sweet Chilli Flavoured Rice Crackers, held by a person in a kitchen environment where food preparation appears to be ongoing in the background. The primary focus is on the packaged snack.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 30,
+        "fodmap": "medium",
+        "gut_notes": "These are highly processed, air-baked rice crackers made primarily from refined rice. They are very low in dietary fiber and offer minimal prebiotic benefits, though trace amounts of resistant starch (RS3) may be present from the rice. The 'Sweet Chilli' flavouring often contains 'natural flavours' which may include moderate amounts of onion or garlic components, making it a 'medium' FODMAP item for some sensitive individuals, depending on the specific ingredients and amount consumed. It provides very few anti-inflammatory compounds and lacks probiotics. While gluten-free, its refined nature means it contributes little to beneficial gut flora and should be consumed in moderation as part of a balanced diet rich in whole foods.",
+        "name": "Peckish Sweet Chilli Flavoured Rice Crackers",
+        "prebiotic_fibres": [
+          "resistant starch (trace)"
+        ],
+        "prebiotic_score": 1,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-05 19:44",
+    "overall_gut_score": 3.5,
+    "gut_notes": "",
+    "date": "2026-06-05"
   }
 ]
