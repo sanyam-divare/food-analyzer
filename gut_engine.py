@@ -553,3 +553,145 @@ def build_monthly_gut_scorecard(all_meals, year, month):
         'fried_meals':       fried_count,
         'gut_scores':        gut_scores,
     }
+
+    # ── Profile functions to ADD to gut_engine.py ────────────────────────────────
+
+def get_empty_profile(patient_id='guest'):
+    return {
+        "patient_id":    patient_id,
+        "name":          "",
+        "test_date":     "",
+        "test_provider": "",
+        "doctor":        "",
+        "metrics": {
+            "evenness":  0,
+            "diversity": 0,
+            "fb_ratio":  0
+        },
+        "functions": {
+            "overall_health":    {"helpful": 0, "harmful": 0},
+            "immunity":          {"helpful": 0, "harmful": 0},
+            "gi_health":         {"helpful": 0, "harmful": 0},
+            "mental_wellness":   {"helpful": 0, "harmful": 0},
+            "weight_management": {"helpful": 0, "harmful": 0},
+            "sugar_metabolism":  {"helpful": 0, "harmful": 0}
+        },
+        "bacteria_boost":  [],
+        "bacteria_reduce": [],
+        "foods_add":       [],
+        "foods_reduce":    [],
+        "food_targets":    []
+    }
+
+
+def load_gut_profile(patient_id='guest'):
+    """Load patient gut profile from file"""
+    profile_file = 'gut_patient_profile.json'
+    if not os.path.exists(profile_file):
+        return get_empty_profile(patient_id)
+    try:
+        with open(profile_file, 'r') as f:
+            data = json.load(f)
+        # Support both single-profile dict and list of profiles
+        if isinstance(data, list):
+            for p in data:
+                if p.get('patient_id') == patient_id:
+                    return p
+            return get_empty_profile(patient_id)
+        elif isinstance(data, dict):
+            if data.get('patient_id') == patient_id:
+                return data
+        return get_empty_profile(patient_id)
+    except Exception:
+        return get_empty_profile(patient_id)
+
+
+def save_gut_profile(profile_data):
+    """Save patient gut profile to file"""
+    profile_file = 'gut_patient_profile.json'
+    with open(profile_file, 'w') as f:
+        json.dump(profile_data, f, indent=2)
+
+
+def check_food_targets_today(patient_profile, meals_today):
+    """
+    Compare doctor-prescribed food targets against what patient ate today.
+    Returns list of progress dicts per target food.
+    """
+    targets  = patient_profile.get('food_targets', [])
+    progress = []
+
+    for target in targets:
+        food_name    = target.get('food', '').lower().strip()
+        target_grams = target.get('amount_grams', 0)
+        eaten_grams  = 0
+        eaten_meals  = []
+
+        for meal in meals_today:
+            for food in meal.get('foods', []):
+                name = food.get('name', '').lower().strip()
+                if food_name in name or name in food_name or \
+                   any(w in name for w in food_name.split() if len(w) > 3):
+                    grams = food.get('estimated_grams', 0)
+                    eaten_grams += grams
+                    eaten_meals.append(meal.get('timestamp', '')[:5])
+
+        pct    = min(100, round(eaten_grams / target_grams * 100)) \
+                 if target_grams > 0 else 0
+        status = 'met' if pct >= 90 else 'partial' if pct >= 50 else 'missed'
+
+        progress.append({
+            "food":         target.get('food', ''),
+            "target_grams": target_grams,
+            "eaten_grams":  round(eaten_grams, 1),
+            "pct":          pct,
+            "status":       status,
+            "frequency":    target.get('frequency', 'daily'),
+            "feeds":        target.get('feeds', ''),
+            "alternatives": target.get('alternatives', []),
+            "eaten_at":     eaten_meals
+        })
+
+    return progress
+
+
+def check_bacteria_progress_today(patient_profile, meals_today):
+    """
+    Check which bacteria from the boost list were fed today.
+    Returns progress per bacteria target.
+    """
+    bacteria_boost = patient_profile.get('bacteria_boost', [])
+    progress       = []
+
+    for target_bact in bacteria_boost:
+        target_name = target_bact.get('name', '').lower().strip()
+        fed_count   = 0
+        fed_by      = []
+        strength    = 0
+
+        for meal in meals_today:
+            for food in meal.get('foods', []):
+                for b in food.get('bacteria_fed', []):
+                    b_name = (b.get('name', b)
+                              if isinstance(b, dict) else b).lower().strip()
+                    # Match on genus name (first word)
+                    t_genus = target_name.split()[0]
+                    b_genus = b_name.split()[0]
+                    if t_genus in b_genus or b_genus in t_genus:
+                        fed_count += 1
+                        fed_by.append(food.get('name', ''))
+                        if isinstance(b, dict):
+                            strength = max(strength,
+                                          b.get('impact_strength', 0))
+
+        progress.append({
+            "name":      target_bact.get('name', ''),
+            "level":     target_bact.get('level', 'low'),
+            "functions": target_bact.get('functions', []),
+            "fed_today": fed_count > 0,
+            "fed_count": fed_count,
+            "fed_by":    list(set(fed_by)),
+            "strength":  strength
+        })
+
+    return progress

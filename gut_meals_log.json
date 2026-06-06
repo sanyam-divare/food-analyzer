@@ -805,5 +805,425 @@
     "overall_gut_score": 3.5,
     "gut_notes": "",
     "date": "2026-06-05"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "One raw banana with oats, milk, and honey",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch and inulin selectively stimulate growth",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and resistant starch serve as substrate for butyrate production",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Pectin provides substrate for mucus layer support",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 120,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic source with resistant starch content increasing as banana ripeness decreases. Raw preparation preserves all prebiotic compounds.",
+        "name": "Raw banana",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "pectin",
+          "inulin"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Beta-glucan is primary substrate for butyrate-producing bacteria",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan fermentation produces short-chain fatty acids",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch and soluble fibre promote growth",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Beta-glucans provide strong prebiotic effect and reduce inflammation through SCFA production. Well-tolerated with low FODMAP profile.",
+        "name": "Oats",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Lactose may be fermented by some strains if lactase-persistent",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Casein and A1 beta-casein may trigger mild inflammatory response in sensitive individuals",
+            "name": "Lactobacillus species"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 200,
+        "fodmap": "low",
+        "gut_notes": "Minimal prebiotic benefit unless individual is lactase-persistent. May be inflammatory in lactose-intolerant or A1 casein-sensitive individuals. Consider lactose-free or A2 milk alternatives for optimal gut health.",
+        "name": "Milk (cow's)",
+        "prebiotic_fibres": [
+          "lactose"
+        ],
+        "prebiotic_score": 2.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Fructose and oligosaccharides in honey selectively feed bifidobacteria",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 15,
+        "fodmap": "high",
+        "gut_notes": "Despite high FODMAP classification, small portion (15g) minimizes impact. Excellent anti-inflammatory compounds (polyphenols, enzymes) support gut barrier integrity. Raw honey preferred for retained antimicrobial compounds.",
+        "name": "Honey",
+        "prebiotic_fibres": [
+          "fructose",
+          "glucose"
+        ],
+        "prebiotic_score": 5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-06 10:19",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-06"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A simple breakfast plate consisting of a fried egg, a small metal bowl of diced avocado, and two slices of lightly toasted artisan white bread, likely with black sesame seeds.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "fried",
+        "estimated_grams": 60,
+        "fodmap": "low",
+        "gut_notes": "A high-quality source of complete protein and essential micronutrients such as choline, selenium, and vitamins A, D, and E. While eggs themselves provide minimal direct dietary fiber or prebiotics, they contribute significantly to satiety and overall nutritional status, indirectly supporting a healthy physiological environment.",
+        "name": "Fried Egg",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "The soluble and insoluble dietary fibers in avocado, along with its polyphenols, are fermented by gut bacteria to produce short-chain fatty acids like butyrate, a key nutrient for this beneficial species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Polyphenols and healthy fats found in avocado have been shown to positively influence the growth and activity of this important mucin-degrading bacterium, which contributes to gut barrier integrity.",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Dietary fiber acts as a substrate, promoting the proliferation and metabolic activity of various Lactobacillus species, including L. plantarum.",
+            "name": "Lactobacillus plantarum"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "The fermentable carbohydrates and fiber in avocado support the growth and metabolic functions of Bifidobacterium species, contributing to a healthy gut environment.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 80,
+        "fodmap": "high",
+        "gut_notes": "An excellent source of monounsaturated fats, dietary fiber, and a wide array of anti-inflammatory compounds (e.g., carotenoids, tocopherols, various polyphenols). These components nourish beneficial gut bacteria and contribute to overall gut barrier function. However, the estimated portion (80g) is high in sorbitol, a polyol FODMAP, which can trigger digestive symptoms in individuals with IBS or FODMAP sensitivities.",
+        "name": "Diced Avocado",
+        "prebiotic_fibres": [
+          "soluble fiber",
+          "insoluble fiber"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Resistant starch, formed during the toasting and cooling process, along with residual fructans (though a FODMAP), can be fermented by Bifidobacterium species like B. adolescentis.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 4,
+            "mechanism": "The fermentation of resistant starch by the gut microbiota leads to the production of butyrate, a short-chain fatty acid beneficial for butyrate-producing species like Roseburia intestinalis.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "toasted",
+        "estimated_grams": 70,
+        "fodmap": "high",
+        "gut_notes": "Primarily provides carbohydrates for energy. Toasting can generate some resistant starch, which functions as a prebiotic. While artisan white bread may be considered higher quality than standard white bread, it still likely contains fructans, making it a high FODMAP food. Its refined nature means it offers less diverse fiber and polyphenols compared to whole-grain options. The visible black specks, if nigella or black sesame seeds, would contribute minor additional anti-inflammatory and antioxidant benefits.",
+        "name": "Toasted Artisan White Bread",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "fructans"
+        ],
+        "prebiotic_score": 4,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-06 10:22",
+    "overall_gut_score": 6,
+    "gut_notes": "",
+    "date": "2026-06-06"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "10gm yogurt and 20gm nuts",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Exogenous probiotic strain commonly present in yogurt cultures",
+            "name": "Lactobacillus delbrueckii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Primary yogurt starter culture strain",
+            "name": "Streptococcus thermophilus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 10,
+        "fodmap": "low",
+        "gut_notes": "Small portion limits probiotic benefit. Contains lactose but 10gm is negligible. Provides bioavailable calcium and protein.",
+        "name": "Yogurt (plain, unsweetened assumed)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": true
+      },
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Fiber and polyphenols support butyrate-producing capacity",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Dietary fiber fermentation substrate",
+            "name": "Roseburia spp."
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "medium",
+        "cooking_method": "raw",
+        "estimated_grams": 20,
+        "fodmap": "low",
+        "gut_notes": "20gm portion is small but provides polyphenols with anti-inflammatory properties. Modest prebiotic fiber content. Rich in vitamin E and magnesium which support barrier function.",
+        "name": "Mixed nuts (composition unspecified)",
+        "prebiotic_fibres": [
+          "inulin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 4.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-06 10:25",
+    "overall_gut_score": 7.1,
+    "gut_notes": "",
+    "date": "2026-06-06"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A traditional Indian meal featuring two deep-fried puris (flatbreads) served with chole (chickpea curry). The meal is garnished with sliced red onion, a green chilli, and a lime wedge.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "fried",
+        "estimated_grams": 150,
+        "fodmap": "high",
+        "gut_notes": "Made from refined wheat flour and deep-fried, puris are high in refined carbohydrates and unhealthy fats. They offer minimal prebiotic fibers, can contribute to gut inflammation due to processing and frying, and may not selectively feed beneficial gut bacteria. High FODMAP (fructans) from wheat can trigger symptoms in sensitive individuals. Overconsumption can negatively impact gut barrier function and microbiome balance.",
+        "name": "Puri (Deep-fried wheat flatbread)",
+        "prebiotic_fibres": [
+          "resistant starch"
+        ],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in GOS (galactooligosaccharides) and resistant starch from chickpeas, which are selectively fermented by this species.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Utilizes GOS and resistant starch found abundantly in chickpeas.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 9,
+            "mechanism": "Resistant starch and other complex carbohydrates in chickpeas serve as excellent fuel for this important butyrate-producer.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Ferments resistant starch and dietary fibers from chickpeas to produce short-chain fatty acids, including butyrate.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 200,
+        "fodmap": "high",
+        "gut_notes": "Chole is rich in chickpeas, an excellent source of prebiotic fibers like resistant starch, GOS, and pectin, which strongly nourish beneficial gut bacteria and support butyrate production. The spices commonly used (e.g., turmeric, cumin, ginger) provide powerful anti-inflammatory and antioxidant compounds. However, the high FODMAP content (GOS) can cause significant digestive discomfort in individuals with IBS or FODMAP sensitivities.",
+        "name": "Chole (Chickpea curry)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "GOS",
+          "pectin"
+        ],
+        "prebiotic_score": 9,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Contains fructans (FOS and inulin) that are selectively utilized by Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Feeds on the fructans present in red onion, promoting its growth and activity.",
+            "name": "Bifidobacterium adolescentis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 20,
+        "fodmap": "high",
+        "gut_notes": "Raw red onion is a potent prebiotic due to its high content of fructans (FOS and inulin), which are excellent fuel for beneficial Bifidobacterium species. It also contains anti-inflammatory compounds like quercetin and anthocyanins. However, its high FODMAP content means it can cause gas and bloating for individuals with FODMAP intolerance.",
+        "name": "Red Onion (sliced)",
+        "prebiotic_fibres": [
+          "fructans",
+          "inulin"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 5,
+        "fodmap": "low",
+        "gut_notes": "Green chillies provide capsaicin, which has some anti-inflammatory and antioxidant properties. In small amounts, it is low FODMAP. However, high intake can irritate the gut lining in sensitive individuals. It does not significantly contribute to prebiotic fiber intake or directly feed specific beneficial gut bacteria.",
+        "name": "Green Chilli",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 15,
+        "fodmap": "low",
+        "gut_notes": "Lime provides Vitamin C and flavonoids, which are antioxidants and contribute to anti-inflammatory effects. Its acidity can aid digestion. It is low FODMAP and generally well-tolerated, but does not offer significant prebiotic fiber for gut bacteria.",
+        "name": "Lime wedge",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-06 10:54",
+    "overall_gut_score": 6.8,
+    "gut_notes": "",
+    "date": "2026-06-06"
   }
 ]

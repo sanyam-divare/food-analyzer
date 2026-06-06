@@ -1,0 +1,169 @@
+{
+  "patient_id": "guest",
+  "name": "Sanyam",
+  "test_date": "06/06/2026",
+  "test_provider": "MicrobioTx",
+  "doctor": "Dr Smith",
+  "metrics": {
+    "evenness": 0.42,
+    "diversity": 1.6,
+    "fb_ratio": 2.4
+  },
+  "functions": {
+    "overall_health": {
+      "helpful": 52,
+      "harmful": 48
+    },
+    "immunity": {
+      "helpful": 58,
+      "harmful": 42
+    },
+    "gi_health": {
+      "helpful": 49,
+      "harmful": 51
+    },
+    "mental_wellness": {
+      "helpful": 55,
+      "harmful": 45
+    },
+    "weight_management": {
+      "helpful": 61,
+      "harmful": 39
+    },
+    "sugar_metabolism": {
+      "helpful": 64,
+      "harmful": 36
+    }
+  },
+  "bacteria_boost": [
+    {
+      "functions": [],
+      "level": "low",
+      "name": "Faecalibacterium prausnitzii"
+    },
+    {
+      "functions": [],
+      "level": "low",
+      "name": "Bifidobacterium longum"
+    },
+    {
+      "functions": [],
+      "level": "low",
+      "name": "Lactobacillus rhamnosus"
+    },
+    {
+      "functions": [],
+      "level": "low",
+      "name": "Akkermansia muciniphila"
+    },
+    {
+      "functions": [],
+      "level": "low",
+      "name": "Roseburia intestinalis"
+    }
+  ],
+  "bacteria_reduce": [
+    {
+      "functions": [],
+      "level": "high",
+      "name": "Proteobacteria"
+    },
+    {
+      "functions": [],
+      "level": "high",
+      "name": "Clostridium perfringens"
+    },
+    {
+      "functions": [],
+      "level": "high",
+      "name": "Ruminococcus gnavus"
+    },
+    {
+      "functions": [],
+      "level": "high",
+      "name": "Bilophila wadsworthia"
+    },
+    {
+      "functions": [],
+      "level": "high",
+      "name": "Methanobrevibacter smithii"
+    }
+  ],
+  "foods_add": [
+    "Ginger tea",
+    "Chia seed",
+    "steamed vegetables",
+    "rice",
+    "banana",
+    "yogurt"
+  ],
+  "foods_reduce": [
+    "Onion & garlic. Wheat bread",
+    "Apples & pears",
+    "Full-fat dairy",
+    "Processed meat",
+    "Alcohol",
+    "Carbonated drinks",
+    "Beans",
+    "Culiflower & cabbage",
+    "Coffee"
+  ],
+  "food_targets": [
+    {
+      "alternatives": [],
+      "amount_grams": 100,
+      "feeds": "",
+      "food": "raw banana",
+      "frequency": "daily"
+    },
+    {
+      "alternatives": [],
+      "amount_grams": 200,
+      "feeds": "",
+      "food": "cooked rice",
+      "frequency": "daily"
+    },
+    {
+      "alternatives": [],
+      "amount_grams": 150,
+      "feeds": "",
+      "food": "Plain yoghurt",
+      "frequency": "daily"
+    },
+    {
+      "alternatives": [],
+      "amount_grams": 80,
+      "feeds": "",
+      "food": "Cooked oats",
+      "frequency": "daily"
+    },
+    {
+      "alternatives": [],
+      "amount_grams": 10,
+      "feeds": "",
+      "food": "Garlic",
+      "frequency": "daily"
+    },
+    {
+      "alternatives": [],
+      "amount_grams": 100,
+      "feeds": "",
+      "food": "Steamed broccoli",
+      "frequency": "3x/week"
+    },
+    {
+      "alternatives": [],
+      "amount_grams": 80,
+      "feeds": "",
+      "food": "Boiled chickpeas",
+      "frequency": "3x/week"
+    },
+    {
+      "alternatives": [],
+      "amount_grams": 15,
+      "feeds": "",
+      "food": "Flaxseed",
+      "frequency": "daily"
+    }
+  ]
+}
