@@ -1102,3 +1102,282 @@
 .hist-meal-detail.open {
     display: block;
 }
+
+/* ── Gut cards — light mode override ─────────── */
+.gut-tab-bar {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.gut-tab {
+    color: #64748b;
+}
+
+.gut-tab.active {
+    background: #0d5c38;
+    color: white;
+}
+
+.gut-tab-label {
+    color: inherit;
+}
+
+/* Cards */
+.card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    color: #0f172a;
+}
+
+/* Gut food card */
+.gut-food-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.gut-food-name { color: #0f172a; }
+.gut-food-grams { color: #64748b; }
+
+/* Score pills */
+.gut-score-pill {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+/* Bacteria rows */
+.bacteria-row {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.bacteria-row-name { color: #0f172a; }
+.bacteria-row-count { color: #64748b; }
+
+/* Gut section titles */
+.gut-section-title { color: #0f172a; }
+.gut-section-hint  { color: #94a3b8; }
+
+/* Score tiles */
+.gut-score-tile {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+.gut-tile-label { color: #64748b; }
+
+/* Plant tags */
+.plant-tag {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.plant-target-label { color: #64748b; }
+
+/* History */
+.hist-date-label { color: #64748b; }
+
+.hist-meal-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.hist-meal-desc  { color: #0f172a; }
+.hist-meal-meta  { color: #94a3b8; }
+.hist-expand-arrow { color: #94a3b8; }
+
+/* Ribbon */
+.ribbon-meal-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.ribbon-meal-foods { color: #0f172a; }
+.ribbon-meal-stats { color: #94a3b8; }
+
+/* Profile */
+.profile-func-label { color: #334155; }
+.profile-bact-name  { color: #0f172a; }
+
+.profile-field label { color: #475569; }
+
+.profile-field input,
+.profile-add-input {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+}
+
+.profile-field input:focus,
+.profile-add-input:focus {
+    border-color: #0d5c38;
+    background: #ffffff;
+}
+
+/* Action card */
+.action-card {
+    background: #ffffff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.action-card-success {
+    background: #f0fdf4;
+}
+
+.action-card-title { color: inherit; }
+.action-card-msg   { color: #475569; }
+.action-card-sub   { color: #64748b; }
+
+.action-quickwin-action { color: #0f172a; }
+
+/* Bacteria pills */
+.bact-pill {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.bact-pill-name { color: #0f172a; }
+
+.bact-detail {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+.bact-detail strong { color: #0f172a; }
+
+/* Collapsible */
+.plan-collapse-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+
+.plan-collapse-header { color: #0f172a; }
+.plan-collapse-arrow  { color: #94a3b8; }
+
+/* Plan section */
+.plan-section-label { color: #64748b; }
+.plan-fed-badge {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* Gut disclaimer */
+.gut-disclaimer {
+    background: #fffbeb;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+/* Gut notes */
+.gut-food-notes {
+    background: #f8fafc;
+    border-left-color: #cbd5e1;
+    color: #475569;
+}
+
+/* Gut overall score box */
+.gut-overall-score {
+    background: #f8fafc;
+}
+
+/* Scorecard date banner */
+.scorecard-date-banner {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+.scorecard-date-hint { color: #64748b; }
+
+/* Week nav */
+.scorecard-week-nav button {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #334155;
+}
+
+/* Fibre tags */
+.fibre-tag {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+/* Hints */
+.hint { color: #64748b; }
+
+/* League rows */
+.bacteria-league-row { border-bottom: 1px solid #e2e8f0; }
+.league-name  { color: #334155; }
+.league-count { color: #94a3b8; }
+
+/* Top foods */
+.top-food-row  { border-bottom: 1px solid #e2e8f0; }
+.top-food-name { color: #334155; }
+.top-food-count { color: #94a3b8; }
+
+/* Profile target rows */
+.profile-target-row  { border-bottom: 1px solid #e2e8f0; }
+.profile-target-food { color: #0f172a; }
+.profile-target-feeds { color: #64748b; }
+
+/* Bacteria expand */
+.bacteria-expand { background: #f8fafc; }
+.bacteria-row-foods { color: #64748b; }
+
+/* Day bars */
+.day-bar-label  { color: #64748b; }
+.day-bar-score  { color: #334155; }
+.day-bar-track  { background: #e2e8f0; }
+
+/* Plan tags */
+.plan-tag-add    { background: #dcfce7; color: #15803d; }
+.plan-tag-reduce { background: #fee2e2; color: #dc2626; }
+
+/* Action chips */
+.action-info-row {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.action-night-note {
+    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Gut bar background */
+.gut-bar-bg { background: #e2e8f0; }
+
+/* Ribbon connector */
+.ribbon-connector { opacity: 0.4; }
+
+/* PIN modal for light mode */
+#pin-overlay .pin-overlay-bg {
+    background: #f8fafc;
+    opacity: .98;
+}
+
+.pin-modal { background: transparent; }
+.pin-title  { color: #0f172a; }
+.pin-subtitle { color: #64748b; }
+.pin-hint   { color: #94a3b8; }
+
+.pin-dot {
+    border-color: #cbd5e1;
+}
+
+.pin-keypad button {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #0f172a;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.pin-keypad button:active {
+    background: #f1f5f9;
+}
+
+.pin-type-btn {
+    border-color: #e2e8f0;
+    color: #94a3b8;
+}

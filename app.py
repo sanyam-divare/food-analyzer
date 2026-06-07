@@ -47,6 +47,54 @@ print("DEBUG: AI_PROVIDER:", AI_PROVIDER)
 # At top of file, after your imports:
 GOOGLE_FIT_AVAILABLE = True  # since you import directly at top
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PIN AUTH — Add these to app.py
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── 1. Add this near the top of app.py (after imports) ────────────────────────
+
+# PIN → patient_id mapping
+# Add new patients here as Mrunal onboards them
+VALID_PINS = {
+    '20262026':  'guest',       # demo / doctor visit
+    '20242024': 'Sanyam',   # first real patient
+    '20252025':  'Jeet',   # second patient
+}
+
+def check_pin(request):
+    """
+    Validate PIN from request header or JSON body.
+    Returns patient_id if valid, None if invalid.
+    """
+    pin = (
+        request.headers.get('X-App-Pin') or
+        (request.get_json(silent=True) or {}).get('pin') or
+        request.args.get('pin') or
+        ''
+    ).strip().lower()
+    return VALID_PINS.get(pin)
+
+
+def require_pin(f):
+    """
+    Decorator — blocks route if PIN invalid.
+    Use on any route you want to protect.
+    """
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        patient_id = check_pin(request)
+        if not patient_id:
+            return jsonify({
+                "error": "Invalid PIN",
+                "code":  "AUTH_FAILED"
+            }), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
+
 app = Flask(__name__)
 # register gut app
 app.register_blueprint(gut_bp)
@@ -251,6 +299,7 @@ def get_nutrition_by_key(food_key):
 #   "overall_gut_health_score": 0,
 #   "overall_gut_notes": "overall gut health summary"
 # }"""
+
 SHARED_JSON_SCHEMA = """Analyze this food image as a clinical nutritionist.
         Identify each food item visible and estimate portion weight.
         Provide key nutrition values per 100g from your knowledge.
@@ -2716,6 +2765,63 @@ def fitness_debug():
 #     except Exception as e:
 #         return jsonify({"error": str(e)})
 
+# ── 2. Add a PIN validation route ────────────────────────────────────────────
+
+@app.route('/auth/validate', methods=['POST'])
+def validate_pin():
+    """Frontend calls this to validate PIN on first launch."""
+    data       = request.get_json() or {}
+    pin        = data.get('pin', '').strip().lower()
+    patient_id = VALID_PINS.get(pin)
+
+    if not patient_id:
+        return jsonify({"valid": False,  "error": "Invalid PIN"}), 401
+
+    return jsonify({
+        "valid":      True,
+        "patient_id": patient_id,
+        "message":    "Access granted"
+    })
+
+
+# ── 3. Protect your existing routes with @require_pin ────────────────────────
+#
+# Option A — protect ALL routes at once (simplest):
+#
+@app.before_request
+def global_pin_check():
+    # Always allow these
+    open_routes = ['validate_pin', 'static', 'index']
+    if request.endpoint in open_routes:
+        return None
+
+    # Skip PIN check for static files
+    if request.path.startswith('/static/'):
+        return None
+
+    if request.path.startswith('/auth/'):
+        return None
+
+    # Get PIN from header, query param, or body
+    pin = (
+        request.headers.get('X-App-Pin') or
+        request.args.get('pin') or
+        ''
+    ).strip().lower()
+
+    if pin not in VALID_PINS:
+        return jsonify({
+            "error": "Invalid PIN",
+            "code":  "AUTH_FAILED"
+        }), 401
+#
+# Option B — protect individual routes:
+# @app.route('/analyze', methods=['POST'])
+# @require_pin
+# def analyze():
+#     ...
+#
+# For the demo, Option A is easiest — uncomment it and add it to app.py
 
 
 if __name__ == '__main__':

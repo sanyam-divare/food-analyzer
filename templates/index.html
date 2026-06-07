@@ -6,17 +6,17 @@
     <meta name="theme-color" content="#1a6b3c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Food Analyzer">
+    <meta name="apple-mobile-web-app-title" content="Gut Booster">
     <link rel="manifest" href="/static/manifest.json">
-    <title>🍽️ Food Analyzer</title>
+    <title>🍽️ Gut Booster</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/gut_style.css">
 </head>
 <body>
 
     <header>
-        <h1>🍽️ Food Analyzer</h1>
-        <p>AI Powered Nutrition Tracker</p>
+        <h1>🍽️ Gut Booster</h1>
+        <p>AI Powered Gut Health Tracker</p>
     </header>
 
     <main>
@@ -380,6 +380,67 @@
 
     </main>
 
-    <script src="/static/js/app.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/pin_auth.js"></script>
+
+    <!-- PIN Gate Overlay -->
+    <div id="pin-overlay" style="display:none">
+        <div class="pin-overlay-bg"></div>
+        <div class="pin-modal">
+            <div class="pin-logo">🍽️</div>
+            <h2 class="pin-title">Gut Booster</h2>
+            <p class="pin-subtitle">Enter your access PIN to continue</p>
+
+            <div class="pin-dots" id="pin-dots">
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+            </div>
+
+            <div id="pin-error" class="pin-error" style="display:none">
+                ❌ Invalid PIN — please try again
+            </div>
+
+            <!-- PIN input (hidden, for mobile keyboard) -->
+            <input type="password"
+                id="pin-input"
+                maxlength="8"
+                autocomplete="off"
+                class="pin-hidden-input"
+                oninput="onPinInput(this.value)"
+                onkeydown="onPinKey(event)">
+
+            <div class="pin-keypad">
+                <button onclick="pinKey('1')">1</button>
+                <button onclick="pinKey('2')">2</button>
+                <button onclick="pinKey('3')">3</button>
+                <button onclick="pinKey('4')">4</button>
+                <button onclick="pinKey('5')">5</button>
+                <button onclick="pinKey('6')">6</button>
+                <button onclick="pinKey('7')">7</button>
+                <button onclick="pinKey('8')">8</button>
+                <button onclick="pinKey('9')">9</button>
+                <button onclick="pinKey('0')" class="pin-key-zero">0</button>
+                <button onclick="pinBackspace()" class="pin-key-del">⌫</button>
+            </div>
+
+            <!-- Or type PIN directly -->
+            <div style="text-align:center;margin-top:16px">
+                <button class="pin-type-btn"
+                        onclick="document.getElementById('pin-input').focus()">
+                    ⌨️ Type PIN
+                </button>
+            </div>
+
+            <p class="pin-hint">
+                PIN provided by your practitioner
+            </p>
+        </div>
+    </div>
 </body>
 </html>

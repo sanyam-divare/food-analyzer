@@ -1597,5 +1597,118 @@
     "overall_gut_score": 6.8,
     "gut_notes": "",
     "date": "2026-06-07"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Milk coffee with a small slice of lemon cake topped with cr\u00e8me",
+    "foods": [
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Lactose can be weakly fermented to produce short-chain fatty acids",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "dairy",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 120,
+        "fodmap": "low",
+        "gut_notes": "Lactose has minor prebiotic properties but milk lacks significant fibre. May cause bloating in lactose-sensitive individuals.",
+        "name": "Milk (in coffee)",
+        "prebiotic_fibres": [
+          "lactose (minor prebiotic effect)"
+        ],
+        "prebiotic_score": 3.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Polyphenols in coffee may increase gut permeability in susceptible individuals; high caffeine can increase intestinal motility",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 200,
+        "fodmap": "low",
+        "gut_notes": "Coffee contains polyphenols with anti-inflammatory properties but caffeine may increase intestinal permeability and motility. Moderate consumption acceptable for most.",
+        "name": "Coffee",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Simple sugars from refined flour and added sugar promote growth of pathogenic Bacteroides species",
+            "name": "Bacteroides vulgatus"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "High sugar content creates dysbiotic conditions favouring pathogenic clostridia",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Refined carbohydrates and added sugars reduce beneficial butyrate-producing bacteria",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "High sugar intake associated with reduced mucus-layer colonisation by this protective species",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "baked",
+        "estimated_grams": 60,
+        "fodmap": "high",
+        "gut_notes": "High refined carbohydrate and sugar content drives dysbiosis. Lemon zest may provide minor polyphenols but insufficient to offset negative impact. High FODMAP due to potential fructose content.",
+        "name": "Lemon cake (small slice)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "High saturated fat reduces diversity and abundance of butyrate-producing bacteria",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 30,
+        "fodmap": "low",
+        "gut_notes": "High saturated fat content may reduce beneficial bacteria diversity and increase bile acid dysmetabolism. No prebiotic value.",
+        "name": "Cr\u00e8me (cream topping)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-07 16:55",
+    "overall_gut_score": 4.1,
+    "gut_notes": "",
+    "date": "2026-06-07"
   }
 ]

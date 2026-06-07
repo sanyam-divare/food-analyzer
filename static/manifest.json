@@ -1,7 +1,7 @@
 {
-    "name": "Food Analyzer",
+    "name": "Gut Booster",
     "short_name": "FoodAI",
-    "description": "AI Powered Nutrition Tracker",
+    "description": "AI Powered Gut Health Tracker",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

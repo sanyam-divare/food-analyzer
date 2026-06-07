@@ -21,6 +21,11 @@ let currentResults       = [];
 const MAX_CLIENT_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_CLIENT_DIMENSION  = { w: 4000, h: 3000 };
 
+window.addEventListener('DOMContentLoaded', async () => {
+    await initPinAuth();  // ← must be FIRST, before anything else
+    // ... rest of your existing init code
+});
+
 // ── Timezone helpers ──────────────────────────────
 function getUserTimezone() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -1274,4 +1279,7 @@ window.addEventListener('beforeinstallprompt', e => {
     deferredPrompt = e;
 });
 
+
 document.addEventListener('DOMContentLoaded', initModeSelector);
+
+

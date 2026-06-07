@@ -8,7 +8,7 @@
     box-sizing: border-box;
 }
 
-:root {
+/* :root {
     --green:        #1a6b3c;
     --green-mid:    #2d9154;
     --green-light:  #4ab870;
@@ -27,6 +27,40 @@
     --shadow-sm:    0 1px 3px rgba(0,0,0,0.08);
     --shadow-md:    0 4px 16px rgba(0,0,0,0.10);
     --shadow-lg:    0 8px 32px rgba(0,0,0,0.12);
+    --radius-sm:    8px;
+    --radius-md:    14px;
+    --radius-lg:    20px;
+} */
+
+:root {
+    /* Brand greens — richer, more clinical */
+    --green:        #0d5c38;
+    --green-mid:    #1a7a4a;
+    --green-light:  #22c55e;
+    --green-pale:   #f0fdf4;
+
+    /* Accent */
+    --orange:       #ea580c;
+    --orange-pale:  #fff7ed;
+
+    /* Neutrals — warmer whites, not cold grey */
+    --white:        #ffffff;
+    --gray-50:      #f8fafc;
+    --gray-100:     #f1f5f9;
+    --gray-200:     #e2e8f0;
+    --gray-400:     #94a3b8;
+    --gray-600:     #475569;
+    --gray-900:     #0f172a;
+
+    /* Status */
+    --red:          #dc2626;
+    --red-pale:     #fef2f2;
+
+    /* Shadows — more visible on light */
+    --shadow-sm:    0 1px 4px rgba(0,0,0,0.08);
+    --shadow-md:    0 4px 20px rgba(0,0,0,0.10);
+    --shadow-lg:    0 8px 32px rgba(0,0,0,0.12);
+
     --radius-sm:    8px;
     --radius-md:    14px;
     --radius-lg:    20px;
@@ -1598,4 +1632,146 @@ main {
     font-size: 0.7rem;
     color: var(--gray-400, #9ca3af);
     text-align: center;
+}
+/* ── PIN Overlay ─────────────────────────────────── */
+#pin-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pin-overlay-bg {
+    position: absolute;
+    inset: 0;
+    background: #0f172a;
+    opacity: .97;
+}
+
+.pin-modal {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 340px;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.pin-logo {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.pin-title {
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+}
+
+.pin-subtitle {
+    color: #9ca3af;
+    font-size: .85rem;
+    margin: 0 0 28px;
+}
+
+/* PIN dots */
+.pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.pin-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #374151;
+    background: transparent;
+    transition: all .15s;
+}
+
+.pin-dot.filled {
+    background: #22c55e;
+    border-color: #22c55e;
+    transform: scale(1.1);
+}
+
+.pin-error {
+    color: #ef4444;
+    font-size: .8rem;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: rgba(239,68,68,.1);
+    border-radius: 8px;
+}
+
+/* Hidden real input (for mobile keyboard) */
+.pin-hidden-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+/* Visual keypad */
+.pin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.pin-keypad button {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 16px;
+    cursor: pointer;
+    transition: background .1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pin-keypad button:active {
+    background: rgba(255,255,255,.18);
+    transform: scale(.95);
+}
+
+.pin-key-zero  { grid-column: 2; }
+.pin-key-del   { grid-column: 3; font-size: 1rem; }
+
+.pin-type-btn {
+    background: transparent;
+    border: 1px solid #374151;
+    color: #6b7280;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: .8rem;
+    cursor: pointer;
+}
+
+.pin-hint {
+    color: #4b5563;
+    font-size: .72rem;
+    margin-top: 20px;
+}
+
+/* Shake animation on wrong PIN */
+@keyframes pin-shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-8px); }
+    40%       { transform: translateX(8px); }
+    60%       { transform: translateX(-5px); }
+    80%       { transform: translateX(5px); }
+}
+
+.pin-shake {
+    animation: pin-shake 0.4s ease;
 }
