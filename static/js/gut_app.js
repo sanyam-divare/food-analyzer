@@ -172,251 +172,6 @@ async function loadGutFoodPlan() {
     }
 }
 
-// function renderFoodPlan(container, data) {
-//     const fp = data.food_progress     || [];
-//     const bp = data.bacteria_progress || [];
-//     const fa = data.foods_add         || [];
-//     const fr = data.foods_reduce      || [];
-
-//     const foodHtml = fp.length ? fp.map(f => {
-//         const color = f.status === 'met' ? '#22c55e' : f.status === 'partial' ? '#f59e0b' : '#ef4444';
-//         const icon  = f.status === 'met' ? '✅' : f.status === 'partial' ? '⚠️' : '❌';
-//         return `
-//             <div class="plan-food-item">
-//                 <div class="plan-food-header">
-//                     <span class="plan-food-name">${icon} ${f.food}</span>
-//                     <span class="plan-food-progress" style="color:${color}">
-//                         ${f.eaten_grams}g / ${f.target_grams}g
-//                     </span>
-//                 </div>
-//                 <div class="gut-bar-bg">
-//                     <div class="gut-bar-fill" style="width:${Math.min(100,f.pct)}%;background:${color}"></div>
-//                 </div>
-//                 ${f.feeds ? `<div class="plan-food-meta">Feeds: ${f.feeds}</div>` : ''}
-//                 ${f.status === 'missed' && f.alternatives && f.alternatives.length
-//                     ? `<div class="plan-food-alt">Try instead: ${f.alternatives.join(', ')}</div>` : ''}
-//             </div>`;
-//     }).join('') : `
-//         <div class="plan-empty">
-//             <p class="hint">No food targets set.</p>
-//             <button class="btn-small" onclick="showGutTab('profile',document.querySelectorAll('.gut-tab')[3])">
-//                 Add in Profile →
-//             </button>
-//         </div>`;
-
-//     const bacteriaHtml = bp.length ? bp.map(b => {
-//         const color = b.fed_today ? '#22c55e' : '#ef4444';
-//         const icon  = b.fed_today ? '✅' : '❌';
-//         return `
-//             <div class="plan-bacteria-item">
-//                 <div class="plan-bacteria-header">
-//                     <span class="plan-bacteria-name">${icon} ${b.name}</span>
-//                     <span class="plan-bacteria-status" style="color:${color}">
-//                         ${b.fed_today ? `Fed ${b.fed_count}x` : 'Not fed today'}
-//                     </span>
-//                 </div>
-//                 ${b.functions && b.functions.length
-//                     ? `<div class="plan-food-meta">Supports: ${b.functions.join(', ')}</div>` : ''}
-//                 ${b.fed_by && b.fed_by.length
-//                     ? `<div class="plan-food-meta">Via: ${b.fed_by.join(', ')}</div>` : ''}
-//             </div>`;
-//     }).join('') : `<p class="hint">No bacteria targets set.</p>`;
-
-//     const reportHtml = (fa.length || fr.length) ? `
-//         <div class="card" style="margin-top:12px">
-//             <h3 style="color:white;margin-bottom:12px">📋 From Your Gut Report</h3>
-//             ${fa.length ? `
-//                 <div class="plan-section-label">✅ Add to diet:</div>
-//                 <div class="plan-tags">${fa.map(f=>`<span class="plan-tag plan-tag-add">${f}</span>`).join('')}</div>` : ''}
-//             ${fr.length ? `
-//                 <div class="plan-section-label" style="margin-top:12px">❌ Reduce:</div>
-//                 <div class="plan-tags">${fr.map(f=>`<span class="plan-tag plan-tag-reduce">${f}</span>`).join('')}</div>` : ''}
-//         </div>` : '';
-
-//     container.innerHTML = `
-//         <div class="card">
-//             <h2>🥗 My Food Plan — Today</h2>
-//             <p class="hint" style="margin-bottom:16px">
-//                 ${new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'})}
-//             </p>
-//             <div class="plan-section-label">🎯 Doctor's Food Targets</div>
-//             ${foodHtml}
-//         </div>
-//         <div class="card" style="margin-top:12px">
-//             <h3 style="color:white;margin-bottom:12px">🦠 Bacteria Boost Progress</h3>
-//             ${bacteriaHtml}
-//         </div>
-//         ${reportHtml}
-//         <div class="card" style="margin-top:12px;text-align:center;padding:16px">
-//             <p class="hint">Log a meal above to update your progress</p>
-//             <button class="btn-primary" style="margin-top:8px"
-//                     onclick="window.scrollTo({top:0,behavior:'smooth'})">
-//                 📷 Log a Meal
-//             </button>
-//         </div>`;
-// }
-
-function renderFoodPlan(container, data) {
-    const fp = data.food_progress     || [];
-    const bp = data.bacteria_progress || [];
-    const fa = data.foods_add         || [];
-    const fr = data.foods_reduce      || [];
-
-    // ── Food Targets Table ─────────────────────────────────────────────────
-    const foodTableRows = fp.map(f => {
-        const color = f.status === 'met'     ? '#22c55e'
-                    : f.status === 'partial' ? '#f59e0b' : '#ef4444';
-        const icon  = f.status === 'met' ? '✅' : f.status === 'partial' ? '⚠️' : '❌';
-        const pct   = Math.min(100, f.pct);
-        return `
-            <tr>
-                <td class="plan-table-food">
-                    ${icon} ${f.food}
-                    ${f.feeds
-                        ? `<div class="plan-table-feeds">→ ${f.feeds.split(' ')[0]}</div>`
-                        : ''}
-                </td>
-                <td class="plan-table-target">${f.target_grams}g</td>
-                <td class="plan-table-eaten" style="color:${color}">
-                    ${f.eaten_grams}g
-                </td>
-                <td class="plan-table-bar">
-                    <div class="gut-bar-bg" style="height:8px">
-                        <div class="gut-bar-fill"
-                             style="width:${pct}%;background:${color};height:8px">
-                        </div>
-                    </div>
-                    <span class="plan-table-pct" style="color:${color}">
-                        ${pct}%
-                    </span>
-                </td>
-            </tr>`;
-    }).join('');
-
-    const foodTable = fp.length ? `
-        <div class="table-container">
-            <table class="nutrition-table plan-table">
-                <thead>
-                    <tr>
-                        <th>Food</th>
-                        <th>Target</th>
-                        <th>Eaten</th>
-                        <th>Progress</th>
-                    </tr>
-                </thead>
-                <tbody>${foodTableRows}</tbody>
-            </table>
-        </div>` : `
-        <div class="plan-empty">
-            <p class="hint">No food targets set.</p>
-            <button class="btn-small"
-                    onclick="showGutTab('profile',
-                        document.querySelectorAll('.gut-tab')[3])">
-                Add in Profile →
-            </button>
-        </div>`;
-
-    // ── Bacteria Boost Progress with bars ──────────────────────────────────
-    const bacteriaHtml = bp.length ? bp.map(b => {
-        // Fed count as progress — target is 3 feeds/day ideally
-        const dailyTarget = 3;
-        const pct         = Math.min(100, Math.round((b.fed_count / dailyTarget) * 100));
-        const color       = b.fed_today ? '#22c55e' : '#ef4444';
-        const statusText  = b.fed_today
-                            ? `Fed ${b.fed_count}x today`
-                            : 'Not fed today';
-        return `
-            <div class="bacteria-boost-row">
-                <div class="bacteria-boost-header">
-                    <span class="bacteria-boost-name">
-                        ${b.fed_today ? '✅' : '❌'} ${b.name}
-                    </span>
-                    <span class="bacteria-boost-status" style="color:${color}">
-                        ${statusText}
-                    </span>
-                </div>
-                <div class="bacteria-boost-bar-row">
-                    <div class="gut-bar-bg" style="flex:1">
-                        <div class="gut-bar-fill"
-                             style="width:${pct}%;background:${color}">
-                        </div>
-                    </div>
-                    <span class="bacteria-boost-pct" style="color:${color}">
-                        ${pct}%
-                    </span>
-                </div>
-                ${b.functions && b.functions.length
-                    ? `<div class="plan-food-meta">
-                           Supports: ${b.functions.join(', ')}
-                       </div>` : ''}
-                ${b.fed_by && b.fed_by.length
-                    ? `<div class="plan-food-meta">
-                           Via: ${b.fed_by.join(', ')}
-                       </div>` : ''}
-                ${!b.fed_today
-                    ? `<div class="plan-food-alt">
-                           Log a meal with foods that feed
-                           ${b.name.split(' ')[0]}
-                       </div>` : ''}
-            </div>`;
-    }).join('') : `<p class="hint">No bacteria targets set.</p>`;
-
-    // ── Report recommendations ─────────────────────────────────────────────
-    const reportHtml = (fa.length || fr.length) ? `
-        <div class="card" style="margin-top:12px">
-            <h3 style="color:white;margin-bottom:12px">
-                📋 From Your Gut Report
-            </h3>
-            ${fa.length ? `
-                <div class="plan-section-label">✅ Add to diet:</div>
-                <div class="plan-tags">
-                    ${fa.map(f =>
-                        `<span class="plan-tag plan-tag-add">${f}</span>`
-                    ).join('')}
-                </div>` : ''}
-            ${fr.length ? `
-                <div class="plan-section-label" style="margin-top:12px">
-                    ❌ Reduce:
-                </div>
-                <div class="plan-tags">
-                    ${fr.map(f =>
-                        `<span class="plan-tag plan-tag-reduce">${f}</span>`
-                    ).join('')}
-                </div>` : ''}
-        </div>` : '';
-
-    container.innerHTML = `
-        <div class="card">
-            <h2>🥗 My Food Plan — Today</h2>
-            <p class="hint" style="margin-bottom:12px">
-                ${new Date().toLocaleDateString('en-AU', {
-                    weekday: 'long', day: 'numeric', month: 'long'
-                })}
-            </p>
-            <div class="plan-section-label">🎯 Doctor's Food Targets</div>
-            ${foodTable}
-        </div>
-
-        <div class="card" style="margin-top:12px">
-            <h3 style="color:white;margin-bottom:12px">
-                🦠 Bacteria Boost Progress
-            </h3>
-            <p class="hint" style="margin-bottom:12px">
-                Target: fed at least once today
-            </p>
-            ${bacteriaHtml}
-        </div>
-
-        ${reportHtml}
-
-        <div class="card" style="margin-top:12px;text-align:center;padding:16px">
-            <p class="hint">Log a meal to update your progress</p>
-            <button class="btn-primary" style="margin-top:8px"
-                    onclick="window.scrollTo({top:0,behavior:'smooth'})">
-                📷 Log a Meal
-            </button>
-        </div>`;
-}
 // ── TAB 3: HISTORY ────────────────────────────────────────────────────────────
 async function loadGutHistory() {
     const container = document.getElementById('gut-history-list');
@@ -625,6 +380,1016 @@ function renderProfileForm(container, profile) {
         </div>`;
 }
 
+function buildSmartReminders(fp, bp) {
+    const hour = new Date().getHours();
+    if (hour < 12) return '';
+
+    // Build bacteria lookup map
+    const bacteriaFedMap = {};
+    bp.forEach(b => {
+        const genus = b.name.split(' ')[0].toLowerCase();
+        bacteriaFedMap[b.name.toLowerCase()] = b.fed_today;
+        bacteriaFedMap[genus]                = b.fed_today;
+    });
+
+    function isBacteriaFed(feedsTarget) {
+        if (!feedsTarget) return false;
+        const genus = feedsTarget.split(' ')[0].toLowerCase();
+        return bacteriaFedMap[feedsTarget.toLowerCase()]
+            || bacteriaFedMap[genus]
+            || false;
+    }
+
+    // Classify food targets
+    const trulyMissed      = fp.filter(f =>
+        f.status === 'missed' && !isBacteriaFed(f.feeds));
+    const missedButFedElse = fp.filter(f =>
+        f.status === 'missed' && f.feeds && isBacteriaFed(f.feeds));
+    const partial          = fp.filter(f => f.status === 'partial');
+    const unfedBacteria    = bp.filter(b => !b.fed_today);
+
+    // All good!
+    if (!trulyMissed.length && !partial.length && !unfedBacteria.length) {
+        return `
+            <div class="reminder-card reminder-success">
+                <span class="reminder-icon">🎉</span>
+                <div>
+                    <div class="reminder-title" style="color:#22c55e">
+                        All targets on track today!
+                    </div>
+                    <div class="reminder-body">
+                        Your gut bacteria are being well fed. Keep it up!
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    const isAfternoon = hour >= 12 && hour < 17;
+    const isEvening   = hour >= 17 && hour < 20;
+    const isNight     = hour >= 20;
+
+    const timeLabel = isAfternoon ? 'Afternoon check-in'
+                    : isEvening   ? 'Still time before dinner!'
+                    : "Today's summary";
+    const timeColor = isAfternoon ? '#f59e0b'
+                    : isEvening   ? '#f97316' : '#6366f1';
+    const timeIcon  = isAfternoon ? '☀️' : isEvening ? '🌆' : '🌙';
+
+    const reminders = [];
+
+    // Food missed but bacteria fed elsewhere — info only
+    missedButFedElse.forEach(f => {
+        reminders.push({
+            icon:   '💡',
+            text:   `<strong>${f.food}</strong> not eaten — but that's OK!`,
+            sub:    `${f.feeds ? f.feeds.split(' ')[0] : 'Target bacteria'} was already fed by other foods today.`,
+            alt:    '',
+            color:  '#22c55e',
+            isInfo: true
+        });
+    });
+
+    // Truly missed — bacteria not fed by anything
+    trulyMissed.forEach(f => {
+        const alt = f.alternatives && f.alternatives.length
+            ? 'Or try: ' + f.alternatives.slice(0,2).join(', ') : '';
+        reminders.push({
+            icon:   '🔴',
+            text:   `<strong>${f.food}</strong> — not eaten today`,
+            sub:    isNight
+                    ? `Add ${f.food} to tomorrow's plan`
+                    : `Add ${f.food} (${f.target_grams}g) to your next meal`,
+            alt:    alt,
+            color:  '#ef4444',
+            isInfo: false
+        });
+    });
+
+    // Partial — only show before night
+    if (!isNight) {
+        partial.forEach(f => {
+            reminders.push({
+                icon:   '🟠',
+                text:   `<strong>${f.food}</strong> — ${f.eaten_grams}g of ${f.target_grams}g`,
+                sub:    `Have ${f.target_grams - f.eaten_grams}g more before dinner`,
+                alt:    '',
+                color:  '#f59e0b',
+                isInfo: false
+            });
+        });
+    }
+
+    // Unfed bacteria
+    unfedBacteria.slice(0,3).forEach(b => {
+        const genus = b.name.split(' ')[0];
+        reminders.push({
+            icon:   '🦠',
+            text:   `<strong>${b.name}</strong> not fed today`,
+            sub:    isNight
+                    ? `Feed ${genus} first thing tomorrow`
+                    : `Include a ${genus}-friendly food in your next meal`,
+            alt:    '',
+            color:  '#8b5cf6',
+            isInfo: false
+        });
+    });
+
+    if (!reminders.length) return '';
+
+    const metCount = fp.filter(f => f.status === 'met').length;
+    const fedCount = bp.filter(b => b.fed_today).length;
+
+    const summaryHtml = isNight && fp.length > 0 ? `
+        <div class="reminder-summary">
+            <span>🎯 ${metCount}/${fp.length} food targets met</span>
+            <span>🦠 ${fedCount}/${bp.length} bacteria fed</span>
+        </div>` : '';
+
+    const items = reminders.map(r => `
+        <div class="reminder-item ${r.isInfo ? 'reminder-item-info' : ''}">
+            <span class="reminder-item-icon">${r.icon}</span>
+            <div class="reminder-item-body">
+                <div class="reminder-item-text">${r.text}</div>
+                <div class="reminder-item-sub"
+                     style="${r.isInfo ? 'color:#22c55e' : ''}">
+                    ${r.sub}
+                </div>
+                ${r.alt ? `<div class="reminder-item-alt">${r.alt}</div>` : ''}
+            </div>
+        </div>`).join('');
+
+    return `
+        <div class="reminder-card" style="border-color:${timeColor}">
+            <div class="reminder-header">
+                <span class="reminder-icon">${timeIcon}</span>
+                <div>
+                    <div class="reminder-title" style="color:${timeColor}">
+                        ${timeLabel}
+                    </div>
+                    <div class="reminder-subtitle">
+                        ${isNight ? 'Here\'s how today went'
+                                  : 'Here\'s what to focus on'}
+                    </div>
+                </div>
+            </div>
+            ${summaryHtml}
+            <div class="reminder-items">${items}</div>
+        </div>`;
+}
+
+function buildSmartReminders(fp, bp) {
+    const hour = new Date().getHours();
+    if (hour < 12) return null; // return null not ''
+
+    const bacteriaFedMap = {};
+    bp.forEach(b => {
+        bacteriaFedMap[b.name.toLowerCase()] = b.fed_today;
+        bacteriaFedMap[b.name.split(' ')[0].toLowerCase()] = b.fed_today;
+    });
+    function isBacteriaFed(f) {
+        if (!f) return false;
+        return bacteriaFedMap[f.toLowerCase()]
+            || bacteriaFedMap[f.split(' ')[0].toLowerCase()]
+            || false;
+    }
+
+    const trulyMissed      = fp.filter(f => f.status === 'missed' && !isBacteriaFed(f.feeds));
+    const missedButFedElse = fp.filter(f => f.status === 'missed' && f.feeds && isBacteriaFed(f.feeds));
+    const partial          = fp.filter(f => f.status === 'partial');
+    const unfedBacteria    = bp.filter(b => !b.fed_today);
+    const metCount         = fp.filter(f => f.status === 'met').length;
+    const fedBactCount     = bp.filter(b => b.fed_today).length;
+    const isNight          = hour >= 20;
+
+    return {
+        trulyMissed, missedButFedElse, partial,
+        unfedBacteria, metCount, fedBactCount,
+        isNight,
+        hour,
+        allGood: !trulyMissed.length && !partial.length && !unfedBacteria.length
+    };
+}
+
+function renderActionCard(reminder, fp, bp) {
+    if (!reminder) return ''; // morning — no card
+
+    const { trulyMissed, missedButFedElse, partial,
+            unfedBacteria, metCount, fedBactCount,
+            isNight, hour, allGood } = reminder;
+
+    // ── All good! ──────────────────────────────────────────────────────────
+    if (allGood) {
+        return `
+            <div class="action-card action-card-success">
+                <div class="action-card-left">
+                    <div class="action-score-ring success">
+                        <span>🎉</span>
+                    </div>
+                </div>
+                <div class="action-card-right">
+                    <div class="action-card-title">All done today!</div>
+                    <div class="action-card-sub">
+                        ${metCount}/${fp.length} foods ·
+                        ${fedBactCount}/${bp.length} bacteria
+                    </div>
+                    <div class="action-card-msg">
+                        Your gut is getting excellent support today.
+                        Keep logging!
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // ── Calculate urgency score ────────────────────────────────────────────
+    const totalIssues = trulyMissed.length + unfedBacteria.length + partial.length;
+    const pctDone     = fp.length > 0
+        ? Math.round(((metCount + partial.length * 0.5) / fp.length) * 100)
+        : 0;
+    const ringColor   = pctDone >= 70 ? '#22c55e'
+                      : pctDone >= 40 ? '#f59e0b' : '#ef4444';
+
+    // ── Quick Win — easiest single action ─────────────────────────────────
+    let quickWin = null;
+    if (partial.length) {
+        const p = partial[0];
+        const remaining = p.target_grams - p.eaten_grams;
+        quickWin = {
+            icon: '⚡',
+            label: 'Quick Win',
+            action: `Top up ${p.food} — just ${remaining}g more`,
+            color: '#f59e0b'
+        };
+    } else if (trulyMissed.length) {
+        const m = trulyMissed[0];
+        const alt = m.alternatives && m.alternatives.length
+            ? ` (or ${m.alternatives[0]})` : '';
+        quickWin = {
+            icon: '🎯',
+            label: 'Priority',
+            action: `Add ${m.food}${alt} to your next meal`,
+            color: '#ef4444'
+        };
+    } else if (unfedBacteria.length) {
+        const b = unfedBacteria[0];
+        quickWin = {
+            icon: '🦠',
+            label: 'Bacteria',
+            action: `Feed ${b.name.split(' ')[0]} — include a prebiotic food now`,
+            color: '#8b5cf6'
+        };
+    }
+
+    // ── Time context ───────────────────────────────────────────────────────
+    const isEvening   = hour >= 17 && hour < 20;
+    const isAfternoon = hour >= 12 && hour < 17;
+
+    const timeMsg = isNight     ? "Today's wrap-up"
+                  : isEvening   ? 'Last chance before dinner!'
+                  : 'Afternoon check-in';
+    const timeColor = isNight   ? '#6366f1'
+                    : isEvening ? '#f97316' : '#f59e0b';
+    const timeEmoji = isNight   ? '🌙' : isEvening ? '🌆' : '☀️';
+
+    // ── Compact issue chips ────────────────────────────────────────────────
+    const issueChips = [
+        ...trulyMissed.map(f => ({
+            label: f.food, color: '#ef4444', bg: 'rgba(239,68,68,.12)', icon: '❌'
+        })),
+        ...partial.map(f => ({
+            label: `${f.food} (${f.pct}%)`, color: '#f59e0b',
+            bg: 'rgba(245,158,11,.12)', icon: '⚠️'
+        })),
+        ...unfedBacteria.slice(0,2).map(b => ({
+            label: b.name.split(' ')[0], color: '#8b5cf6',
+            bg: 'rgba(139,92,246,.12)', icon: '🦠'
+        }))
+    ];
+
+    const chipsHtml = issueChips.map(c => `
+        <span class="action-chip"
+              style="color:${c.color};background:${c.bg};border-color:${c.color}">
+            ${c.icon} ${c.label}
+        </span>`).join('');
+
+    // ── Friendly info items (food already covered) ─────────────────────────
+    const infoHtml = missedButFedElse.length ? `
+        <div class="action-info-row">
+            💡 ${missedButFedElse.map(f =>
+                `<strong>${f.food}</strong> skipped but
+                 ${f.feeds ? f.feeds.split(' ')[0] : 'bacteria'}
+                 fed by other foods ✅`
+            ).join(' · ')}
+        </div>` : '';
+
+    return `
+        <div class="action-card" style="border-color:${timeColor}">
+
+            <!-- Header row -->
+            <div class="action-card-header">
+                <div class="action-card-left">
+                    <div class="action-score-ring"
+                         style="--ring-color:${ringColor}">
+                        <span class="action-ring-pct"
+                              style="color:${ringColor}">
+                            ${pctDone}%
+                        </span>
+                    </div>
+                </div>
+                <div class="action-card-right">
+                    <div class="action-card-title"
+                         style="color:${timeColor}">
+                        ${timeEmoji} ${timeMsg}
+                    </div>
+                    <div class="action-card-sub">
+                        ${metCount}/${fp.length} foods ·
+                        ${fedBactCount}/${bp.length} bacteria fed
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick win CTA -->
+            ${quickWin ? `
+                <div class="action-quickwin"
+                     style="border-color:${quickWin.color};
+                            background:${quickWin.color}18">
+                    <span class="action-quickwin-icon">
+                        ${quickWin.icon}
+                    </span>
+                    <div>
+                        <div class="action-quickwin-label"
+                             style="color:${quickWin.color}">
+                            ${quickWin.label}
+                        </div>
+                        <div class="action-quickwin-action">
+                            ${quickWin.action}
+                        </div>
+                    </div>
+                </div>` : ''}
+
+            <!-- Issue chips -->
+            ${issueChips.length ? `
+                <div class="action-chips-row">${chipsHtml}</div>` : ''}
+
+            <!-- Info (bacteria covered by other foods) -->
+            ${infoHtml}
+
+            <!-- Night summary -->
+            ${isNight ? `
+                <div class="action-night-note">
+                    Plan these for tomorrow:
+                    ${trulyMissed.slice(0,3).map(f =>
+                        `<strong>${f.food}</strong>`).join(', ')}
+                </div>` : ''}
+        </div>`;
+}
+
+function renderFoodPlan(container, data) {
+    const fp = data.food_progress     || [];
+    const bp = data.bacteria_progress || [];
+    const fa = data.foods_add         || [];
+    const fr = data.foods_reduce      || [];
+
+    const reminder    = buildSmartReminders(fp, bp);
+    const actionHtml  = renderActionCard(reminder, fp, bp);
+
+    // ── Bacteria pills (compact) ───────────────────────────────────────────
+    const fedCount  = bp.filter(b => b.fed_today).length;
+    const totalBact = bp.length;
+
+    const bacteriaPillsHtml = bp.map((b, idx) => {
+        const color = b.fed_today ? '#22c55e' : '#ef4444';
+        const bg    = b.fed_today
+                      ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.12)';
+        const genus = b.name.split(' ')[0];
+        return `
+            <div class="bact-pill"
+                 style="border-color:${color};background:${bg}"
+                 onclick="toggleBactDetail('bd-${idx}')">
+                <span class="bact-pill-icon">
+                    ${b.fed_today ? '✅' : '❌'}
+                </span>
+                <span class="bact-pill-name">${genus}</span>
+                ${b.fed_today
+                    ? `<span class="bact-pill-count" style="color:${color}">
+                           ${b.fed_count}x
+                       </span>`
+                    : ''}
+            </div>
+            <div class="bact-detail" id="bd-${idx}">
+                <strong>${b.name}</strong>
+                ${b.fed_today
+                    ? `<div>Via: ${b.fed_by.join(', ')}</div>`
+                    : `<div style="color:#ef4444">Not fed today — log a meal with ${genus} foods</div>`}
+                ${b.functions && b.functions.length
+                    ? `<div>Supports: ${b.functions.join(', ')}</div>` : ''}
+            </div>`;
+    }).join('');
+
+    // Detailed bars (hidden by default)
+    const bacteriaDetailHtml = bp.map(b => {
+        const pct   = Math.min(100, Math.round((b.fed_count / 3) * 100));
+        const color = b.fed_today ? '#22c55e' : '#ef4444';
+        return `
+            <div class="bacteria-boost-row">
+                <div class="bacteria-boost-header">
+                    <span class="bacteria-boost-name">
+                        ${b.fed_today ? '✅' : '❌'} ${b.name}
+                    </span>
+                    <span class="bacteria-boost-status" style="color:${color}">
+                        ${b.fed_today ? `Fed ${b.fed_count}x` : 'Not fed'}
+                    </span>
+                </div>
+                <div class="bacteria-boost-bar-row">
+                    <div class="gut-bar-bg" style="flex:1">
+                        <div class="gut-bar-fill"
+                             style="width:${pct}%;background:${color}">
+                        </div>
+                    </div>
+                    <span class="bacteria-boost-pct" style="color:${color}">
+                        ${pct}%
+                    </span>
+                </div>
+                ${b.fed_by && b.fed_by.length
+                    ? `<div class="plan-food-meta">Via: ${b.fed_by.join(', ')}</div>` : ''}
+            </div>`;
+    }).join('');
+
+    // ── Food targets — compact pills summary + collapsible table ──────────
+    const metCount = fp.filter(f => f.status === 'met').length;
+    const partCount = fp.filter(f => f.status === 'partial').length;
+
+    const foodPillsHtml = fp.map((f, idx) => {
+        const color = f.status === 'met'     ? '#22c55e'
+                    : f.status === 'partial' ? '#f59e0b' : '#ef4444';
+        const bg    = f.status === 'met'     ? 'rgba(34,197,94,.12)'
+                    : f.status === 'partial' ? 'rgba(245,158,11,.12)'
+                    :                          'rgba(239,68,68,.12)';
+        const icon  = f.status === 'met' ? '✅'
+                    : f.status === 'partial' ? '⚠️' : '❌';
+        // Short food name (first word)
+        const shortName = f.food.split(' ')[0];
+        return `
+            <div class="bact-pill"
+                 style="border-color:${color};background:${bg}"
+                 onclick="toggleBactDetail('fd-${idx}')">
+                <span class="bact-pill-icon">${icon}</span>
+                <span class="bact-pill-name">${shortName}</span>
+                ${f.status !== 'missed'
+                    ? `<span class="bact-pill-count" style="color:${color}">
+                           ${f.pct}%
+                       </span>`
+                    : ''}
+            </div>
+            <div class="bact-detail" id="fd-${idx}">
+                <strong>${f.food}</strong>
+                <div>${f.eaten_grams}g eaten of ${f.target_grams}g target</div>
+                ${f.feeds ? `<div>Feeds: ${f.feeds}</div>` : ''}
+                ${f.alternatives && f.alternatives.length
+                    ? `<div>Alternatives: ${f.alternatives.join(', ')}</div>` : ''}
+            </div>`;
+    }).join('');
+
+    const foodTableRows = fp.map(f => {
+        const color = f.status === 'met'     ? '#22c55e'
+                    : f.status === 'partial' ? '#f59e0b' : '#ef4444';
+        const icon  = f.status === 'met' ? '✅'
+                    : f.status === 'partial' ? '⚠️' : '❌';
+        const pct   = Math.min(100, f.pct);
+        return `
+            <tr>
+                <td class="plan-table-food">
+                    ${icon} ${f.food}
+                    ${f.feeds
+                        ? `<div class="plan-table-feeds">
+                               → ${f.feeds.split(' ')[0]}
+                           </div>` : ''}
+                </td>
+                <td class="plan-table-target">${f.target_grams}g</td>
+                <td class="plan-table-eaten" style="color:${color}">
+                    ${f.eaten_grams}g
+                </td>
+                <td class="plan-table-bar">
+                    <div class="gut-bar-bg" style="height:6px">
+                        <div class="gut-bar-fill"
+                             style="width:${pct}%;
+                                    background:${color};height:6px">
+                        </div>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+
+    // ── Report recommendations (collapsed) ────────────────────────────────
+    const reportHtml = (fa.length || fr.length) ? `
+        <div class="plan-collapse-card" style="margin-top:10px">
+            <div class="plan-collapse-header"
+                 onclick="togglePlanSection('report-section','report-arrow')">
+                <span>📋 Report Recommendations</span>
+                <span class="plan-collapse-arrow" id="report-arrow">›</span>
+            </div>
+            <div id="report-section" style="display:none;margin-top:12px">
+                ${fa.length ? `
+                    <div class="plan-section-label">✅ Add:</div>
+                    <div class="plan-tags">
+                        ${fa.map(f =>
+                            `<span class="plan-tag plan-tag-add">${f}</span>`
+                        ).join('')}
+                    </div>` : ''}
+                ${fr.length ? `
+                    <div class="plan-section-label" style="margin-top:8px">
+                        ❌ Reduce:
+                    </div>
+                    <div class="plan-tags">
+                        ${fr.map(f =>
+                            `<span class="plan-tag plan-tag-reduce">${f}</span>`
+                        ).join('')}
+                    </div>` : ''}
+            </div>
+        </div>` : '';
+
+    // ── Final layout ───────────────────────────────────────────────────────
+    container.innerHTML = `
+
+        <!-- Action card (time-aware, most important) -->
+        ${actionHtml}
+
+        <!-- Bacteria Boost — compact pills + collapsible detail -->
+        <div class="card" style="margin-top:10px">
+            <div class="plan-section-header">
+                <h3 style="color:white;margin:0;font-size:.95rem">
+                    🦠 Bacteria Boost
+                </h3>
+                <span class="plan-fed-badge">
+                    ${fedCount}/${totalBact} fed
+                </span>
+            </div>
+            <div class="bact-summary-row">${bacteriaPillsHtml}</div>
+            <div class="plan-collapse-header" style="margin-top:10px"
+                 onclick="togglePlanSection('bact-detail','bact-arrow')">
+                <span style="font-size:.78rem;color:#9ca3af">
+                    See full detail
+                </span>
+                <span class="plan-collapse-arrow" id="bact-arrow">›</span>
+            </div>
+            <div id="bact-detail" style="display:none;margin-top:8px">
+                ${bacteriaDetailHtml}
+            </div>
+        </div>
+
+        <!-- Food Targets — compact pills + collapsible table -->
+        <div class="card" style="margin-top:10px">
+            <div class="plan-section-header">
+                <h3 style="color:white;margin:0;font-size:.95rem">
+                    🎯 Food Targets
+                </h3>
+                <span class="plan-fed-badge">
+                    ${metCount}/${fp.length} met
+                </span>
+            </div>
+            <div class="bact-summary-row">${foodPillsHtml}</div>
+            <div class="plan-collapse-header" style="margin-top:10px"
+                 onclick="togglePlanSection('food-detail','food-arrow')">
+                <span style="font-size:.78rem;color:#9ca3af">
+                    See full table
+                </span>
+                <span class="plan-collapse-arrow" id="food-arrow">›</span>
+            </div>
+            <div id="food-detail" style="display:none;margin-top:8px">
+                <div class="table-container">
+                    <table class="nutrition-table plan-table">
+                        <thead>
+                            <tr>
+                                <th>Food</th>
+                                <th>Target</th>
+                                <th>Eaten</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>${foodTableRows}</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        ${reportHtml}
+
+        <div style="text-align:center;padding:16px">
+            <button class="btn-primary"
+                    onclick="window.scrollTo({top:0,behavior:'smooth'})">
+                📷 Log a Meal
+            </button>
+        </div>`;
+}
+
+function toggleBactDetail(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function togglePlanSection(sectionId, arrowId) {
+    const section = document.getElementById(sectionId);
+    const arrow   = document.getElementById(arrowId);
+    if (!section) return;
+    const isOpen = section.style.display !== 'none';
+    section.style.display = isOpen ? 'none' : 'block';
+    if (arrow) arrow.textContent = isOpen ? '›' : '↓';
+}
+// function renderFoodPlan(container, data) {
+//     const fp = data.food_progress     || [];
+//     const bp = data.bacteria_progress || [];
+//     const fa = data.foods_add         || [];
+//     const fr = data.foods_reduce      || [];
+
+//     // ── Bacteria summary pills (compact top view) ──────────────────────────
+//     const allFed    = bp.every(b => b.fed_today);
+//     const fedCount  = bp.filter(b => b.fed_today).length;
+//     const totalBact = bp.length;
+
+//     const bacteriaPillsHtml = bp.length ? `
+//         <div class="bact-summary-row">
+//             ${bp.map(b => {
+//                 const color = b.fed_today ? '#22c55e' : '#ef4444';
+//                 const bg    = b.fed_today
+//                               ? 'rgba(34,197,94,0.12)'
+//                               : 'rgba(239,68,68,0.12)';
+//                 const icon  = b.fed_today ? '✅' : '❌';
+//                 const genus = b.name.split(' ')[0];
+//                 return `
+//                     <div class="bact-pill" style="border-color:${color};background:${bg}"
+//                          onclick="toggleBactDetail('bd-${bp.indexOf(b)}')">
+//                         <span class="bact-pill-icon">${icon}</span>
+//                         <span class="bact-pill-name">${genus}</span>
+//                         ${b.fed_today
+//                             ? `<span class="bact-pill-count"
+//                                     style="color:${color}">${b.fed_count}x</span>`
+//                             : ''}
+//                     </div>
+//                     <div class="bact-detail" id="bd-${bp.indexOf(b)}">
+//                         <strong>${b.name}</strong>
+//                         ${b.fed_today
+//                             ? `<div>Via: ${b.fed_by.join(', ')}</div>`
+//                             : `<div style="color:#ef4444">Not fed today</div>`}
+//                         ${b.functions && b.functions.length
+//                             ? `<div>Supports: ${b.functions.join(', ')}</div>`
+//                             : ''}
+//                     </div>`;
+//             }).join('')}
+//         </div>` : '';
+
+//     // Detailed bacteria bars (collapsed by default if all fed)
+//     const bacteriaDetailHtml = bp.map(b => {
+//         const pct   = Math.min(100, Math.round((b.fed_count / 3) * 100));
+//         const color = b.fed_today ? '#22c55e' : '#ef4444';
+//         return `
+//             <div class="bacteria-boost-row">
+//                 <div class="bacteria-boost-header">
+//                     <span class="bacteria-boost-name">
+//                         ${b.fed_today ? '✅' : '❌'} ${b.name}
+//                     </span>
+//                     <span class="bacteria-boost-status" style="color:${color}">
+//                         ${b.fed_today ? `Fed ${b.fed_count}x` : 'Not fed'}
+//                     </span>
+//                 </div>
+//                 <div class="bacteria-boost-bar-row">
+//                     <div class="gut-bar-bg" style="flex:1">
+//                         <div class="gut-bar-fill"
+//                              style="width:${pct}%;background:${color}"></div>
+//                     </div>
+//                     <span class="bacteria-boost-pct" style="color:${color}">
+//                         ${pct}%
+//                     </span>
+//                 </div>
+//                 ${b.fed_by && b.fed_by.length
+//                     ? `<div class="plan-food-meta">Via: ${b.fed_by.join(', ')}</div>`
+//                     : ''}
+//                 ${!b.fed_today
+//                     ? `<div class="plan-food-alt">
+//                            Include a ${b.name.split(' ')[0]}-friendly food next
+//                        </div>`
+//                     : ''}
+//             </div>`;
+//     }).join('');
+
+//     // ── Food targets table (compact) ───────────────────────────────────────
+//     const foodTableRows = fp.map(f => {
+//         const color = f.status === 'met'     ? '#22c55e'
+//                     : f.status === 'partial' ? '#f59e0b' : '#ef4444';
+//         const icon  = f.status === 'met' ? '✅'
+//                     : f.status === 'partial' ? '⚠️' : '❌';
+//         const pct   = Math.min(100, f.pct);
+//         return `
+//             <tr>
+//                 <td class="plan-table-food">
+//                     ${icon} ${f.food}
+//                     ${f.feeds
+//                         ? `<div class="plan-table-feeds">
+//                                → ${f.feeds.split(' ')[0]}
+//                            </div>`
+//                         : ''}
+//                 </td>
+//                 <td class="plan-table-target">${f.target_grams}g</td>
+//                 <td class="plan-table-eaten" style="color:${color}">
+//                     ${f.eaten_grams}g
+//                 </td>
+//                 <td class="plan-table-bar">
+//                     <div class="gut-bar-bg" style="height:6px">
+//                         <div class="gut-bar-fill"
+//                              style="width:${pct}%;background:${color};height:6px">
+//                         </div>
+//                     </div>
+//                 </td>
+//             </tr>`;
+//     }).join('');
+
+//     const foodTable = fp.length ? `
+//         <div class="table-container">
+//             <table class="nutrition-table plan-table">
+//                 <thead>
+//                     <tr>
+//                         <th>Food</th>
+//                         <th>Target</th>
+//                         <th>Eaten</th>
+//                         <th>Progress</th>
+//                     </tr>
+//                 </thead>
+//                 <tbody>${foodTableRows}</tbody>
+//             </table>
+//         </div>` : `
+//         <div class="plan-empty">
+//             <p class="hint">No food targets set.</p>
+//             <button class="btn-small"
+//                     onclick="showGutTab('profile',
+//                         document.querySelectorAll('.gut-tab')[3])">
+//                 Add in Profile →
+//             </button>
+//         </div>`;
+
+//     // ── Report recommendations (collapsed) ────────────────────────────────
+//     const reportHtml = (fa.length || fr.length) ? `
+//         <div class="card plan-collapse-card" style="margin-top:12px">
+//             <div class="plan-collapse-header"
+//                  onclick="togglePlanSection('report-section')">
+//                 <span>📋 Report Recommendations</span>
+//                 <span class="plan-collapse-arrow" id="report-arrow">›</span>
+//             </div>
+//             <div id="report-section" style="display:none;margin-top:12px">
+//                 ${fa.length ? `
+//                     <div class="plan-section-label">✅ Add to diet:</div>
+//                     <div class="plan-tags">
+//                         ${fa.map(f =>
+//                             `<span class="plan-tag plan-tag-add">${f}</span>`
+//                         ).join('')}
+//                     </div>` : ''}
+//                 ${fr.length ? `
+//                     <div class="plan-section-label" style="margin-top:10px">
+//                         ❌ Reduce:
+//                     </div>
+//                     <div class="plan-tags">
+//                         ${fr.map(f =>
+//                             `<span class="plan-tag plan-tag-reduce">${f}</span>`
+//                         ).join('')}
+//                     </div>` : ''}
+//             </div>
+//         </div>` : '';
+
+//     // ── Reminder (collapsible) ─────────────────────────────────────────────
+//     const rawReminder = buildSmartReminders(fp, bp);
+//     const reminderHtml = rawReminder ? `
+//         <div class="plan-collapse-card" style="margin-bottom:12px">
+//             <div class="plan-collapse-header reminder-collapse-header"
+//                  onclick="togglePlanSection('reminder-section','reminder-arrow')">
+//                 <span>
+//                     ${rawReminder.includes('reminder-success')
+//                         ? '🎉 All targets on track!'
+//                         : '⚠️ Action needed today'}
+//                 </span>
+//                 <span class="plan-collapse-arrow" id="reminder-arrow">›</span>
+//             </div>
+//             <div id="reminder-section" style="display:none;margin-top:12px">
+//                 ${rawReminder}
+//             </div>
+//         </div>` : '';
+
+//     // ── Assemble — bacteria FIRST ──────────────────────────────────────────
+//     container.innerHTML = `
+
+//         <!-- Collapsible reminder at top -->
+//         ${reminderHtml}
+
+//         <!-- Bacteria boost — FIRST, most important -->
+//         <div class="card">
+//             <div class="plan-section-header">
+//                 <h3 style="color:white;margin:0">🦠 Bacteria Boost</h3>
+//                 <span class="plan-fed-badge">
+//                     ${fedCount}/${totalBact} fed today
+//                 </span>
+//             </div>
+
+//             <!-- Compact pills -->
+//             ${bacteriaPillsHtml}
+
+//             <!-- Detailed bars (collapsible) -->
+//             <div class="plan-collapse-header"
+//                  style="margin-top:12px"
+//                  onclick="togglePlanSection('bact-detail-section','bact-detail-arrow')">
+//                 <span style="font-size:.8rem;color:#9ca3af">Show detail</span>
+//                 <span class="plan-collapse-arrow" id="bact-detail-arrow">›</span>
+//             </div>
+//             <div id="bact-detail-section" style="display:none;margin-top:8px">
+//                 ${bacteriaDetailHtml}
+//             </div>
+//         </div>
+
+//         <!-- Food targets table -->
+//         <div class="card" style="margin-top:12px">
+//             <div class="plan-section-header">
+//                 <h3 style="color:white;margin:0">🎯 Food Targets</h3>
+//                 <span style="font-size:.78rem;color:#9ca3af">
+//                     ${new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})}
+//                 </span>
+//             </div>
+//             ${foodTable}
+//         </div>
+
+//         <!-- Report recommendations (collapsed) -->
+//         ${reportHtml}
+
+//         <!-- Log meal CTA -->
+//         <div style="text-align:center;padding:16px">
+//             <button class="btn-primary"
+//                     onclick="window.scrollTo({top:0,behavior:'smooth'})">
+//                 📷 Log a Meal
+//             </button>
+//         </div>`;
+// }
+
+// // ── Helpers ───────────────────────────────────────────────────────────────────
+// function toggleBactDetail(id) {
+//     const el = document.getElementById(id);
+//     if (!el) return;
+//     el.style.display = el.style.display === 'none' ? 'block' : 'none';
+// }
+
+// function togglePlanSection(sectionId, arrowId) {
+//     const section = document.getElementById(sectionId);
+//     const arrow   = document.getElementById(arrowId);
+//     if (!section) return;
+//     const isOpen = section.style.display !== 'none';
+//     section.style.display = isOpen ? 'none' : 'block';
+//     if (arrow) arrow.textContent = isOpen ? '›' : '↓';
+// }
+
+// function renderFoodPlan(container, data) {
+//     const fp = data.food_progress     || [];
+//     const bp = data.bacteria_progress || [];
+//     const fa = data.foods_add         || [];
+//     const fr = data.foods_reduce      || [];
+
+//     // ── Food targets table ─────────────────────────────────────────────────
+//     const foodTableRows = fp.map(f => {
+//         const color = f.status === 'met'     ? '#22c55e'
+//                     : f.status === 'partial' ? '#f59e0b' : '#ef4444';
+//         const icon  = f.status === 'met' ? '✅' : f.status === 'partial' ? '⚠️' : '❌';
+//         const pct   = Math.min(100, f.pct);
+//         return `
+//             <tr>
+//                 <td class="plan-table-food">
+//                     ${icon} ${f.food}
+//                     ${f.feeds
+//                         ? `<div class="plan-table-feeds">→ ${f.feeds.split(' ')[0]}</div>`
+//                         : ''}
+//                 </td>
+//                 <td class="plan-table-target">${f.target_grams}g</td>
+//                 <td class="plan-table-eaten" style="color:${color}">
+//                     ${f.eaten_grams}g
+//                 </td>
+//                 <td class="plan-table-bar">
+//                     <div class="gut-bar-bg" style="height:8px">
+//                         <div class="gut-bar-fill"
+//                              style="width:${pct}%;background:${color};height:8px">
+//                         </div>
+//                     </div>
+//                     <span class="plan-table-pct" style="color:${color}">
+//                         ${pct}%
+//                     </span>
+//                 </td>
+//             </tr>`;
+//     }).join('');
+
+//     const foodTable = fp.length ? `
+//         <div class="table-container">
+//             <table class="nutrition-table plan-table">
+//                 <thead>
+//                     <tr>
+//                         <th>Food</th>
+//                         <th>Target</th>
+//                         <th>Eaten</th>
+//                         <th>Progress</th>
+//                     </tr>
+//                 </thead>
+//                 <tbody>${foodTableRows}</tbody>
+//             </table>
+//         </div>` : `
+//         <div class="plan-empty">
+//             <p class="hint">No food targets set.</p>
+//             <button class="btn-small"
+//                     onclick="showGutTab('profile',
+//                         document.querySelectorAll('.gut-tab')[3])">
+//                 Add in Profile →
+//             </button>
+//         </div>`;
+
+//     // ── Bacteria boost bars ────────────────────────────────────────────────
+//     const bacteriaHtml = bp.length ? bp.map(b => {
+//         const dailyTarget = 3;
+//         const pct   = Math.min(100, Math.round((b.fed_count / dailyTarget) * 100));
+//         const color = b.fed_today ? '#22c55e' : '#ef4444';
+//         return `
+//             <div class="bacteria-boost-row">
+//                 <div class="bacteria-boost-header">
+//                     <span class="bacteria-boost-name">
+//                         ${b.fed_today ? '✅' : '❌'} ${b.name}
+//                     </span>
+//                     <span class="bacteria-boost-status" style="color:${color}">
+//                         ${b.fed_today ? `Fed ${b.fed_count}x today` : 'Not fed today'}
+//                     </span>
+//                 </div>
+//                 <div class="bacteria-boost-bar-row">
+//                     <div class="gut-bar-bg" style="flex:1">
+//                         <div class="gut-bar-fill"
+//                              style="width:${pct}%;background:${color}">
+//                         </div>
+//                     </div>
+//                     <span class="bacteria-boost-pct" style="color:${color}">
+//                         ${pct}%
+//                     </span>
+//                 </div>
+//                 ${b.functions && b.functions.length
+//                     ? `<div class="plan-food-meta">Supports: ${b.functions.join(', ')}</div>`
+//                     : ''}
+//                 ${b.fed_by && b.fed_by.length
+//                     ? `<div class="plan-food-meta">Via: ${b.fed_by.join(', ')}</div>`
+//                     : ''}
+//                 ${!b.fed_today
+//                     ? `<div class="plan-food-alt">Log a meal with foods that feed ${b.name.split(' ')[0]}</div>`
+//                     : ''}
+//             </div>`;
+//     }).join('') : `<p class="hint">No bacteria targets set.</p>`;
+
+//     // ── Report recommendations ─────────────────────────────────────────────
+//     const reportHtml = (fa.length || fr.length) ? `
+//         <div class="card" style="margin-top:12px">
+//             <h3 style="color:white;margin-bottom:12px">📋 From Your Gut Report</h3>
+//             ${fa.length ? `
+//                 <div class="plan-section-label">✅ Add to diet:</div>
+//                 <div class="plan-tags">
+//                     ${fa.map(f => `<span class="plan-tag plan-tag-add">${f}</span>`).join('')}
+//                 </div>` : ''}
+//             ${fr.length ? `
+//                 <div class="plan-section-label" style="margin-top:12px">❌ Reduce:</div>
+//                 <div class="plan-tags">
+//                     ${fr.map(f => `<span class="plan-tag plan-tag-reduce">${f}</span>`).join('')}
+//                 </div>` : ''}
+//         </div>` : '';
+
+//     // ── Build reminders ────────────────────────────────────────────────────
+//     const remindersHtml = buildSmartReminders(fp, bp);
+
+//     container.innerHTML = `
+//         ${remindersHtml}
+
+//         <div class="card">
+//             <h2>🥗 My Food Plan — Today</h2>
+//             <p class="hint" style="margin-bottom:12px">
+//                 ${new Date().toLocaleDateString('en-AU', {
+//                     weekday: 'long', day: 'numeric', month: 'long'
+//                 })}
+//             </p>
+//             <div class="plan-section-label">🎯 Doctor's Food Targets</div>
+//             ${foodTable}
+//         </div>
+
+//         <div class="card" style="margin-top:12px">
+//             <h3 style="color:white;margin-bottom:12px">
+//                 🦠 Bacteria Boost Progress
+//             </h3>
+//             <p class="hint" style="margin-bottom:12px">
+//                 Target: fed at least once today
+//             </p>
+//             ${bacteriaHtml}
+//         </div>
+
+//         ${reportHtml}
+
+//         <div class="card" style="margin-top:12px;text-align:center;padding:16px">
+//             <p class="hint">Log a meal to update your progress</p>
+//             <button class="btn-primary" style="margin-top:8px"
+//                     onclick="window.scrollTo({top:0,behavior:'smooth'})">
+//                 📷 Log a Meal
+//             </button>
+//         </div>`;
+// }
 // ── Profile helpers ────────────────────────────────────────────────────────────
 function addBoostBacteria() {
     const name = document.getElementById('new-boost-name').value.trim();
@@ -686,16 +1451,20 @@ function addFoodTarget() {
     document.getElementById('new-target-alts').value  = '';
     refreshFoodTargetList();
 }
+
 function removeFoodTarget(i) {
     if (!gutProfile) return;
     gutProfile.food_targets.splice(i, 1);
     refreshFoodTargetList();
 }
+
 function refreshFoodTargetList() {
     const list = gutProfile.food_targets || [];
     const el   = document.getElementById('food-targets-list');
     if (!el) return;
-    if (!list.length) { el.innerHTML = '<p class="hint">No targets added yet.</p>'; return; }
+    if (!list.length) {
+        el.innerHTML = '<p class="hint">No targets added yet.</p>'; return;
+    }
     el.innerHTML = list.map((t,i) => `
         <div class="profile-target-row">
             <span class="profile-target-food">${t.food}</span>
@@ -704,22 +1473,34 @@ function refreshFoodTargetList() {
             <button class="profile-remove-btn" onclick="removeFoodTarget(${i})">✕</button>
         </div>`).join('');
 }
+
 async function saveGutProfile() {
     const get    = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
     const getNum = id => { const el = document.getElementById(id); return el ? Number(el.value)||0 : 0; };
-    const funcKeys = ['overall_health','immunity','gi_health','mental_wellness','weight_management','sugar_metabolism'];
+
+    const funcKeys = ['overall_health','immunity','gi_health',
+                      'mental_wellness','weight_management','sugar_metabolism'];
     const functions = {};
     funcKeys.forEach(key => {
         const h = getNum(`func-${key}`);
-        functions[key] = { helpful: h, harmful: Math.round(100-h) };
+        functions[key] = { helpful: h, harmful: Math.round(100 - h) };
     });
+
     const faRaw = get('profile-foods-add');
     const frRaw = get('profile-foods-reduce');
+
     const updated = {
-        ...(gutProfile || {}), patient_id: gutPatientId,
-        name: get('profile-name'), test_provider: get('profile-provider'),
-        test_date: get('profile-test-date'), doctor: get('profile-doctor'),
-        metrics: { evenness: getNum('metric-evenness'), diversity: getNum('metric-diversity'), fb_ratio: getNum('metric-fb') },
+        ...(gutProfile || {}),
+        patient_id:    gutPatientId,
+        name:          get('profile-name'),
+        test_provider: get('profile-provider'),
+        test_date:     get('profile-test-date'),
+        doctor:        get('profile-doctor'),
+        metrics: {
+            evenness:  getNum('metric-evenness'),
+            diversity: getNum('metric-diversity'),
+            fb_ratio:  getNum('metric-fb')
+        },
         functions,
         foods_add:    faRaw ? faRaw.split(',').map(s=>s.trim()).filter(Boolean) : [],
         foods_reduce: frRaw ? frRaw.split(',').map(s=>s.trim()).filter(Boolean) : [],
@@ -727,6 +1508,7 @@ async function saveGutProfile() {
         bacteria_reduce: gutProfile ? gutProfile.bacteria_reduce || [] : [],
         food_targets:    gutProfile ? gutProfile.food_targets    || [] : []
     };
+
     try {
         const res    = await fetch('/gut/profile', {
             method: 'POST',
@@ -738,7 +1520,9 @@ async function saveGutProfile() {
         gutProfile = result.profile;
         showMessage('✅ Profile saved!');
         setTimeout(() => clearError(), 2000);
-    } catch (err) { showError('Save failed: ' + err.message); }
+    } catch (err) {
+        showError('Save failed: ' + err.message);
+    }
 }
 
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
@@ -992,6 +1776,7 @@ function renderDailyScorecard(container, data) {
         <div class="gut-section"><div class="gut-section-title">⚠️ Bacteria Harmed <span class="gut-section-hint">tap to expand</span></div>${renderBacteriaHarmed(data.bacteria_harmed||{})}</div>
         <div class="gut-section">${renderPlantDiversity(data.plant_diversity||[],data.plant_count||0,30)}</div>`;
 }
+
 function renderWeeklyScorecard(container, data) {
     const avg = data.avg_gut_score||0, sc = gutScoreColor(avg);
     const today = new Date().toLocaleDateString('en-CA');

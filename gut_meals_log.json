@@ -1225,5 +1225,107 @@
     "overall_gut_score": 6.8,
     "gut_notes": "",
     "date": "2026-06-06"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A plate featuring seekh kebabs, served with a side of shredded iceberg lettuce and raw sliced red onion.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Spices like cumin and coriander present in kebabs may offer modest prebiotic effects supporting this species.",
+            "name": "Lactobacillus plantarum"
+          },
+          {
+            "impact_strength": 2,
+            "mechanism": "Small amounts of onion/garlic powder in seasoning can provide trace fructans, offering minimal support.",
+            "name": "Bifidobacterium adolescentis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "grilled|fried",
+        "estimated_grams": 180,
+        "fodmap": "medium",
+        "gut_notes": "A good source of protein. The spices commonly used (ginger, turmeric, cumin) contribute anti-inflammatory properties. However, if high in saturated fat or cooked at very high temperatures, it could potentially contribute to inflammatory pathways, although this effect is mitigated by beneficial spices. Medium FODMAP due to typical onion and garlic content.",
+        "name": "Seekh Kebab",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Provides general dietary fiber (cellulose, hemicellulose) which supports a diverse gut microbiome, including Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "Fermentation of non-digestible carbohydrates contributes to butyrate production by key short-chain fatty acid producers.",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "A source of hydration and low-FODMAP dietary fiber, which supports general gut motility and feeds beneficial gut bacteria, contributing to overall diversity. Its anti-inflammatory impact is moderate due to its water content and some antioxidants.",
+        "name": "Shredded Iceberg Lettuce",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 3,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Rich in FOS and inulin, which are selectively fermented by Bifidobacterium species, promoting their growth and activity.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "High content of fructans provides a primary substrate for this beneficial species.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Certain Lactobacillus species can also ferment FOS, contributing to a healthy gut environment.",
+            "name": "Lactobacillus acidophilus"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "The fermentation of FOS by other bacteria leads to the production of short-chain fatty acids (SCFAs) like butyrate, which is utilized by F. prausnitzii, a key butyrate producer and anti-inflammatory species.",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 25,
+        "fodmap": "high",
+        "gut_notes": "An excellent source of potent prebiotics (FOS, inulin) that strongly feed beneficial gut bacteria, and rich in anti-inflammatory flavonoids (quercetin, anthocyanins). However, its high FODMAP content can trigger significant digestive symptoms like gas, bloating, and abdominal pain in individuals with irritable bowel syndrome (IBS).",
+        "name": "Raw Red Onion",
+        "prebiotic_fibres": [
+          "FOS",
+          "inulin"
+        ],
+        "prebiotic_score": 9,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-06 21:01",
+    "overall_gut_score": 7.2,
+    "gut_notes": "",
+    "date": "2026-06-06"
   }
 ]
