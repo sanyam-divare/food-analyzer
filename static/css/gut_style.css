@@ -837,3 +837,268 @@
     font-weight: 600;
     color: white;
 }
+/* ── History tab — grouped by date ──────────────────── */
+
+.hist-date-group {
+    margin-bottom: 20px;
+}
+
+.hist-date-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    margin-bottom: 8px;
+}
+
+.hist-date-label {
+    font-size: .82rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.hist-day-score {
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+/* Meal card — compact tap-to-expand */
+.hist-meal-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+
+.hist-meal-card:active {
+    border-color: rgba(255,255,255,.2);
+}
+
+/* Summary row (always visible) */
+.hist-meal-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    gap: 10px;
+}
+
+.hist-meal-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Score dot */
+.hist-meal-score-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+}
+
+.hist-meal-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.hist-meal-desc {
+    font-size: .82rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hist-meal-meta {
+    font-size: .72rem;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.hist-expand-arrow {
+    font-size: 1.1rem;
+    color: #6b7280;
+    flex-shrink: 0;
+    transition: transform .2s;
+}
+
+/* Detail panel (hidden by default) */
+.hist-meal-detail {
+    display: none;
+    padding: 0 14px 14px;
+    border-top: 1px solid rgba(255,255,255,.06);
+}
+
+.hist-meal-detail.open {
+    display: block;
+}
+/* ── History — Date group ─────────────────────────── */
+.hist-date-group {
+    margin-bottom: 24px;
+}
+
+.hist-date-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    margin-bottom: 16px;
+}
+
+.hist-date-label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.hist-day-score {
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+/* ── Time ribbon ──────────────────────────────────── */
+.ribbon-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.ribbon-slot {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+/* Left column — dot + connecting line */
+.ribbon-line-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 20px;
+}
+
+.ribbon-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+    z-index: 1;
+}
+
+.ribbon-connector {
+    width: 2px;
+    flex: 1;
+    min-height: 16px;
+    margin: 4px 0;
+    border-radius: 1px;
+}
+
+/* Right column — slot label + meal cards */
+.ribbon-slot-content {
+    flex: 1;
+    padding-bottom: 16px;
+    min-width: 0;
+}
+
+.ribbon-slot-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 6px;
+}
+
+/* Individual meal card within a slot */
+.ribbon-meal-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+
+.ribbon-meal-card:active {
+    border-color: rgba(255,255,255,.18);
+}
+
+.ribbon-meal-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+}
+
+/* Score circle badge */
+.ribbon-score-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .78rem;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+}
+
+.ribbon-meal-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ribbon-meal-foods {
+    font-size: .82rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ribbon-meal-stats {
+    font-size: .7rem;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+/* Expand arrow */
+.hist-expand-arrow {
+    font-size: 1.1rem;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+/* Detail panel */
+.hist-meal-detail {
+    display: none;
+    padding: 0 12px 12px;
+    border-top: 1px solid rgba(255,255,255,.06);
+}
+
+.hist-meal-detail.open {
+    display: block;
+}

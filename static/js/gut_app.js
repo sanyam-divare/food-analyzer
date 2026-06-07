@@ -295,33 +295,342 @@ async function loadGutFoodPlan() {
 }
 
 // ── TAB 3: HISTORY ────────────────────────────────────────────────────────────
+// async function loadGutHistory() {
+//     const container = document.getElementById('gut-history-list');
+//     if (!container) return;
+//     try {
+//         const res  = await fetch(`/gut/history?patient_id=${gutPatientId}`);
+//         const data = await res.json();
+//         if (!data.length) {
+//             container.innerHTML = '<p class="hint">No gut meals logged yet.</p>'; return;
+//         }
+//         container.innerHTML = [...data].reverse().map(meal => {
+//             const s     = meal.overall_gut_score || 0;
+//             const color = s >= 7 ? '#22c55e' : s >= 5 ? '#f59e0b' : '#ef4444';
+//             const foods = (meal.foods || []).map(f => f.name).join(' · ');
+//             return `
+//                 <div class="history-item">
+//                     <div class="history-date">📅 ${meal.timestamp || ''}</div>
+//                     <div class="history-desc">${meal.meal_description || ''}</div>
+//                     <div class="history-foods">${foods}</div>
+//                     <div class="history-meta">
+//                         <span style="color:${color};font-weight:600">🦠 Gut Score: ${s}/10</span>
+//                     </div>
+//                 </div>`;
+//         }).join('');
+//     } catch (err) {
+//         container.innerHTML = '<p class="hint">Could not load history.</p>';
+//     }
+// }
+
+// ── TAB 3: HISTORY ────────────────────────────────────────────────────────────
+// ── TAB 3: HISTORY — Time Ribbon ─────────────────────────────────────────────
 async function loadGutHistory() {
     const container = document.getElementById('gut-history-list');
     if (!container) return;
     try {
         const res  = await fetch(`/gut/history?patient_id=${gutPatientId}`);
         const data = await res.json();
+
         if (!data.length) {
-            container.innerHTML = '<p class="hint">No gut meals logged yet.</p>'; return;
-        }
-        container.innerHTML = [...data].reverse().map(meal => {
-            const s     = meal.overall_gut_score || 0;
-            const color = s >= 7 ? '#22c55e' : s >= 5 ? '#f59e0b' : '#ef4444';
-            const foods = (meal.foods || []).map(f => f.name).join(' · ');
-            return `
-                <div class="history-item">
-                    <div class="history-date">📅 ${meal.timestamp || ''}</div>
-                    <div class="history-desc">${meal.meal_description || ''}</div>
-                    <div class="history-foods">${foods}</div>
-                    <div class="history-meta">
-                        <span style="color:${color};font-weight:600">🦠 Gut Score: ${s}/10</span>
-                    </div>
+            container.innerHTML = `
+                <div style="text-align:center;padding:32px 16px">
+                    <div style="font-size:2.5rem;margin-bottom:12px">🍽️</div>
+                    <p class="hint">No gut meals logged yet.</p>
+                    <p class="hint" style="margin-top:6px">
+                        Log your first meal to start your journal!
+                    </p>
                 </div>`;
-        }).join('');
+            return;
+        }
+
+        // Group by date, newest first
+        const byDate = {};
+        [...data].reverse().forEach(meal => {
+            const date = (meal.timestamp || meal.date || '').slice(0, 10);
+            if (!byDate[date]) byDate[date] = [];
+            byDate[date].push(meal);
+        });
+
+        container.innerHTML = Object.entries(byDate)
+            .map(([date, meals]) => renderDayRibbon(date, meals))
+            .join('');
+
     } catch (err) {
         container.innerHTML = '<p class="hint">Could not load history.</p>';
     }
 }
+
+// ── Meal slot classifier ───────────────────────────────────────────────────────
+function getMealSlot(timestamp) {
+    const timeStr = (timestamp || '').slice(11, 16); // "HH:MM"
+    if (!timeStr) return { label: 'Meal', emoji: '🍽️', color: '#6b7280', order: 99 };
+
+    const [h, m] = timeStr.split(':').map(Number);
+    const mins   = h * 60 + m;
+
+    if (mins >= 360  && mins < 600)  // 6am–10am
+        return { label: 'Breakfast', emoji: '🌅', color: '#f59e0b', order: 1 };
+    if (mins >= 600  && mins < 720)  // 10am–12pm
+        return { label: 'Mid-morning', emoji: '🌤️', color: '#fb923c', order: 2 };
+    if (mins >= 720  && mins < 900)  // 12pm–3pm
+        return { label: 'Lunch', emoji: '☀️', color: '#22c55e', order: 3 };
+    if (mins >= 900  && mins < 1080) // 3pm–6pm
+        return { label: 'Snack', emoji: '🍵', color: '#8b5cf6', order: 4 };
+    if (mins >= 1080 && mins < 1260) // 6pm–9pm
+        return { label: 'Dinner', emoji: '🌆', color: '#3b82f6', order: 5 };
+    if (mins >= 1260)                // 9pm+
+        return { label: 'Late night', emoji: '🌙', color: '#6366f1', order: 6 };
+
+    return { label: 'Morning', emoji: '🌅', color: '#f59e0b', order: 1 };
+}
+
+// ── Render one day ─────────────────────────────────────────────────────────────
+function renderDayRibbon(date, meals) {
+    const dateLabel = new Date(date + 'T12:00:00')
+        .toLocaleDateString('en-AU', {
+            weekday: 'long', day: 'numeric', month: 'long'
+        });
+
+    // Day average score
+    const scores   = meals.map(m => m.overall_gut_score || 0).filter(s => s > 0);
+    const avgScore = scores.length
+        ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10) / 10
+        : 0;
+    const dayColor = avgScore >= 7 ? '#22c55e'
+                   : avgScore >= 5 ? '#f59e0b' : '#ef4444';
+
+    // Group meals by slot — multiple meals in same slot stack together
+    const slotMap = {};
+    meals.forEach((meal, idx) => {
+        const slot = getMealSlot(meal.timestamp);
+        const key  = slot.order;
+        if (!slotMap[key]) slotMap[key] = { slot, meals: [] };
+        slotMap[key].meals.push({ meal, idx });
+    });
+
+    // Sort by time order
+    const slots = Object.values(slotMap)
+        .sort((a, b) => a.slot.order - b.slot.order);
+
+    const ribbonItems = slots.map(({ slot, meals: slotMeals }, slotIdx) => {
+        const isLast = slotIdx === slots.length - 1;
+
+        const mealItems = slotMeals.map(({ meal, idx }) => {
+            const s      = meal.overall_gut_score || 0;
+            const sc     = s >= 7 ? '#22c55e' : s >= 5 ? '#f59e0b' : '#ef4444';
+            const time   = (meal.timestamp || '').slice(11, 16);
+            const foods  = meal.foods || [];
+            const fCount = foods.length;
+            const mealId = `hist-${date}-${idx}`;
+
+            // Count unique bacteria fed
+            const allBact = new Set();
+            foods.forEach(f =>
+                (f.bacteria_fed || []).forEach(b =>
+                    allBact.add(typeof b === 'object' ? b.name : b)
+                )
+            );
+
+            // Short food names for preview
+            const foodPreview = foods
+                .slice(0, 3)
+                .map(f => f.name)
+                .join(', ')
+                + (foods.length > 3 ? ` +${foods.length - 3}` : '');
+
+            return `
+                <div class="ribbon-meal-card"
+                     onclick="toggleHistoryMeal('${mealId}')">
+                    <div class="ribbon-meal-row">
+                        <!-- Score badge -->
+                        <div class="ribbon-score-badge"
+                             style="background:${sc}">
+                            ${s}
+                        </div>
+                        <!-- Meal info -->
+                        <div class="ribbon-meal-info">
+                            <div class="ribbon-meal-foods">
+                                ${foodPreview}
+                            </div>
+                            <div class="ribbon-meal-stats">
+                                ${time ? `🕐 ${time}` : ''}
+                                · ${fCount} food${fCount !== 1 ? 's' : ''}
+                                ${allBact.size
+                                    ? ` · 🦠 ${allBact.size}`
+                                    : ''}
+                            </div>
+                        </div>
+                        <span class="hist-expand-arrow">›</span>
+                    </div>
+
+                    <!-- Full detail panel -->
+                    <div class="hist-meal-detail" id="${mealId}">
+                        ${renderHistoryMealDetail(meal)}
+                    </div>
+                </div>`;
+        }).join('');
+
+        return `
+            <div class="ribbon-slot">
+                <!-- Timeline line + dot -->
+                <div class="ribbon-line-col">
+                    <div class="ribbon-dot"
+                         style="background:${slot.color};
+                                box-shadow:0 0 0 3px ${slot.color}30">
+                    </div>
+                    ${!isLast
+                        ? `<div class="ribbon-connector"
+                                style="background:linear-gradient(to bottom,
+                                    ${slot.color}40, transparent)">
+                           </div>`
+                        : ''}
+                </div>
+
+                <!-- Slot content -->
+                <div class="ribbon-slot-content">
+                    <div class="ribbon-slot-label"
+                         style="color:${slot.color}">
+                        ${slot.emoji} ${slot.label}
+                    </div>
+                    ${mealItems}
+                </div>
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="hist-date-group">
+            <!-- Date header -->
+            <div class="hist-date-header">
+                <span class="hist-date-label">${dateLabel}</span>
+                ${avgScore > 0
+                    ? `<span class="hist-day-score"
+                              style="color:${dayColor}">
+                           Avg ${avgScore}/10
+                       </span>`
+                    : ''}
+            </div>
+
+            <!-- Time ribbon -->
+            <div class="ribbon-timeline">
+                ${ribbonItems}
+            </div>
+        </div>`;
+}
+
+// ── Toggle meal detail ────────────────────────────────────────────────────────
+function toggleHistoryMeal(id) {
+    const detail = document.getElementById(id);
+    const card   = detail?.closest('.ribbon-meal-card');
+    const arrow  = card?.querySelector('.hist-expand-arrow');
+    if (!detail) return;
+    const isOpen = detail.classList.toggle('open');
+    if (arrow) arrow.textContent = isOpen ? '↓' : '›';
+    if (isOpen) {
+        // Smooth scroll so detail is visible
+        setTimeout(() =>
+            detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        , 100);
+    }
+}
+
+// ── Reconstruct original analysis view from saved data ────────────────────────
+function renderHistoryMealDetail(meal) {
+    const foods = meal.foods || [];
+    const score = meal.overall_gut_score || 0;
+    const notes = meal.gut_notes || '';
+    const sc    = score >= 7 ? '#22c55e' : score >= 5 ? '#f59e0b' : '#ef4444';
+    const se    = score >= 7 ? '✅' : score >= 5 ? '⚠️' : '❌';
+
+    const foodCards = foods.map(f => {
+        const fc = f.fodmap === 'high'   ? '#ef4444'
+                 : f.fodmap === 'medium' ? '#f59e0b' : '#22c55e';
+
+        const bacteriaFedHtml = (f.bacteria_fed || []).map(b => {
+            const n = typeof b === 'object' ? b.name            : b;
+            const s = typeof b === 'object' ? b.impact_strength : '';
+            const m = typeof b === 'object' ? b.mechanism       : '';
+            return `
+                <div class="bacteria-item bacteria-positive">
+                    <span class="bacteria-name">✅ ${n}</span>
+                    ${s ? `<span class="bacteria-strength">${s}/10</span>` : ''}
+                    ${m ? `<div class="bacteria-mech">${m}</div>` : ''}
+                </div>`;
+        }).join('');
+
+        const bacteriaHarmedHtml = (f.bacteria_harmed || []).map(b => {
+            const n = typeof b === 'object' ? b.name : b;
+            return `
+                <div class="bacteria-item bacteria-negative">
+                    <span class="bacteria-name">❌ ${n}</span>
+                </div>`;
+        }).join('');
+
+        const fibresHtml = (f.prebiotic_fibres || []).length
+            ? `<div class="fibre-tags">
+                   ${f.prebiotic_fibres.map(x =>
+                       `<span class="fibre-tag">${x}</span>`
+                   ).join('')}
+               </div>` : '';
+
+        return `
+            <div class="gut-food-card">
+                <div class="gut-food-header">
+                    <div class="gut-food-name">${f.name}</div>
+                    <div class="gut-food-grams">${f.estimated_grams}g</div>
+                </div>
+                <div class="gut-scores-row">
+                    <div class="gut-score-pill">
+                        🌱 Prebiotic:
+                        <strong>${f.prebiotic_score || 0}/10</strong>
+                    </div>
+                    <div class="gut-score-pill">
+                        🔥 Anti-inflam:
+                        <strong>${f.anti_inflammatory_score || 0}/10</strong>
+                    </div>
+                    <div class="gut-score-pill" style="color:${fc}">
+                        FODMAP:
+                        <strong>${(f.fodmap || 'low').toUpperCase()}</strong>
+                    </div>
+                    ${f.probiotic
+                        ? `<div class="gut-score-pill probiotic-badge">
+                               🦠 Probiotic
+                           </div>` : ''}
+                </div>
+                ${fibresHtml}
+                ${bacteriaFedHtml || bacteriaHarmedHtml ? `
+                    <div class="bacteria-section">
+                        ${bacteriaFedHtml
+                            ? `<div class="bacteria-group">${bacteriaFedHtml}</div>`
+                            : ''}
+                        ${bacteriaHarmedHtml
+                            ? `<div class="bacteria-group">${bacteriaHarmedHtml}</div>`
+                            : ''}
+                    </div>` : ''}
+                ${f.gut_notes
+                    ? `<div class="gut-food-notes">💬 ${f.gut_notes}</div>`
+                    : ''}
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="gut-overall-score"
+             style="border-color:${sc};margin-top:12px">
+            <div class="gut-score-circle" style="background:${sc}">
+                <span class="gut-score-num">${score}</span>
+                <span class="gut-score-label">/ 10</span>
+            </div>
+            <div class="gut-score-info">
+                <div class="gut-score-title">${se} Gut Score</div>
+                <div class="gut-score-notes">${notes}</div>
+            </div>
+        </div>
+        <div class="section-label" style="margin-top:12px">
+            🥗 Food Breakdown
+        </div>
+        ${foodCards}`;
+}
+
 
 // ── TAB 4: PROFILE ────────────────────────────────────────────────────────────
 async function loadGutProfile() {

@@ -1327,5 +1327,275 @@
     "overall_gut_score": 7.2,
     "gut_notes": "",
     "date": "2026-06-06"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Rice with spicy prawn curry, cucumber, and spinach paratha",
+    "foods": [
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Refined grains lack resistant starch; may reduce butyrate-producing bacteria",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "Refined white rice devoid of bran and germ; minimal prebiotic value. Lacks the resistant starch needed to feed beneficial bacteria. Does not cause dysbiosis but offers no gut health advantage.",
+        "name": "White rice",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Animal protein source supports proteolytic bacteria",
+            "name": "Bacteroides fragilis"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Excessive animal protein without fibre shifts microbiota balance; may reduce butyrate producers",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "High protein, low fibre meal reduces substrates for this SCFA producer",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "category": "protein",
+        "confidence": "medium",
+        "cooking_method": "fried/saut\u00e9ed",
+        "estimated_grams": 200,
+        "fodmap": "high",
+        "gut_notes": "Curry base likely contains onion, garlic (high FODMAP triggers). Spices (chilli, turmeric) may cause inflammation in sensitive individuals. Curcumin in turmeric is anti-inflammatory but offset by high FODMAP load. Prawn provides protein but shifts balance toward proteolytic bacteria.",
+        "name": "Prawn curry (with spices)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Mild fibre content supports this versatile lactic acid bacterium",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Low FODMAP, good for sensitive guts. Contains quercetin (anti-inflammatory polyphenol). Minimal prebiotic impact due to small portion and low fibre density. Hydrating and gentle on gut.",
+        "name": "Cucumber",
+        "prebiotic_fibres": [
+          "pectin"
+        ],
+        "prebiotic_score": 3.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Spinach contains inulin-type fibres; modest amounts feed bifidobacteria",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 4,
+            "mechanism": "Polyphenols in spinach support mucus-layer bacteria",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "fried",
+        "estimated_grams": 75,
+        "fodmap": "medium",
+        "gut_notes": "Spinach provides iron, lutein, and polyphenols with anti-inflammatory effects. Paratha made with refined wheat flour reduces prebiotic value compared to whole wheat. Fried preparation adds oil which may slow digestion. Medium FODMAP due to small spinach content within larger bread portion.",
+        "name": "Spinach paratha (half piece)",
+        "prebiotic_fibres": [
+          "inulin"
+        ],
+        "prebiotic_score": 4,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-07 15:16",
+    "overall_gut_score": 5.8,
+    "gut_notes": "",
+    "date": "2026-06-07"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Light breakfast consisting of porridge with milk, roasted gram flour with milk, digestive biscuit, and half banana",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Beta-glucan is fermented to short-chain fatty acids which feed this butyrate-producing species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Oat beta-glucan supports SCFA production",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "boiled",
+        "estimated_grams": 15,
+        "fodmap": "low",
+        "gut_notes": "Small portion limits impact. Beta-glucan provides moderate prebiotic benefit and supports butyrate producers.",
+        "name": "Porridge (oats)",
+        "prebiotic_fibres": [
+          "beta-glucan"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Lactose fermentation if lactase-insufficient",
+            "name": "Bifidobacterium adolescentis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "dairy",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 30,
+        "fodmap": "low",
+        "gut_notes": "Minimal prebiotic value unless individual has lactase deficiency. Lactose may cause issues in sensitive individuals.",
+        "name": "Milk",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Inulin and resistant starch content selectively promotes this species",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch fermentation produces butyrate",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Supports SCFA-producing bacteria through carbohydrate fermentation",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "legume/grain",
+        "confidence": "high",
+        "cooking_method": "roasted",
+        "estimated_grams": 5,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic source despite small portion. High resistant starch and inulin content supports beneficial bacteria. Anti-inflammatory polyphenols present.",
+        "name": "Roasted gram flour (chickpea flour)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "inulin"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Refined carbohydrates support rapid colonization",
+            "name": "Bacteroides vulgatus"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Refined carbohydrates lack the fibre this species requires",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 14,
+        "fodmap": "low",
+        "gut_notes": "Refined carbohydrate source with minimal fibre and prebiotic value. May feed less beneficial bacteria. Contributes empty calories nutritionally.",
+        "name": "Digestive biscuit",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and fructo-oligosaccharides support bifidogenic growth",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Pectin fermentation",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Pectin fermentation produces short-chain fatty acids",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 50,
+        "fodmap": "low",
+        "gut_notes": "Good prebiotic source with soluble fibre (pectin). Contains polyphenols with anti-inflammatory properties. Supports beneficial bacteria growth.",
+        "name": "Banana",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 7.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-07 15:19",
+    "overall_gut_score": 6.8,
+    "gut_notes": "",
+    "date": "2026-06-07"
   }
 ]
