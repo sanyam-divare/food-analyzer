@@ -8,10 +8,22 @@ let gutPatientId      = localStorage.getItem('gutPatientId') || 'guest';
 let gutScorecardView  = 'daily';
 let gutActiveTab      = 'scorecard';
 let gutProfile        = null;
+let gutWeekOffset   = 0;  // 0 = current week, -1 = last week
+let gutMonthOffset  = 0;
 
 function initGutMode() {
     console.log('🦠 Gut mode initialised');
     renderGutDashboard();
+}
+
+function shiftWeek(dir) {
+    gutWeekOffset += dir;
+    loadGutScorecard();
+}
+
+function shiftMonth(dir) {
+    gutMonthOffset += dir;
+    loadGutScorecard();
 }
 
 function renderGutDashboard() {
@@ -112,6 +124,35 @@ function switchScorecardView(view, btn) {
     loadGutScorecard();
 }
 
+// async function loadGutScorecard() {
+//     const container = document.getElementById('gut-scorecard');
+//     if (!container) return;
+//     container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Loading...</p></div>`;
+//     try {
+//         const today = new Date().toLocaleDateString('en-CA');
+//         let url = '';
+//         if (gutScorecardView === 'daily') {
+//             url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${today}`;
+//         } else if (gutScorecardView === 'weekly') {
+//             const now = new Date();
+//             const mon = new Date(now);
+//             mon.setDate(now.getDate() - now.getDay() + 1);
+//             url = `/gut/scorecard/weekly?patient_id=${gutPatientId}&week_start=${mon.toLocaleDateString('en-CA')}`;
+//         } else {
+//             const now = new Date();
+//             url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${now.getFullYear()}&month=${now.getMonth()+1}`;
+//         }
+//         const res  = await fetch(url);
+//         const data = await res.json();
+//         if (data.error) { container.innerHTML = `<p class="hint">Error: ${data.error}</p>`; return; }
+//         if (gutScorecardView === 'daily')   renderDailyScorecard(container, data);
+//         if (gutScorecardView === 'weekly')  renderWeeklyScorecard(container, data);
+//         if (gutScorecardView === 'monthly') renderMonthlyScorecard(container, data);
+//     } catch (err) {
+//         container.innerHTML = `<p class="hint">Could not load: ${err.message}</p>`;
+//     }
+// }
+
 async function loadGutScorecard() {
     const container = document.getElementById('gut-scorecard');
     if (!container) return;
@@ -119,28 +160,109 @@ async function loadGutScorecard() {
     try {
         const today = new Date().toLocaleDateString('en-CA');
         let url = '';
+
         if (gutScorecardView === 'daily') {
             url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${today}`;
         } else if (gutScorecardView === 'weekly') {
             const now = new Date();
             const mon = new Date(now);
-            mon.setDate(now.getDate() - now.getDay() + 1);
+            const dayOfWeek = now.getDay();
+            const daysBack  = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            mon.setDate(now.getDate() - daysBack + (gutWeekOffset * 7));
+            const weekLabel = gutWeekOffset === 0 ? 'This Week'
+                            : gutWeekOffset === -1 ? 'Last Week'
+                            : mon.toLocaleDateString('en-AU', {day:'numeric', month:'short'});
+            document.getElementById('week-nav-label') &&
+                (document.getElementById('week-nav-label').textContent = weekLabel);
             url = `/gut/scorecard/weekly?patient_id=${gutPatientId}&week_start=${mon.toLocaleDateString('en-CA')}`;
+            
+        // } else {
+        //     const now = new Date();
+        //     url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${now.getFullYear()}&month=${now.getMonth()+1}`;
+        // }
         } else {
-            const now = new Date();
-            url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${now.getFullYear()}&month=${now.getMonth()+1}`;
+            const now  = new Date();
+            const year = now.getFullYear();
+            const mon  = now.getMonth() + 1 + gutMonthOffset;
+            // Handle year rollover
+            const adjYear  = year + Math.floor((mon - 1) / 12);
+            const adjMonth = ((mon - 1 + 120) % 12) + 1;
+            url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${adjYear}&month=${adjMonth}`;
         }
         const res  = await fetch(url);
         const data = await res.json();
-        if (data.error) { container.innerHTML = `<p class="hint">Error: ${data.error}</p>`; return; }
+
+        if (data.error) {
+            container.innerHTML = `<p class="hint">Error: ${data.error}</p>`;
+            return;
+        }
+        // After rendering weekly scorecard, add nav buttons
+        if (gutScorecardView === 'weekly') {
+            const nav = document.createElement('div');
+            nav.className = 'scorecard-week-nav';
+            nav.innerHTML = `
+                <button onclick="shiftWeek(-1)">← Prev</button>
+                <span id="week-nav-label"></span>
+                <button onclick="shiftWeek(1)">Next →</button>`;
+            container.insertBefore(nav, container.firstChild);
+        }
+
+        // ── If today has no meals, auto-fallback to last date with data ──
+        if (gutScorecardView === 'daily' && (!data.meal_count || data.meal_count === 0)) {
+            const fallback = await fetchLastMealDate();
+            if (fallback && fallback !== today) {
+                const res2  = await fetch(
+                    `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${fallback}`
+                );
+                const data2 = await res2.json();
+                if (data2.meal_count > 0) {
+                    renderDailyScorecard(container, data2);
+                    // Show which date is being shown
+                    const banner = document.createElement('div');
+                    banner.className = 'scorecard-date-banner';
+                    banner.innerHTML = `
+                        <span>📅 Showing ${fallback}</span>
+                        <span class="scorecard-date-hint">
+                            No meals logged today yet
+                        </span>`;
+                    container.insertBefore(banner, container.firstChild);
+                    return;
+                }
+            }
+            // Truly no data at all
+            container.innerHTML = `
+                <div style="text-align:center;padding:32px 16px">
+                    <div style="font-size:2.5rem;margin-bottom:12px">🍽️</div>
+                    <p class="hint">No meals logged yet.</p>
+                    <p class="hint" style="margin-top:8px">
+                        Log your first meal to see your gut scorecard!
+                    </p>
+                </div>`;
+            return;
+        }
+
         if (gutScorecardView === 'daily')   renderDailyScorecard(container, data);
         if (gutScorecardView === 'weekly')  renderWeeklyScorecard(container, data);
         if (gutScorecardView === 'monthly') renderMonthlyScorecard(container, data);
+
     } catch (err) {
         container.innerHTML = `<p class="hint">Could not load: ${err.message}</p>`;
     }
 }
 
+// Helper — get last date that has meal data
+async function fetchLastMealDate() {
+    try {
+        const res  = await fetch(`/gut/history?patient_id=${gutPatientId}`);
+        const data = await res.json();
+        if (!data.length) return null;
+        // Get most recent meal's date
+        const last = data[data.length - 1];
+        return (last.timestamp || last.date || '').slice(0, 10);
+    } catch {
+        return null;
+    }
+}
 // ── TAB 2: MY FOOD PLAN ───────────────────────────────────────────────────────
 async function loadGutFoodPlan() {
     const container = document.getElementById('gut-plan-content');
@@ -380,162 +502,162 @@ function renderProfileForm(container, profile) {
         </div>`;
 }
 
-function buildSmartReminders(fp, bp) {
-    const hour = new Date().getHours();
-    if (hour < 12) return '';
+// function buildSmartReminders(fp, bp) {
+//     const hour = new Date().getHours();
+//     if (hour < 12) return '';
 
-    // Build bacteria lookup map
-    const bacteriaFedMap = {};
-    bp.forEach(b => {
-        const genus = b.name.split(' ')[0].toLowerCase();
-        bacteriaFedMap[b.name.toLowerCase()] = b.fed_today;
-        bacteriaFedMap[genus]                = b.fed_today;
-    });
+//     // Build bacteria lookup map
+//     const bacteriaFedMap = {};
+//     bp.forEach(b => {
+//         const genus = b.name.split(' ')[0].toLowerCase();
+//         bacteriaFedMap[b.name.toLowerCase()] = b.fed_today;
+//         bacteriaFedMap[genus]                = b.fed_today;
+//     });
 
-    function isBacteriaFed(feedsTarget) {
-        if (!feedsTarget) return false;
-        const genus = feedsTarget.split(' ')[0].toLowerCase();
-        return bacteriaFedMap[feedsTarget.toLowerCase()]
-            || bacteriaFedMap[genus]
-            || false;
-    }
+//     function isBacteriaFed(feedsTarget) {
+//         if (!feedsTarget) return false;
+//         const genus = feedsTarget.split(' ')[0].toLowerCase();
+//         return bacteriaFedMap[feedsTarget.toLowerCase()]
+//             || bacteriaFedMap[genus]
+//             || false;
+//     }
 
-    // Classify food targets
-    const trulyMissed      = fp.filter(f =>
-        f.status === 'missed' && !isBacteriaFed(f.feeds));
-    const missedButFedElse = fp.filter(f =>
-        f.status === 'missed' && f.feeds && isBacteriaFed(f.feeds));
-    const partial          = fp.filter(f => f.status === 'partial');
-    const unfedBacteria    = bp.filter(b => !b.fed_today);
+//     // Classify food targets
+//     const trulyMissed      = fp.filter(f =>
+//         f.status === 'missed' && !isBacteriaFed(f.feeds));
+//     const missedButFedElse = fp.filter(f =>
+//         f.status === 'missed' && f.feeds && isBacteriaFed(f.feeds));
+//     const partial          = fp.filter(f => f.status === 'partial');
+//     const unfedBacteria    = bp.filter(b => !b.fed_today);
 
-    // All good!
-    if (!trulyMissed.length && !partial.length && !unfedBacteria.length) {
-        return `
-            <div class="reminder-card reminder-success">
-                <span class="reminder-icon">🎉</span>
-                <div>
-                    <div class="reminder-title" style="color:#22c55e">
-                        All targets on track today!
-                    </div>
-                    <div class="reminder-body">
-                        Your gut bacteria are being well fed. Keep it up!
-                    </div>
-                </div>
-            </div>`;
-    }
+//     // All good!
+//     if (!trulyMissed.length && !partial.length && !unfedBacteria.length) {
+//         return `
+//             <div class="reminder-card reminder-success">
+//                 <span class="reminder-icon">🎉</span>
+//                 <div>
+//                     <div class="reminder-title" style="color:#22c55e">
+//                         All targets on track today!
+//                     </div>
+//                     <div class="reminder-body">
+//                         Your gut bacteria are being well fed. Keep it up!
+//                     </div>
+//                 </div>
+//             </div>`;
+//     }
 
-    const isAfternoon = hour >= 12 && hour < 17;
-    const isEvening   = hour >= 17 && hour < 20;
-    const isNight     = hour >= 20;
+//     const isAfternoon = hour >= 12 && hour < 17;
+//     const isEvening   = hour >= 17 && hour < 20;
+//     const isNight     = hour >= 20;
 
-    const timeLabel = isAfternoon ? 'Afternoon check-in'
-                    : isEvening   ? 'Still time before dinner!'
-                    : "Today's summary";
-    const timeColor = isAfternoon ? '#f59e0b'
-                    : isEvening   ? '#f97316' : '#6366f1';
-    const timeIcon  = isAfternoon ? '☀️' : isEvening ? '🌆' : '🌙';
+//     const timeLabel = isAfternoon ? 'Afternoon check-in'
+//                     : isEvening   ? 'Still time before dinner!'
+//                     : "Today's summary";
+//     const timeColor = isAfternoon ? '#f59e0b'
+//                     : isEvening   ? '#f97316' : '#6366f1';
+//     const timeIcon  = isAfternoon ? '☀️' : isEvening ? '🌆' : '🌙';
 
-    const reminders = [];
+//     const reminders = [];
 
-    // Food missed but bacteria fed elsewhere — info only
-    missedButFedElse.forEach(f => {
-        reminders.push({
-            icon:   '💡',
-            text:   `<strong>${f.food}</strong> not eaten — but that's OK!`,
-            sub:    `${f.feeds ? f.feeds.split(' ')[0] : 'Target bacteria'} was already fed by other foods today.`,
-            alt:    '',
-            color:  '#22c55e',
-            isInfo: true
-        });
-    });
+//     // Food missed but bacteria fed elsewhere — info only
+//     missedButFedElse.forEach(f => {
+//         reminders.push({
+//             icon:   '💡',
+//             text:   `<strong>${f.food}</strong> not eaten — but that's OK!`,
+//             sub:    `${f.feeds ? f.feeds.split(' ')[0] : 'Target bacteria'} was already fed by other foods today.`,
+//             alt:    '',
+//             color:  '#22c55e',
+//             isInfo: true
+//         });
+//     });
 
-    // Truly missed — bacteria not fed by anything
-    trulyMissed.forEach(f => {
-        const alt = f.alternatives && f.alternatives.length
-            ? 'Or try: ' + f.alternatives.slice(0,2).join(', ') : '';
-        reminders.push({
-            icon:   '🔴',
-            text:   `<strong>${f.food}</strong> — not eaten today`,
-            sub:    isNight
-                    ? `Add ${f.food} to tomorrow's plan`
-                    : `Add ${f.food} (${f.target_grams}g) to your next meal`,
-            alt:    alt,
-            color:  '#ef4444',
-            isInfo: false
-        });
-    });
+//     // Truly missed — bacteria not fed by anything
+//     trulyMissed.forEach(f => {
+//         const alt = f.alternatives && f.alternatives.length
+//             ? 'Or try: ' + f.alternatives.slice(0,2).join(', ') : '';
+//         reminders.push({
+//             icon:   '🔴',
+//             text:   `<strong>${f.food}</strong> — not eaten today`,
+//             sub:    isNight
+//                     ? `Add ${f.food} to tomorrow's plan`
+//                     : `Add ${f.food} (${f.target_grams}g) to your next meal`,
+//             alt:    alt,
+//             color:  '#ef4444',
+//             isInfo: false
+//         });
+//     });
 
-    // Partial — only show before night
-    if (!isNight) {
-        partial.forEach(f => {
-            reminders.push({
-                icon:   '🟠',
-                text:   `<strong>${f.food}</strong> — ${f.eaten_grams}g of ${f.target_grams}g`,
-                sub:    `Have ${f.target_grams - f.eaten_grams}g more before dinner`,
-                alt:    '',
-                color:  '#f59e0b',
-                isInfo: false
-            });
-        });
-    }
+//     // Partial — only show before night
+//     if (!isNight) {
+//         partial.forEach(f => {
+//             reminders.push({
+//                 icon:   '🟠',
+//                 text:   `<strong>${f.food}</strong> — ${f.eaten_grams}g of ${f.target_grams}g`,
+//                 sub:    `Have ${f.target_grams - f.eaten_grams}g more before dinner`,
+//                 alt:    '',
+//                 color:  '#f59e0b',
+//                 isInfo: false
+//             });
+//         });
+//     }
 
-    // Unfed bacteria
-    unfedBacteria.slice(0,3).forEach(b => {
-        const genus = b.name.split(' ')[0];
-        reminders.push({
-            icon:   '🦠',
-            text:   `<strong>${b.name}</strong> not fed today`,
-            sub:    isNight
-                    ? `Feed ${genus} first thing tomorrow`
-                    : `Include a ${genus}-friendly food in your next meal`,
-            alt:    '',
-            color:  '#8b5cf6',
-            isInfo: false
-        });
-    });
+//     // Unfed bacteria
+//     unfedBacteria.slice(0,3).forEach(b => {
+//         const genus = b.name.split(' ')[0];
+//         reminders.push({
+//             icon:   '🦠',
+//             text:   `<strong>${b.name}</strong> not fed today`,
+//             sub:    isNight
+//                     ? `Feed ${genus} first thing tomorrow`
+//                     : `Include a ${genus}-friendly food in your next meal`,
+//             alt:    '',
+//             color:  '#8b5cf6',
+//             isInfo: false
+//         });
+//     });
 
-    if (!reminders.length) return '';
+//     if (!reminders.length) return '';
 
-    const metCount = fp.filter(f => f.status === 'met').length;
-    const fedCount = bp.filter(b => b.fed_today).length;
+//     const metCount = fp.filter(f => f.status === 'met').length;
+//     const fedCount = bp.filter(b => b.fed_today).length;
 
-    const summaryHtml = isNight && fp.length > 0 ? `
-        <div class="reminder-summary">
-            <span>🎯 ${metCount}/${fp.length} food targets met</span>
-            <span>🦠 ${fedCount}/${bp.length} bacteria fed</span>
-        </div>` : '';
+//     const summaryHtml = isNight && fp.length > 0 ? `
+//         <div class="reminder-summary">
+//             <span>🎯 ${metCount}/${fp.length} food targets met</span>
+//             <span>🦠 ${fedCount}/${bp.length} bacteria fed</span>
+//         </div>` : '';
 
-    const items = reminders.map(r => `
-        <div class="reminder-item ${r.isInfo ? 'reminder-item-info' : ''}">
-            <span class="reminder-item-icon">${r.icon}</span>
-            <div class="reminder-item-body">
-                <div class="reminder-item-text">${r.text}</div>
-                <div class="reminder-item-sub"
-                     style="${r.isInfo ? 'color:#22c55e' : ''}">
-                    ${r.sub}
-                </div>
-                ${r.alt ? `<div class="reminder-item-alt">${r.alt}</div>` : ''}
-            </div>
-        </div>`).join('');
+//     const items = reminders.map(r => `
+//         <div class="reminder-item ${r.isInfo ? 'reminder-item-info' : ''}">
+//             <span class="reminder-item-icon">${r.icon}</span>
+//             <div class="reminder-item-body">
+//                 <div class="reminder-item-text">${r.text}</div>
+//                 <div class="reminder-item-sub"
+//                      style="${r.isInfo ? 'color:#22c55e' : ''}">
+//                     ${r.sub}
+//                 </div>
+//                 ${r.alt ? `<div class="reminder-item-alt">${r.alt}</div>` : ''}
+//             </div>
+//         </div>`).join('');
 
-    return `
-        <div class="reminder-card" style="border-color:${timeColor}">
-            <div class="reminder-header">
-                <span class="reminder-icon">${timeIcon}</span>
-                <div>
-                    <div class="reminder-title" style="color:${timeColor}">
-                        ${timeLabel}
-                    </div>
-                    <div class="reminder-subtitle">
-                        ${isNight ? 'Here\'s how today went'
-                                  : 'Here\'s what to focus on'}
-                    </div>
-                </div>
-            </div>
-            ${summaryHtml}
-            <div class="reminder-items">${items}</div>
-        </div>`;
-}
+//     return `
+//         <div class="reminder-card" style="border-color:${timeColor}">
+//             <div class="reminder-header">
+//                 <span class="reminder-icon">${timeIcon}</span>
+//                 <div>
+//                     <div class="reminder-title" style="color:${timeColor}">
+//                         ${timeLabel}
+//                     </div>
+//                     <div class="reminder-subtitle">
+//                         ${isNight ? 'Here\'s how today went'
+//                                   : 'Here\'s what to focus on'}
+//                     </div>
+//                 </div>
+//             </div>
+//             ${summaryHtml}
+//             <div class="reminder-items">${items}</div>
+//         </div>`;
+// }
 
 function buildSmartReminders(fp, bp) {
     const hour = new Date().getHours();
@@ -995,401 +1117,7 @@ function togglePlanSection(sectionId, arrowId) {
     section.style.display = isOpen ? 'none' : 'block';
     if (arrow) arrow.textContent = isOpen ? '›' : '↓';
 }
-// function renderFoodPlan(container, data) {
-//     const fp = data.food_progress     || [];
-//     const bp = data.bacteria_progress || [];
-//     const fa = data.foods_add         || [];
-//     const fr = data.foods_reduce      || [];
 
-//     // ── Bacteria summary pills (compact top view) ──────────────────────────
-//     const allFed    = bp.every(b => b.fed_today);
-//     const fedCount  = bp.filter(b => b.fed_today).length;
-//     const totalBact = bp.length;
-
-//     const bacteriaPillsHtml = bp.length ? `
-//         <div class="bact-summary-row">
-//             ${bp.map(b => {
-//                 const color = b.fed_today ? '#22c55e' : '#ef4444';
-//                 const bg    = b.fed_today
-//                               ? 'rgba(34,197,94,0.12)'
-//                               : 'rgba(239,68,68,0.12)';
-//                 const icon  = b.fed_today ? '✅' : '❌';
-//                 const genus = b.name.split(' ')[0];
-//                 return `
-//                     <div class="bact-pill" style="border-color:${color};background:${bg}"
-//                          onclick="toggleBactDetail('bd-${bp.indexOf(b)}')">
-//                         <span class="bact-pill-icon">${icon}</span>
-//                         <span class="bact-pill-name">${genus}</span>
-//                         ${b.fed_today
-//                             ? `<span class="bact-pill-count"
-//                                     style="color:${color}">${b.fed_count}x</span>`
-//                             : ''}
-//                     </div>
-//                     <div class="bact-detail" id="bd-${bp.indexOf(b)}">
-//                         <strong>${b.name}</strong>
-//                         ${b.fed_today
-//                             ? `<div>Via: ${b.fed_by.join(', ')}</div>`
-//                             : `<div style="color:#ef4444">Not fed today</div>`}
-//                         ${b.functions && b.functions.length
-//                             ? `<div>Supports: ${b.functions.join(', ')}</div>`
-//                             : ''}
-//                     </div>`;
-//             }).join('')}
-//         </div>` : '';
-
-//     // Detailed bacteria bars (collapsed by default if all fed)
-//     const bacteriaDetailHtml = bp.map(b => {
-//         const pct   = Math.min(100, Math.round((b.fed_count / 3) * 100));
-//         const color = b.fed_today ? '#22c55e' : '#ef4444';
-//         return `
-//             <div class="bacteria-boost-row">
-//                 <div class="bacteria-boost-header">
-//                     <span class="bacteria-boost-name">
-//                         ${b.fed_today ? '✅' : '❌'} ${b.name}
-//                     </span>
-//                     <span class="bacteria-boost-status" style="color:${color}">
-//                         ${b.fed_today ? `Fed ${b.fed_count}x` : 'Not fed'}
-//                     </span>
-//                 </div>
-//                 <div class="bacteria-boost-bar-row">
-//                     <div class="gut-bar-bg" style="flex:1">
-//                         <div class="gut-bar-fill"
-//                              style="width:${pct}%;background:${color}"></div>
-//                     </div>
-//                     <span class="bacteria-boost-pct" style="color:${color}">
-//                         ${pct}%
-//                     </span>
-//                 </div>
-//                 ${b.fed_by && b.fed_by.length
-//                     ? `<div class="plan-food-meta">Via: ${b.fed_by.join(', ')}</div>`
-//                     : ''}
-//                 ${!b.fed_today
-//                     ? `<div class="plan-food-alt">
-//                            Include a ${b.name.split(' ')[0]}-friendly food next
-//                        </div>`
-//                     : ''}
-//             </div>`;
-//     }).join('');
-
-//     // ── Food targets table (compact) ───────────────────────────────────────
-//     const foodTableRows = fp.map(f => {
-//         const color = f.status === 'met'     ? '#22c55e'
-//                     : f.status === 'partial' ? '#f59e0b' : '#ef4444';
-//         const icon  = f.status === 'met' ? '✅'
-//                     : f.status === 'partial' ? '⚠️' : '❌';
-//         const pct   = Math.min(100, f.pct);
-//         return `
-//             <tr>
-//                 <td class="plan-table-food">
-//                     ${icon} ${f.food}
-//                     ${f.feeds
-//                         ? `<div class="plan-table-feeds">
-//                                → ${f.feeds.split(' ')[0]}
-//                            </div>`
-//                         : ''}
-//                 </td>
-//                 <td class="plan-table-target">${f.target_grams}g</td>
-//                 <td class="plan-table-eaten" style="color:${color}">
-//                     ${f.eaten_grams}g
-//                 </td>
-//                 <td class="plan-table-bar">
-//                     <div class="gut-bar-bg" style="height:6px">
-//                         <div class="gut-bar-fill"
-//                              style="width:${pct}%;background:${color};height:6px">
-//                         </div>
-//                     </div>
-//                 </td>
-//             </tr>`;
-//     }).join('');
-
-//     const foodTable = fp.length ? `
-//         <div class="table-container">
-//             <table class="nutrition-table plan-table">
-//                 <thead>
-//                     <tr>
-//                         <th>Food</th>
-//                         <th>Target</th>
-//                         <th>Eaten</th>
-//                         <th>Progress</th>
-//                     </tr>
-//                 </thead>
-//                 <tbody>${foodTableRows}</tbody>
-//             </table>
-//         </div>` : `
-//         <div class="plan-empty">
-//             <p class="hint">No food targets set.</p>
-//             <button class="btn-small"
-//                     onclick="showGutTab('profile',
-//                         document.querySelectorAll('.gut-tab')[3])">
-//                 Add in Profile →
-//             </button>
-//         </div>`;
-
-//     // ── Report recommendations (collapsed) ────────────────────────────────
-//     const reportHtml = (fa.length || fr.length) ? `
-//         <div class="card plan-collapse-card" style="margin-top:12px">
-//             <div class="plan-collapse-header"
-//                  onclick="togglePlanSection('report-section')">
-//                 <span>📋 Report Recommendations</span>
-//                 <span class="plan-collapse-arrow" id="report-arrow">›</span>
-//             </div>
-//             <div id="report-section" style="display:none;margin-top:12px">
-//                 ${fa.length ? `
-//                     <div class="plan-section-label">✅ Add to diet:</div>
-//                     <div class="plan-tags">
-//                         ${fa.map(f =>
-//                             `<span class="plan-tag plan-tag-add">${f}</span>`
-//                         ).join('')}
-//                     </div>` : ''}
-//                 ${fr.length ? `
-//                     <div class="plan-section-label" style="margin-top:10px">
-//                         ❌ Reduce:
-//                     </div>
-//                     <div class="plan-tags">
-//                         ${fr.map(f =>
-//                             `<span class="plan-tag plan-tag-reduce">${f}</span>`
-//                         ).join('')}
-//                     </div>` : ''}
-//             </div>
-//         </div>` : '';
-
-//     // ── Reminder (collapsible) ─────────────────────────────────────────────
-//     const rawReminder = buildSmartReminders(fp, bp);
-//     const reminderHtml = rawReminder ? `
-//         <div class="plan-collapse-card" style="margin-bottom:12px">
-//             <div class="plan-collapse-header reminder-collapse-header"
-//                  onclick="togglePlanSection('reminder-section','reminder-arrow')">
-//                 <span>
-//                     ${rawReminder.includes('reminder-success')
-//                         ? '🎉 All targets on track!'
-//                         : '⚠️ Action needed today'}
-//                 </span>
-//                 <span class="plan-collapse-arrow" id="reminder-arrow">›</span>
-//             </div>
-//             <div id="reminder-section" style="display:none;margin-top:12px">
-//                 ${rawReminder}
-//             </div>
-//         </div>` : '';
-
-//     // ── Assemble — bacteria FIRST ──────────────────────────────────────────
-//     container.innerHTML = `
-
-//         <!-- Collapsible reminder at top -->
-//         ${reminderHtml}
-
-//         <!-- Bacteria boost — FIRST, most important -->
-//         <div class="card">
-//             <div class="plan-section-header">
-//                 <h3 style="color:white;margin:0">🦠 Bacteria Boost</h3>
-//                 <span class="plan-fed-badge">
-//                     ${fedCount}/${totalBact} fed today
-//                 </span>
-//             </div>
-
-//             <!-- Compact pills -->
-//             ${bacteriaPillsHtml}
-
-//             <!-- Detailed bars (collapsible) -->
-//             <div class="plan-collapse-header"
-//                  style="margin-top:12px"
-//                  onclick="togglePlanSection('bact-detail-section','bact-detail-arrow')">
-//                 <span style="font-size:.8rem;color:#9ca3af">Show detail</span>
-//                 <span class="plan-collapse-arrow" id="bact-detail-arrow">›</span>
-//             </div>
-//             <div id="bact-detail-section" style="display:none;margin-top:8px">
-//                 ${bacteriaDetailHtml}
-//             </div>
-//         </div>
-
-//         <!-- Food targets table -->
-//         <div class="card" style="margin-top:12px">
-//             <div class="plan-section-header">
-//                 <h3 style="color:white;margin:0">🎯 Food Targets</h3>
-//                 <span style="font-size:.78rem;color:#9ca3af">
-//                     ${new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})}
-//                 </span>
-//             </div>
-//             ${foodTable}
-//         </div>
-
-//         <!-- Report recommendations (collapsed) -->
-//         ${reportHtml}
-
-//         <!-- Log meal CTA -->
-//         <div style="text-align:center;padding:16px">
-//             <button class="btn-primary"
-//                     onclick="window.scrollTo({top:0,behavior:'smooth'})">
-//                 📷 Log a Meal
-//             </button>
-//         </div>`;
-// }
-
-// // ── Helpers ───────────────────────────────────────────────────────────────────
-// function toggleBactDetail(id) {
-//     const el = document.getElementById(id);
-//     if (!el) return;
-//     el.style.display = el.style.display === 'none' ? 'block' : 'none';
-// }
-
-// function togglePlanSection(sectionId, arrowId) {
-//     const section = document.getElementById(sectionId);
-//     const arrow   = document.getElementById(arrowId);
-//     if (!section) return;
-//     const isOpen = section.style.display !== 'none';
-//     section.style.display = isOpen ? 'none' : 'block';
-//     if (arrow) arrow.textContent = isOpen ? '›' : '↓';
-// }
-
-// function renderFoodPlan(container, data) {
-//     const fp = data.food_progress     || [];
-//     const bp = data.bacteria_progress || [];
-//     const fa = data.foods_add         || [];
-//     const fr = data.foods_reduce      || [];
-
-//     // ── Food targets table ─────────────────────────────────────────────────
-//     const foodTableRows = fp.map(f => {
-//         const color = f.status === 'met'     ? '#22c55e'
-//                     : f.status === 'partial' ? '#f59e0b' : '#ef4444';
-//         const icon  = f.status === 'met' ? '✅' : f.status === 'partial' ? '⚠️' : '❌';
-//         const pct   = Math.min(100, f.pct);
-//         return `
-//             <tr>
-//                 <td class="plan-table-food">
-//                     ${icon} ${f.food}
-//                     ${f.feeds
-//                         ? `<div class="plan-table-feeds">→ ${f.feeds.split(' ')[0]}</div>`
-//                         : ''}
-//                 </td>
-//                 <td class="plan-table-target">${f.target_grams}g</td>
-//                 <td class="plan-table-eaten" style="color:${color}">
-//                     ${f.eaten_grams}g
-//                 </td>
-//                 <td class="plan-table-bar">
-//                     <div class="gut-bar-bg" style="height:8px">
-//                         <div class="gut-bar-fill"
-//                              style="width:${pct}%;background:${color};height:8px">
-//                         </div>
-//                     </div>
-//                     <span class="plan-table-pct" style="color:${color}">
-//                         ${pct}%
-//                     </span>
-//                 </td>
-//             </tr>`;
-//     }).join('');
-
-//     const foodTable = fp.length ? `
-//         <div class="table-container">
-//             <table class="nutrition-table plan-table">
-//                 <thead>
-//                     <tr>
-//                         <th>Food</th>
-//                         <th>Target</th>
-//                         <th>Eaten</th>
-//                         <th>Progress</th>
-//                     </tr>
-//                 </thead>
-//                 <tbody>${foodTableRows}</tbody>
-//             </table>
-//         </div>` : `
-//         <div class="plan-empty">
-//             <p class="hint">No food targets set.</p>
-//             <button class="btn-small"
-//                     onclick="showGutTab('profile',
-//                         document.querySelectorAll('.gut-tab')[3])">
-//                 Add in Profile →
-//             </button>
-//         </div>`;
-
-//     // ── Bacteria boost bars ────────────────────────────────────────────────
-//     const bacteriaHtml = bp.length ? bp.map(b => {
-//         const dailyTarget = 3;
-//         const pct   = Math.min(100, Math.round((b.fed_count / dailyTarget) * 100));
-//         const color = b.fed_today ? '#22c55e' : '#ef4444';
-//         return `
-//             <div class="bacteria-boost-row">
-//                 <div class="bacteria-boost-header">
-//                     <span class="bacteria-boost-name">
-//                         ${b.fed_today ? '✅' : '❌'} ${b.name}
-//                     </span>
-//                     <span class="bacteria-boost-status" style="color:${color}">
-//                         ${b.fed_today ? `Fed ${b.fed_count}x today` : 'Not fed today'}
-//                     </span>
-//                 </div>
-//                 <div class="bacteria-boost-bar-row">
-//                     <div class="gut-bar-bg" style="flex:1">
-//                         <div class="gut-bar-fill"
-//                              style="width:${pct}%;background:${color}">
-//                         </div>
-//                     </div>
-//                     <span class="bacteria-boost-pct" style="color:${color}">
-//                         ${pct}%
-//                     </span>
-//                 </div>
-//                 ${b.functions && b.functions.length
-//                     ? `<div class="plan-food-meta">Supports: ${b.functions.join(', ')}</div>`
-//                     : ''}
-//                 ${b.fed_by && b.fed_by.length
-//                     ? `<div class="plan-food-meta">Via: ${b.fed_by.join(', ')}</div>`
-//                     : ''}
-//                 ${!b.fed_today
-//                     ? `<div class="plan-food-alt">Log a meal with foods that feed ${b.name.split(' ')[0]}</div>`
-//                     : ''}
-//             </div>`;
-//     }).join('') : `<p class="hint">No bacteria targets set.</p>`;
-
-//     // ── Report recommendations ─────────────────────────────────────────────
-//     const reportHtml = (fa.length || fr.length) ? `
-//         <div class="card" style="margin-top:12px">
-//             <h3 style="color:white;margin-bottom:12px">📋 From Your Gut Report</h3>
-//             ${fa.length ? `
-//                 <div class="plan-section-label">✅ Add to diet:</div>
-//                 <div class="plan-tags">
-//                     ${fa.map(f => `<span class="plan-tag plan-tag-add">${f}</span>`).join('')}
-//                 </div>` : ''}
-//             ${fr.length ? `
-//                 <div class="plan-section-label" style="margin-top:12px">❌ Reduce:</div>
-//                 <div class="plan-tags">
-//                     ${fr.map(f => `<span class="plan-tag plan-tag-reduce">${f}</span>`).join('')}
-//                 </div>` : ''}
-//         </div>` : '';
-
-//     // ── Build reminders ────────────────────────────────────────────────────
-//     const remindersHtml = buildSmartReminders(fp, bp);
-
-//     container.innerHTML = `
-//         ${remindersHtml}
-
-//         <div class="card">
-//             <h2>🥗 My Food Plan — Today</h2>
-//             <p class="hint" style="margin-bottom:12px">
-//                 ${new Date().toLocaleDateString('en-AU', {
-//                     weekday: 'long', day: 'numeric', month: 'long'
-//                 })}
-//             </p>
-//             <div class="plan-section-label">🎯 Doctor's Food Targets</div>
-//             ${foodTable}
-//         </div>
-
-//         <div class="card" style="margin-top:12px">
-//             <h3 style="color:white;margin-bottom:12px">
-//                 🦠 Bacteria Boost Progress
-//             </h3>
-//             <p class="hint" style="margin-bottom:12px">
-//                 Target: fed at least once today
-//             </p>
-//             ${bacteriaHtml}
-//         </div>
-
-//         ${reportHtml}
-
-//         <div class="card" style="margin-top:12px;text-align:center;padding:16px">
-//             <p class="hint">Log a meal to update your progress</p>
-//             <button class="btn-primary" style="margin-top:8px"
-//                     onclick="window.scrollTo({top:0,behavior:'smooth'})">
-//                 📷 Log a Meal
-//             </button>
-//         </div>`;
-// }
 // ── Profile helpers ────────────────────────────────────────────────────────────
 function addBoostBacteria() {
     const name = document.getElementById('new-boost-name').value.trim();

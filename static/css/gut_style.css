@@ -797,3 +797,43 @@
     padding-top: 8px;
     border-top: 1px solid rgba(255,255,255,.07);
 }
+.scorecard-date-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(99,102,241,.12);
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    font-size: .8rem;
+    color: #a5b4fc;
+}
+.scorecard-date-hint {
+    font-size: .72rem;
+    color: #6b7280;
+}
+.scorecard-week-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 6px 0;
+}
+.scorecard-week-nav button {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    color: #d1d5db;
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: .8rem;
+}
+.scorecard-week-nav button:active {
+    background: rgba(255,255,255,.12);
+}
+.scorecard-week-nav span {
+    font-size: .85rem;
+    font-weight: 600;
+    color: white;
+}
