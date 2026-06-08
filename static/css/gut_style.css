@@ -1381,3 +1381,97 @@
     border-color: #e2e8f0;
     color: #94a3b8;
 }
+/* ── Light mode text visibility fixes ─────────── */
+
+/* Gut Health Tracker header title */
+.gut-header-card h2 {
+    color: #0d5c38;
+    font-weight: 700;
+}
+
+/* Score circle subtitle text */
+.gut-score-notes {
+    color: #334155;
+    font-weight: 500;
+}
+
+/* Section titles — Bacteria Nourished etc */
+.gut-section-title {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.gut-section-hint {
+    color: #64748b;
+    font-size: .72rem;
+}
+
+/* Score tile labels */
+.gut-tile-label {
+    color: #475569;
+    font-weight: 600;
+}
+
+/* Bacteria row names */
+.bacteria-row-name {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.bacteria-row-count {
+    color: #475569;
+}
+
+.bacteria-strength-badge {
+    color: #475569;
+}
+
+/* Scorecard header h2 */
+.gut-scorecard-header h2 {
+    color: #0f172a;
+}
+
+/* Weekly/Monthly tab buttons */
+.scorecard-tab {
+    color: #475569;
+    font-weight: 600;
+}
+
+.scorecard-tab.active {
+    background: #0d5c38;
+    color: white;
+}
+
+/* Overall score box text */
+.gut-score-title {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+/* Plant diversity */
+.plant-header {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* Gut disclaimer text */
+.gut-disclaimer {
+    color: #92400e;
+    font-weight: 500;
+}
+
+/* Tab bar inactive labels */
+.gut-tab-label {
+    color: inherit;
+    font-size: .65rem;
+    font-weight: 600;
+}
+
+/* History section */
+.hist-date-header {
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.ribbon-slot-label {
+    font-weight: 700;
+}

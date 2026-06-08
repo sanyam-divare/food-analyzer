@@ -8,12 +8,20 @@ let gutPatientId      = localStorage.getItem('gutPatientId') || 'guest';
 let gutScorecardView  = 'daily';
 let gutActiveTab      = 'scorecard';
 let gutProfile        = null;
+let gutDailyOffset = 0;  // 0 = today, -1 = yesterday, -2 = two days ago
 let gutWeekOffset   = 0;  // 0 = current week, -1 = last week
 let gutMonthOffset  = 0;
 
 function initGutMode() {
     console.log('🦠 Gut mode initialised');
     renderGutDashboard();
+}
+
+function shiftDay(dir) {
+    gutDailyOffset += dir;
+    // Don't allow future dates
+    if (gutDailyOffset > 0) gutDailyOffset = 0;
+    loadGutScorecard();
 }
 
 function shiftWeek(dir) {
@@ -124,71 +132,35 @@ function switchScorecardView(view, btn) {
     loadGutScorecard();
 }
 
-// async function loadGutScorecard() {
-//     const container = document.getElementById('gut-scorecard');
-//     if (!container) return;
-//     container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Loading...</p></div>`;
-//     try {
-//         const today = new Date().toLocaleDateString('en-CA');
-//         let url = '';
-//         if (gutScorecardView === 'daily') {
-//             url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${today}`;
-//         } else if (gutScorecardView === 'weekly') {
-//             const now = new Date();
-//             const mon = new Date(now);
-//             mon.setDate(now.getDate() - now.getDay() + 1);
-//             url = `/gut/scorecard/weekly?patient_id=${gutPatientId}&week_start=${mon.toLocaleDateString('en-CA')}`;
-//         } else {
-//             const now = new Date();
-//             url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${now.getFullYear()}&month=${now.getMonth()+1}`;
-//         }
-//         const res  = await fetch(url);
-//         const data = await res.json();
-//         if (data.error) { container.innerHTML = `<p class="hint">Error: ${data.error}</p>`; return; }
-//         if (gutScorecardView === 'daily')   renderDailyScorecard(container, data);
-//         if (gutScorecardView === 'weekly')  renderWeeklyScorecard(container, data);
-//         if (gutScorecardView === 'monthly') renderMonthlyScorecard(container, data);
-//     } catch (err) {
-//         container.innerHTML = `<p class="hint">Could not load: ${err.message}</p>`;
-//     }
-// }
-
 async function loadGutScorecard() {
     const container = document.getElementById('gut-scorecard');
     if (!container) return;
     container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Loading...</p></div>`;
+
     try {
-        const today = new Date().toLocaleDateString('en-CA');
+        // ── Build URL ──────────────────────────────────────────────────────
         let url = '';
 
         if (gutScorecardView === 'daily') {
-            url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${today}`;
-        } else if (gutScorecardView === 'weekly') {
-            const now = new Date();
-            const mon = new Date(now);
-            const dayOfWeek = now.getDay();
-            const daysBack  = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            mon.setDate(now.getDate() - daysBack + (gutWeekOffset * 7));
-            const weekLabel = gutWeekOffset === 0 ? 'This Week'
-                            : gutWeekOffset === -1 ? 'Last Week'
-                            : mon.toLocaleDateString('en-AU', {day:'numeric', month:'short'});
-            document.getElementById('week-nav-label') &&
-                (document.getElementById('week-nav-label').textContent = weekLabel);
-            url = `/gut/scorecard/weekly?patient_id=${gutPatientId}&week_start=${mon.toLocaleDateString('en-CA')}`;
-            
-        // } else {
-        //     const now = new Date();
-        //     url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${now.getFullYear()}&month=${now.getMonth()+1}`;
-        // }
-        } else {
             const now  = new Date();
-            const year = now.getFullYear();
-            const mon  = now.getMonth() + 1 + gutMonthOffset;
-            // Handle year rollover
-            const adjYear  = year + Math.floor((mon - 1) / 12);
-            const adjMonth = ((mon - 1 + 120) % 12) + 1;
+            now.setDate(now.getDate() + gutDailyOffset);
+            url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${now.toLocaleDateString('en-CA')}`;
+
+        } else if (gutScorecardView === 'weekly') {
+            const now  = new Date();
+            const from = new Date(now);
+            from.setDate(now.getDate() - 6 + (gutWeekOffset * 7));
+            url = `/gut/scorecard/weekly?patient_id=${gutPatientId}&week_start=${from.toLocaleDateString('en-CA')}&days=7`;
+
+        } else {
+            const now      = new Date();
+            const rawMonth = now.getMonth() + 1 + gutMonthOffset;
+            const adjYear  = now.getFullYear() + Math.floor((rawMonth - 1) / 12);
+            const adjMonth = ((rawMonth - 1 + 120) % 12) + 1;
             url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${adjYear}&month=${adjMonth}`;
         }
+
+        // ── Fetch ──────────────────────────────────────────────────────────
         const res  = await fetch(url);
         const data = await res.json();
 
@@ -196,73 +168,308 @@ async function loadGutScorecard() {
             container.innerHTML = `<p class="hint">Error: ${data.error}</p>`;
             return;
         }
-        // After rendering weekly scorecard, add nav buttons
-        if (gutScorecardView === 'weekly') {
+
+        // ── Render ─────────────────────────────────────────────────────────
+        if (gutScorecardView === 'daily') {
+
+            const navNow = new Date();
+            navNow.setDate(navNow.getDate() + gutDailyOffset);
+            const dateLabel = gutDailyOffset ===  0 ? 'Today'
+                            : gutDailyOffset === -1 ? 'Yesterday'
+                            : navNow.toLocaleDateString('en-AU', {
+                                weekday: 'short',
+                                day:     'numeric',
+                                month:   'short'
+                              });
+
+            if (!data.meal_count || data.meal_count === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center;padding:32px 16px">
+                        <div style="font-size:2rem;margin-bottom:8px">🍽️</div>
+                        <p class="hint">No meals logged ${
+                            gutDailyOffset === 0 ? 'today' : 'on this day'
+                        } yet.</p>
+                        ${gutDailyOffset === 0
+                            ? `<p class="hint" style="margin-top:6px">
+                                   Log your first meal above!
+                               </p>`
+                            : ''}
+                    </div>`;
+            } else {
+                renderDailyScorecard(container, data);
+            }
+
+            // Nav always added last — never gets wiped
+            const nav = document.createElement('div');
+            nav.className = 'scorecard-week-nav';
+            nav.innerHTML = `
+                <button onclick="shiftDay(-1)">← Prev</button>
+                <span>${dateLabel}</span>
+                <button onclick="shiftDay(1)"
+                        ${gutDailyOffset >= 0
+                            ? 'disabled style="opacity:.4"' : ''}>
+                    Next →
+                </button>`;
+            container.insertBefore(nav, container.firstChild);
+
+        } else if (gutScorecardView === 'weekly') {
+
+            renderWeeklyScorecard(container, data);
+
+            const now  = new Date();
+            const from = new Date(now);
+            const to   = new Date(now);
+            from.setDate(now.getDate() - 6 + (gutWeekOffset * 7));
+            to.setDate(now.getDate() + (gutWeekOffset * 7));
+            const weekLabel = gutWeekOffset === 0
+                ? 'Last 7 Days'
+                : `${from.toLocaleDateString('en-AU', {day:'numeric',month:'short'})}–${to.toLocaleDateString('en-AU', {day:'numeric',month:'short'})}`;
+
             const nav = document.createElement('div');
             nav.className = 'scorecard-week-nav';
             nav.innerHTML = `
                 <button onclick="shiftWeek(-1)">← Prev</button>
-                <span id="week-nav-label"></span>
-                <button onclick="shiftWeek(1)">Next →</button>`;
+                <span>${weekLabel}</span>
+                <button onclick="shiftWeek(1)"
+                        ${gutWeekOffset >= 0
+                            ? 'disabled style="opacity:.4"' : ''}>
+                    Next →
+                </button>`;
+            container.insertBefore(nav, container.firstChild);
+
+        } else {
+
+            renderMonthlyScorecard(container, data);
+
+            const now      = new Date();
+            const rawMonth = now.getMonth() + 1 + gutMonthOffset;
+            const adjYear  = now.getFullYear() + Math.floor((rawMonth - 1) / 12);
+            const adjMonth = ((rawMonth - 1 + 120) % 12) + 1;
+            const mNames   = ['Jan','Feb','Mar','Apr','May','Jun',
+                              'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+            const nav = document.createElement('div');
+            nav.className = 'scorecard-week-nav';
+            nav.innerHTML = `
+                <button onclick="shiftMonth(-1)">← Prev</button>
+                <span>${mNames[adjMonth-1]} ${adjYear}</span>
+                <button onclick="shiftMonth(1)"
+                        ${gutMonthOffset >= 0
+                            ? 'disabled style="opacity:.4"' : ''}>
+                    Next →
+                </button>`;
             container.insertBefore(nav, container.firstChild);
         }
 
-        // ── If today has no meals, auto-fallback to last date with data ──
-        if (gutScorecardView === 'daily' && (!data.meal_count || data.meal_count === 0)) {
-            const fallback = await fetchLastMealDate();
-            if (fallback && fallback !== today) {
-                const res2  = await fetch(
-                    `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${fallback}`
-                );
-                const data2 = await res2.json();
-                if (data2.meal_count > 0) {
-                    renderDailyScorecard(container, data2);
-                    // Show which date is being shown
-                    const banner = document.createElement('div');
-                    banner.className = 'scorecard-date-banner';
-                    banner.innerHTML = `
-                        <span>📅 Showing ${fallback}</span>
-                        <span class="scorecard-date-hint">
-                            No meals logged today yet
-                        </span>`;
-                    container.insertBefore(banner, container.firstChild);
-                    return;
-                }
-            }
-            // Truly no data at all
-            container.innerHTML = `
-                <div style="text-align:center;padding:32px 16px">
-                    <div style="font-size:2.5rem;margin-bottom:12px">🍽️</div>
-                    <p class="hint">No meals logged yet.</p>
-                    <p class="hint" style="margin-top:8px">
-                        Log your first meal to see your gut scorecard!
-                    </p>
-                </div>`;
-            return;
-        }
-
-        if (gutScorecardView === 'daily')   renderDailyScorecard(container, data);
-        if (gutScorecardView === 'weekly')  renderWeeklyScorecard(container, data);
-        if (gutScorecardView === 'monthly') renderMonthlyScorecard(container, data);
-
     } catch (err) {
-        container.innerHTML = `<p class="hint">Could not load: ${err.message}</p>`;
+        container.innerHTML =
+            `<p class="hint">Could not load: ${err.message}</p>`;
     }
 }
 
-// Helper — get last date that has meal data
 async function fetchLastMealDate() {
     try {
         const res  = await fetch(`/gut/history?patient_id=${gutPatientId}`);
         const data = await res.json();
         if (!data.length) return null;
-        // Get most recent meal's date
         const last = data[data.length - 1];
         return (last.timestamp || last.date || '').slice(0, 10);
     } catch {
         return null;
     }
 }
+
+// async function loadGutScorecard() {
+//     const container = document.getElementById('gut-scorecard');
+//     if (!container) return;
+//     container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Loading...</p></div>`;
+
+//     try {
+//         const today = new Date().toLocaleDateString('en-CA');
+//         let url = '';
+
+//         // if (gutScorecardView === 'daily') {
+//         //     url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${today}`;
+//         // if (gutScorecardView === 'daily') {
+//         //     const now  = new Date();
+//         //     now.setDate(now.getDate() + gutDailyOffset);
+//         //     const date = now.toLocaleDateString('en-CA');
+//         //     url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${date}`;
+//         // ── Daily: render + nav + empty state ─────────────────────────────
+//         if (gutScorecardView === 'daily') {
+
+//             // Helper to get nav label
+//             const navNow = new Date();
+//             navNow.setDate(navNow.getDate() + gutDailyOffset);
+//             const dateLabel = gutDailyOffset ===  0 ? 'Today'
+//                             : gutDailyOffset === -1 ? 'Yesterday'
+//                             : navNow.toLocaleDateString('en-AU', {
+//                                 weekday:'short',
+//                                 day:'numeric',
+//                                 month:'short'
+//                               });
+
+//             // Empty state — no meals this day
+//             if (!data.meal_count || data.meal_count === 0) {
+//                 container.innerHTML = `
+//                     <div style="text-align:center;padding:32px 16px">
+//                         <div style="font-size:2rem;margin-bottom:8px">
+//                             🍽️
+//                         </div>
+//                         <p class="hint">
+//                             No meals logged ${
+//                                 gutDailyOffset === 0
+//                                     ? 'today' : 'on this day'
+//                             } yet.
+//                         </p>
+//                         ${gutDailyOffset === 0
+//                             ? `<p class="hint" style="margin-top:6px">
+//                                    Log your first meal above!
+//                                </p>`
+//                             : ''}
+//                     </div>`;
+//             } else {
+//                 // Has data — render scorecard
+//                 renderDailyScorecard(container, data);
+//             }
+
+//             // Always add nav for daily (even on empty days)
+//             const nav = document.createElement('div');
+//             nav.className = 'scorecard-week-nav';
+//             nav.innerHTML = `
+//                 <button onclick="shiftDay(-1)">← Prev</button>
+//                 <span>${dateLabel}</span>
+//                 <button onclick="shiftDay(1)"
+//                         ${gutDailyOffset >= 0
+//                             ? 'disabled style="opacity:.4"'
+//                             : ''}>
+//                     Next →
+//                 </button>`;
+//             container.insertBefore(nav, container.firstChild);
+//             return;
+        
+
+//         } else if (gutScorecardView === 'weekly') {
+//             const now  = new Date();
+//             const from = new Date(now);
+//             from.setDate(now.getDate() - 6 + (gutWeekOffset * 7));
+//             url = `/gut/scorecard/weekly?patient_id=${gutPatientId}&week_start=${from.toLocaleDateString('en-CA')}&days=7`;
+
+//         } else {
+//             const now      = new Date();
+//             const rawMonth = now.getMonth() + 1 + gutMonthOffset;
+//             const adjYear  = now.getFullYear() + Math.floor((rawMonth - 1) / 12);
+//             const adjMonth = ((rawMonth - 1 + 120) % 12) + 1;
+//             url = `/gut/scorecard/monthly?patient_id=${gutPatientId}&year=${adjYear}&month=${adjMonth}`;
+//         }
+
+//         const res  = await fetch(url);
+//         const data = await res.json();
+
+//         if (data.error) {
+//             container.innerHTML = `<p class="hint">Error: ${data.error}</p>`;
+//             return;
+//         }
+
+//         // Daily — fallback to last date with data if today empty
+//         if (gutScorecardView === 'daily' &&
+//             (!data.meal_count || data.meal_count === 0)) {
+//             const fallback = await fetchLastMealDate();
+//             if (fallback && fallback !== today) {
+//                 const res2  = await fetch(
+//                     `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${fallback}`
+//                 );
+//                 const data2 = await res2.json();
+//                 if (data2.meal_count > 0) {
+//                     renderDailyScorecard(container, data2);
+//                     const banner = document.createElement('div');
+//                     banner.className = 'scorecard-date-banner';
+//                     banner.innerHTML = `
+//                         <span>📅 Showing ${fallback}</span>
+//                         <span class="scorecard-date-hint">
+//                             No meals logged today yet
+//                         </span>`;
+//                     container.insertBefore(banner, container.firstChild);
+//                     return;
+//                 }
+//             }
+//             container.innerHTML = `
+//                 <div style="text-align:center;padding:32px 16px">
+//                     <div style="font-size:2.5rem;margin-bottom:12px">🍽️</div>
+//                     <p class="hint">No meals logged yet.</p>
+//                     <p class="hint" style="margin-top:8px">
+//                         Log your first meal to see your gut scorecard!
+//                     </p>
+//                 </div>`;
+//             return;
+//         }
+
+//         // ── Render FIRST, then insert nav on top ──────────────────────────
+//         if (gutScorecardView === 'daily')   renderDailyScorecard(container, data);
+//         if (gutScorecardView === 'weekly')  renderWeeklyScorecard(container, data);
+//         if (gutScorecardView === 'monthly') renderMonthlyScorecard(container, data);
+
+//         // ── Add navigation AFTER render (so it doesn't get wiped) ─────────
+//         if (gutScorecardView === 'weekly') {
+//             const now  = new Date();
+//             const from = new Date(now);
+//             const to   = new Date(now);
+//             from.setDate(now.getDate() - 6 + (gutWeekOffset * 7));
+//             to.setDate(now.getDate() + (gutWeekOffset * 7));
+
+//             const weekLabel = gutWeekOffset === 0
+//                 ? 'Last 7 Days'
+//                 : `${from.toLocaleDateString('en-AU', {day:'numeric', month:'short'})}–${to.toLocaleDateString('en-AU', {day:'numeric', month:'short'})}`;
+
+//             const nav = document.createElement('div');
+//             nav.className = 'scorecard-week-nav';
+//             nav.innerHTML = `
+//                 <button onclick="shiftWeek(-1)">← Prev</button>
+//                 <span>${weekLabel}</span>
+//                 <button onclick="shiftWeek(1)"
+//                         ${gutWeekOffset >= 0 ? 'disabled style="opacity:.4"' : ''}>
+//                     Next →
+//                 </button>`;
+//             container.insertBefore(nav, container.firstChild);
+//         }
+
+//         if (gutScorecardView === 'monthly') {
+//             const now      = new Date();
+//             const rawMonth = now.getMonth() + 1 + gutMonthOffset;
+//             const adjYear  = now.getFullYear() + Math.floor((rawMonth - 1) / 12);
+//             const adjMonth = ((rawMonth - 1 + 120) % 12) + 1;
+//             const mNames   = ['Jan','Feb','Mar','Apr','May','Jun',
+//                               'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+//             const nav = document.createElement('div');
+//             nav.className = 'scorecard-week-nav';
+//             nav.innerHTML = `
+//                 <button onclick="shiftMonth(-1)">← Prev</button>
+//                 <span>${mNames[adjMonth-1]} ${adjYear}</span>
+//                 <button onclick="shiftMonth(1)"
+//                         ${gutMonthOffset >= 0 ? 'disabled style="opacity:.4"' : ''}>
+//                     Next →
+//                 </button>`;
+//             container.insertBefore(nav, container.firstChild);
+//         }
+
+//     } catch (err) {
+//         container.innerHTML =
+//             `<p class="hint">Could not load: ${err.message}</p>`;
+//     }
+// }
+
+// async function fetchLastMealDate() {
+//     try {
+//         const res  = await fetch(`/gut/history?patient_id=${gutPatientId}`);
+//         const data = await res.json();
+//         if (!data.length) return null;
+//         const last = data[data.length - 1];
+//         return (last.timestamp || last.date || '').slice(0, 10);
+//     } catch {
+//         return null;
+//     }
+// }
 // ── TAB 2: MY FOOD PLAN ───────────────────────────────────────────────────────
 async function loadGutFoodPlan() {
     const container = document.getElementById('gut-plan-content');
@@ -1749,7 +1956,8 @@ function renderBacteriaFed(bact) {
             </div>
             <div class="gut-bar-bg"><div class="gut-bar-fill" style="width:${p}%;background:${c}"></div></div>
             <div class="bacteria-expand" id="${id}">
-                <div class="bacteria-row-foods">🌿 via: ${data.from_foods.join(', ')}</div>
+
+                <div class="bacteria-row-foods">🌿 via: ${(data.from_foods||[]).join(', ')}</div>
                 ${data.mechanism?`<div class="bacteria-mech">💬 ${data.mechanism}</div>`:''}
             </div>
         </div>`;
@@ -1769,7 +1977,7 @@ function renderBacteriaHarmed(bact) {
                 </div>
             </div>
             <div class="bacteria-expand" id="${id}">
-                <div class="bacteria-row-foods">🍽️ via: ${data.from_foods.join(', ')}</div>
+                <div class="bacteria-row-foods">🍽️ via: ${(data.from_foods||[]).join(', ')}</div>
             </div>
         </div>`;
     }).join('');
@@ -1791,39 +1999,96 @@ function renderPlantDiversity(plants, count, target=30) {
         <div class="plant-tags">${plants.map(p=>`<span class="plant-tag">${p}</span>`).join('')}</div>
     </div>`;
 }
+
 function renderDailyScorecard(container, data) {
     const s = data.daily_gut_score||0, sc = gutScoreColor(s);
     container.innerHTML = `
         <div class="gut-overall-score" style="border-color:${sc}">
             <div class="gut-score-circle" style="background:${sc}">
-                <span class="gut-score-num">${s}</span><span class="gut-score-label">/ 10</span>
+                <span class="gut-score-num">${s}</span>
+                <span class="gut-score-label">/ 10</span>
             </div>
             <div class="gut-score-info">
-                <div class="gut-score-title">${gutScoreEmoji(s)} Daily Gut Score</div>
-                <div class="gut-score-notes">${data.meal_count} meals · ${data.plant_count} plants · FODMAP: <span style="color:${fodmapColor(data.fodmap_worst)}">${(data.fodmap_worst||'low').toUpperCase()}</span></div>
+                <div class="gut-score-title">
+                    ${gutScoreEmoji(s)} Daily Gut Score
+                </div>
+                <div class="gut-score-notes">
+                    ${data.meal_count} meals · 
+                    ${data.plant_count} plants · 
+                    FODMAP: <span style="color:${fodmapColor(data.fodmap_worst)}">
+                        ${(data.fodmap_worst||'low').toUpperCase()}
+                    </span>
+                </div>
             </div>
         </div>
         <div class="gut-scores-grid">
-            <div class="gut-score-tile"><span class="gut-tile-label">🌱 Prebiotic</span><span class="gut-tile-value" style="color:${gutScoreColor(data.avg_prebiotic)}">${data.avg_prebiotic}/10</span>${scoreBar(data.avg_prebiotic)}</div>
-            <div class="gut-score-tile"><span class="gut-tile-label">🔥 Anti-Inflam</span><span class="gut-tile-value" style="color:${gutScoreColor(data.avg_antiinflam)}">${data.avg_antiinflam}/10</span>${scoreBar(data.avg_antiinflam)}</div>
-            <div class="gut-score-tile"><span class="gut-tile-label">🦠 Probiotic</span><span class="gut-tile-value" style="color:${data.probiotic_meals>0?'#22c55e':'#ef4444'}">${data.probiotic_meals>0?'✅ Yes':'❌ None'}</span></div>
-            <div class="gut-score-tile"><span class="gut-tile-label">🌿 FODMAP</span><span class="gut-tile-value" style="color:${fodmapColor(data.fodmap_worst)}">${(data.fodmap_worst||'low').toUpperCase()}</span></div>
+            <div class="gut-score-tile">
+                <span class="gut-tile-label">🌱 Prebiotic</span>
+                <span class="gut-tile-value" 
+                      style="color:${gutScoreColor(data.avg_prebiotic)}">
+                    ${data.avg_prebiotic}/10
+                </span>
+                ${scoreBar(data.avg_prebiotic)}
+            </div>
+            <div class="gut-score-tile">
+                <span class="gut-tile-label">🔥 Anti-Inflam</span>
+                <span class="gut-tile-value"
+                      style="color:${gutScoreColor(data.avg_antiinflam)}">
+                    ${data.avg_antiinflam}/10
+                </span>
+                ${scoreBar(data.avg_antiinflam)}
+            </div>
+            <div class="gut-score-tile">
+                <span class="gut-tile-label">🦠 Probiotic</span>
+                <span class="gut-tile-value"
+                      style="color:${data.probiotic_meals>0?'#22c55e':'#ef4444'}">
+                    ${data.probiotic_meals>0?'✅ Yes':'❌ None'}
+                </span>
+            </div>
+            <div class="gut-score-tile">
+                <span class="gut-tile-label">🌿 FODMAP</span>
+                <span class="gut-tile-value"
+                      style="color:${fodmapColor(data.fodmap_worst)}">
+                    ${(data.fodmap_worst||'low').toUpperCase()}
+                </span>
+            </div>
         </div>
-        <div class="gut-section"><div class="gut-section-title">🦠 Bacteria Nourished <span class="gut-section-hint">tap to expand</span></div>${renderBacteriaFed(data.bacteria_fed||{})}</div>
-        <div class="gut-section"><div class="gut-section-title">⚠️ Bacteria Harmed <span class="gut-section-hint">tap to expand</span></div>${renderBacteriaHarmed(data.bacteria_harmed||{})}</div>
-        <div class="gut-section">${renderPlantDiversity(data.plant_diversity||[],data.plant_count||0,30)}</div>`;
+        <div class="gut-section">
+            <div class="gut-section-title">
+                🦠 Bacteria Nourished 
+                <span class="gut-section-hint">tap to expand</span>
+            </div>
+            ${renderBacteriaFed(data.bacteria_fed||{})}
+        </div>
+        <div class="gut-section">
+            <div class="gut-section-title">
+                ⚠️ Bacteria Harmed
+                <span class="gut-section-hint">tap to expand</span>
+            </div>
+            ${renderBacteriaHarmed(data.bacteria_harmed||{})}
+        </div>
+        <div class="gut-section">
+            ${renderPlantDiversity(
+                data.plant_diversity||[], data.plant_count||0, 30)}
+        </div>`;
 }
 
 function renderWeeklyScorecard(container, data) {
     const avg = data.avg_gut_score||0, sc = gutScoreColor(avg);
     const today = new Date().toLocaleDateString('en-CA');
-    const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    // const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    // const dayBars = (data.daily_scorecards||[]).map((day,i) => {
     const dayBars = (data.daily_scorecards||[]).map((day,i) => {
+        const dayDate  = new Date(day.date + 'T12:00:00');
+        const dayName  = dayDate.toLocaleDateString('en-AU', {weekday:'short'});
+        const dayNum   = dayDate.getDate();
         const s = day.daily_gut_score||0, p = Math.min(100,(s/10)*100), c = s>0?gutScoreColor(s):'#374151';
         return `<div class="day-bar-col ${day.date===today?'day-bar-today':''}">
             <div class="day-bar-score" style="color:${c}">${s>0?s:'—'}</div>
             <div class="day-bar-track"><div class="day-bar-fill" style="height:${p}%;background:${c}"></div></div>
-            <div class="day-bar-label">${dayNames[i]}</div>
+            <div class="day-bar-label">${dayName}</div>
+            <div class="day-bar-label" style="font-size:.6rem;color:#94a3b8">${dayNum}</div>
+            
         </div>`;
     }).join('');
     const bRows = Object.entries(data.bacteria_fed||{}).sort((a,b)=>b[1].count-a[1].count).map(([name,d],i)=>{

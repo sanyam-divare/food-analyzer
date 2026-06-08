@@ -380,90 +380,215 @@ def build_daily_gut_scorecard(meals, date):
     }
 
 
-def build_weekly_gut_scorecard(all_meals, week_start_date):
+# def build_weekly_gut_scorecard(all_meals, week_start_date):
+#     """
+#     Aggregates gut meals for 7 days into a weekly scorecard.
+#     week_start_date: 'YYYY-MM-DD' string for Monday of the week
+#     """
+#     from datetime import datetime, timedelta
+
+#     # Build list of 7 dates
+#     start = datetime.strptime(week_start_date, "%Y-%m-%d")
+#     week_dates = [
+#         (start + timedelta(days=i)).strftime("%Y-%m-%d")
+#         for i in range(7)
+#     ]
+
+#     # Group meals by date
+#     daily_scorecards = []
+#     all_plants_week  = set()
+#     all_bacteria_fed = {}
+#     gut_scores_by_day = {}
+
+#     for date in week_dates:
+#         day_meals = [
+#             m for m in all_meals
+#             if m.get('timestamp', '').startswith(date)
+#             or m.get('date', '') == date
+#         ]
+#         scorecard = build_daily_gut_scorecard(day_meals, date)
+#         daily_scorecards.append(scorecard)
+
+#         # Accumulate weekly data
+#         if scorecard['daily_gut_score'] > 0:
+#             gut_scores_by_day[date] = scorecard['daily_gut_score']
+
+#         all_plants_week.update(scorecard['plant_diversity'])
+
+#         for name, data in scorecard['bacteria_fed'].items():
+#             if name not in all_bacteria_fed:
+#                 all_bacteria_fed[name] = {
+#                     'count':      0,
+#                     'total_strength': 0,
+#                     'avg_strength':   0
+#                 }
+#             all_bacteria_fed[name]['count']          += data['count']
+#             all_bacteria_fed[name]['total_strength'] += data['total_strength']
+
+#     # Calculate avg strength per bacteria
+#     for name, data in all_bacteria_fed.items():
+#         if data['count'] > 0:
+#             data['avg_strength'] = round(
+#                 data['total_strength'] / data['count'], 1
+#             )
+
+#     # Sort bacteria by count descending
+#     sorted_bacteria = dict(
+#         sorted(all_bacteria_fed.items(),
+#                key=lambda x: x[1]['count'],
+#                reverse=True)
+#     )
+
+#     scores = list(gut_scores_by_day.values())
+#     avg_score = round(sum(scores) / len(scores), 1) if scores else 0
+
+#     best_day  = max(gut_scores_by_day, key=gut_scores_by_day.get) \
+#                 if gut_scores_by_day else None
+#     worst_day = min(gut_scores_by_day, key=gut_scores_by_day.get) \
+#                 if gut_scores_by_day else None
+
+#     return {
+#         'week_start':        week_start_date,
+#         'week_end':          week_dates[-1],
+#         'daily_scorecards':  daily_scorecards,
+#         'gut_scores_by_day': gut_scores_by_day,
+#         'avg_gut_score':     avg_score,
+#         'best_day':          best_day,
+#         'best_day_score':    gut_scores_by_day.get(best_day, 0),
+#         'worst_day':         worst_day,
+#         'worst_day_score':   gut_scores_by_day.get(worst_day, 0),
+#         'bacteria_fed':      sorted_bacteria,
+#         'plant_diversity':   sorted(list(all_plants_week)),
+#         'plant_count':       len(all_plants_week),
+#         'total_meals':       sum(s['meal_count'] for s in daily_scorecards)
+#     }
+
+def build_weekly_gut_scorecard(all_meals, week_start):
     """
-    Aggregates gut meals for 7 days into a weekly scorecard.
-    week_start_date: 'YYYY-MM-DD' string for Monday of the week
+    Builds scorecard for any 7-day window ending today.
+    week_start: YYYY-MM-DD string for first day of window
     """
     from datetime import datetime, timedelta
 
-    # Build list of 7 dates
-    start = datetime.strptime(week_start_date, "%Y-%m-%d")
-    week_dates = [
-        (start + timedelta(days=i)).strftime("%Y-%m-%d")
+    start_date = datetime.strptime(week_start, "%Y-%m-%d").date()
+    # Always exactly 7 days from start
+    dates_in_window = [
+        (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
         for i in range(7)
     ]
 
-    # Group meals by date
+    window_meals = [
+        m for m in all_meals
+        if m.get('timestamp', '')[:10] in dates_in_window
+        or m.get('date', '') in dates_in_window
+    ]
+
+    all_plants      = set()
+    bacteria_fed    = {}
+    bacteria_harmed = {}
+    gut_scores      = []
+    daily_data      = {}
+
+    # Initialise all 7 days
+    for d in dates_in_window:
+        daily_data[d] = {
+            'date':            d,
+            'meals':           [],
+            'daily_gut_score': 0,
+            'plant_count':     0
+        }
+
+    for meal in window_meals:
+        date  = meal.get('timestamp', meal.get('date', ''))[:10]
+        score = meal.get('overall_gut_score', 0)
+
+        if date in daily_data:
+            daily_data[date]['meals'].append(meal)
+
+        if score:
+            gut_scores.append(score)
+
+        for food in meal.get('foods', []):
+            food_name = food.get('name', '').lower().strip()
+            if food_name:
+                all_plants.add(food_name)
+
+            for b in food.get('bacteria_fed', []):
+                bname    = b.get('name', b) if isinstance(b, dict) else b
+                strength = b.get('impact_strength', 5) \
+                           if isinstance(b, dict) else 5
+                if bname not in bacteria_fed:
+                    bacteria_fed[bname] = {
+                        'count':          0,
+                        'total_strength': 0,
+                        'avg_strength':   0,
+                        'from_foods':     []
+                    }
+                bacteria_fed[bname]['count']          += 1
+                bacteria_fed[bname]['total_strength'] += strength
+                if food_name and food_name not in \
+                        bacteria_fed[bname]['from_foods']:
+                    bacteria_fed[bname]['from_foods'].append(food_name)
+
+            for b in food.get('bacteria_harmed', []):
+                bname = b.get('name', b) if isinstance(b, dict) else b
+                if bname not in bacteria_harmed:
+                    bacteria_harmed[bname] = {
+                        'count': 0, 'from_foods': []
+                    }
+                bacteria_harmed[bname]['count'] += 1
+                if food_name and food_name not in \
+                        bacteria_harmed[bname]['from_foods']:
+                    bacteria_harmed[bname]['from_foods'].append(food_name)
+
+    # Build daily scorecards
     daily_scorecards = []
-    all_plants_week  = set()
-    all_bacteria_fed = {}
-    gut_scores_by_day = {}
+    for d in dates_in_window:
+        day_meals  = daily_data[d]['meals']
+        day_scores = [m.get('overall_gut_score', 0)
+                      for m in day_meals if m.get('overall_gut_score')]
+        day_avg    = round(sum(day_scores) / len(day_scores), 1) \
+                     if day_scores else 0
+        daily_scorecards.append({
+            'date':            d,
+            'daily_gut_score': day_avg,
+            'meal_count':      len(day_meals)
+        })
 
-    for date in week_dates:
-        day_meals = [
-            m for m in all_meals
-            if m.get('timestamp', '').startswith(date)
-            or m.get('date', '') == date
-        ]
-        scorecard = build_daily_gut_scorecard(day_meals, date)
-        daily_scorecards.append(scorecard)
-
-        # Accumulate weekly data
-        if scorecard['daily_gut_score'] > 0:
-            gut_scores_by_day[date] = scorecard['daily_gut_score']
-
-        all_plants_week.update(scorecard['plant_diversity'])
-
-        for name, data in scorecard['bacteria_fed'].items():
-            if name not in all_bacteria_fed:
-                all_bacteria_fed[name] = {
-                    'count':      0,
-                    'total_strength': 0,
-                    'avg_strength':   0
-                }
-            all_bacteria_fed[name]['count']          += data['count']
-            all_bacteria_fed[name]['total_strength'] += data['total_strength']
-
-    # Calculate avg strength per bacteria
-    for name, data in all_bacteria_fed.items():
+    # Avg strength
+    for name, data in bacteria_fed.items():
         if data['count'] > 0:
             data['avg_strength'] = round(
                 data['total_strength'] / data['count'], 1
             )
 
-    # Sort bacteria by count descending
     sorted_bacteria = dict(
-        sorted(all_bacteria_fed.items(),
-               key=lambda x: x[1]['count'],
-               reverse=True)
+        sorted(bacteria_fed.items(),
+               key=lambda x: x[1]['count'], reverse=True)
     )
 
-    scores = list(gut_scores_by_day.values())
-    avg_score = round(sum(scores) / len(scores), 1) if scores else 0
+    avg_score = round(sum(gut_scores) / len(gut_scores), 1) \
+                if gut_scores else 0
 
-    best_day  = max(gut_scores_by_day, key=gut_scores_by_day.get) \
-                if gut_scores_by_day else None
-    worst_day = min(gut_scores_by_day, key=gut_scores_by_day.get) \
-                if gut_scores_by_day else None
+    scores_only = [d['daily_gut_score']
+                   for d in daily_scorecards
+                   if d['daily_gut_score'] > 0]
 
     return {
-        'week_start':        week_start_date,
-        'week_end':          week_dates[-1],
-        'daily_scorecards':  daily_scorecards,
-        'gut_scores_by_day': gut_scores_by_day,
-        'avg_gut_score':     avg_score,
-        'best_day':          best_day,
-        'best_day_score':    gut_scores_by_day.get(best_day, 0),
-        'worst_day':         worst_day,
-        'worst_day_score':   gut_scores_by_day.get(worst_day, 0),
-        'bacteria_fed':      sorted_bacteria,
-        'plant_diversity':   sorted(list(all_plants_week)),
-        'plant_count':       len(all_plants_week),
-        'total_meals':       sum(s['meal_count'] for s in daily_scorecards)
+        'week_start':       week_start,
+        'dates':            dates_in_window,
+        'avg_gut_score':    avg_score,
+        'total_meals':      len(window_meals),
+        'daily_scorecards': daily_scorecards,
+        'bacteria_fed':     sorted_bacteria,
+        'bacteria_harmed':  bacteria_harmed,
+        'plant_diversity':  sorted(list(all_plants)),
+        'plant_count':      len(all_plants),
+        'best_day_score':   max(scores_only) if scores_only else 0,
+        'worst_day_score':  min(scores_only) if scores_only else 0,
+        'best_day':         True if scores_only else False,
     }
-
-
+    
 def build_monthly_gut_scorecard(all_meals, year, month):
     """
     Aggregates gut meals for a full month into a monthly report.
@@ -471,7 +596,6 @@ def build_monthly_gut_scorecard(all_meals, year, month):
     from datetime import datetime
     import calendar
 
-    # Get all dates in the month
     days_in_month = calendar.monthrange(year, month)[1]
     month_str     = f"{year}-{month:02d}"
 
@@ -481,12 +605,12 @@ def build_monthly_gut_scorecard(all_meals, year, month):
         or m.get('date', '').startswith(month_str)
     ]
 
-    all_plants_month = set()
-    all_bacteria_fed = {}
+    all_plants_month    = set()
+    all_bacteria_fed    = {}
     all_bacteria_harmed = {}
-    gut_scores       = []
-    food_frequency   = {}  # food name → count
-    fried_count      = 0
+    gut_scores          = []
+    food_frequency      = {}
+    fried_count         = 0
 
     for meal in month_meals:
         score = meal.get('overall_gut_score', 0)
@@ -494,29 +618,44 @@ def build_monthly_gut_scorecard(all_meals, year, month):
             gut_scores.append(score)
 
         for food in meal.get('foods', []):
-            name = food.get('name', '').lower().strip()
-            if name:
-                all_plants_month.add(name)
-                food_frequency[name] = food_frequency.get(name, 0) + 1
+            food_name = food.get('name', '').lower().strip()
+            if food_name:
+                all_plants_month.add(food_name)
+                food_frequency[food_name] = food_frequency.get(food_name, 0) + 1
 
             if food.get('cooking_method', '') == 'fried':
                 fried_count += 1
 
+            # ── Bacteria fed ──────────────────────────────
             for b in food.get('bacteria_fed', []):
                 bname    = b.get('name', b) if isinstance(b, dict) else b
                 strength = b.get('impact_strength', 5) \
                            if isinstance(b, dict) else 5
                 if bname not in all_bacteria_fed:
                     all_bacteria_fed[bname] = {
-                        'count': 0, 'total_strength': 0
+                        'count':          0,
+                        'total_strength': 0,
+                        'avg_strength':   0,
+                        'from_foods':     []
                     }
                 all_bacteria_fed[bname]['count']          += 1
                 all_bacteria_fed[bname]['total_strength'] += strength
+                if food_name and food_name not in \
+                        all_bacteria_fed[bname]['from_foods']:
+                    all_bacteria_fed[bname]['from_foods'].append(food_name)
 
+            # ── Bacteria harmed ───────────────────────────
             for b in food.get('bacteria_harmed', []):
                 bname = b.get('name', b) if isinstance(b, dict) else b
-                all_bacteria_harmed[bname] = \
-                    all_bacteria_harmed.get(bname, 0) + 1
+                if bname not in all_bacteria_harmed:
+                    all_bacteria_harmed[bname] = {
+                        'count':      0,
+                        'from_foods': []
+                    }
+                all_bacteria_harmed[bname]['count'] += 1
+                if food_name and food_name not in \
+                        all_bacteria_harmed[bname]['from_foods']:
+                    all_bacteria_harmed[bname]['from_foods'].append(food_name)
 
     # Top foods
     top_foods = sorted(
@@ -540,20 +679,19 @@ def build_monthly_gut_scorecard(all_meals, year, month):
                 if gut_scores else 0
 
     return {
-        'year':              year,
-        'month':             month,
-        'month_str':         month_str,
-        'avg_gut_score':     avg_score,
-        'total_meals':       len(month_meals),
-        'bacteria_fed':      sorted_bacteria,
-        'bacteria_harmed':   all_bacteria_harmed,
-        'plant_diversity':   sorted(list(all_plants_month)),
-        'plant_count':       len(all_plants_month),
-        'top_foods':         top_foods,
-        'fried_meals':       fried_count,
-        'gut_scores':        gut_scores,
+        'year':            year,
+        'month':           month,
+        'month_str':       month_str,
+        'avg_gut_score':   avg_score,
+        'total_meals':     len(month_meals),
+        'bacteria_fed':    sorted_bacteria,
+        'bacteria_harmed': all_bacteria_harmed,
+        'plant_diversity': sorted(list(all_plants_month)),
+        'plant_count':     len(all_plants_month),
+        'top_foods':       top_foods,
+        'fried_meals':     fried_count,
+        'gut_scores':      gut_scores,
     }
-
     # ── Profile functions to ADD to gut_engine.py ────────────────────────────────
 
 def get_empty_profile(patient_id='guest'):

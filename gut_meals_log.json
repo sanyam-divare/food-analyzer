@@ -1710,5 +1710,792 @@
     "overall_gut_score": 4.1,
     "gut_notes": "",
     "date": "2026-06-07"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Roasted gram (sattu) with milk, sugar, and salt",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch from roasted gram ferments to produce butyrate",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Benefits from resistant starch fermentation",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Minor prebiotic effect from plant polysaccharides",
+            "name": "Bifidobacterium adolescentis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "roasted",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Roasting increases resistant starch content. Good source of plant-based protein and soluble fiber. Low FODMAP makes it well-tolerated.",
+        "name": "Roasted gram (sattu)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "beta-glucan"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Lactose can be fermented by some Bifidobacterium species if lactase-persistent",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Unfermented milk provides limited substrate; pasteurization reduces beneficial bacteria",
+            "name": "Lactobacillus delbrueckii"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 200,
+        "fodmap": "low",
+        "gut_notes": "Impact depends on lactase persistence. Pasteurized milk lacks probiotics. May cause bloating in lactose-intolerant individuals. Contains some anti-inflammatory compounds (lactoferrin, immunoglobulins).",
+        "name": "Milk",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 1,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Refined sugar rapidly fermented by pathogenic strains",
+            "name": "Escherichia coli"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Simple carbohydrates support overgrowth of opportunistic species",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Refined sugar shifts microbiota away from beneficial butyrate producers",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 5,
+        "fodmap": "low",
+        "gut_notes": "Refined sugar has minimal prebiotic value and promotes dysbiotic bacteria. Even small amounts can negatively impact microbiota diversity.",
+        "name": "Sugar (refined)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "High salt concentrations can inhibit Bifidobacterium growth",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 2,
+            "mechanism": "Salt-sensitive species affected by elevated sodium intake",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 0.5,
+        "fodmap": "low",
+        "gut_notes": "Minimal amount used is unlikely to cause significant harm, but excess dietary salt is associated with dysbiosis and intestinal barrier dysfunction.",
+        "name": "Salt",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-07 20:12",
+    "overall_gut_score": 6.8,
+    "gut_notes": "",
+    "date": "2026-06-07"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Moong dal khichadi with mango pickle and pickled onion slice",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch from cooked moong dal serves as primary substrate",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and resistant starch support butyrate-producing species",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Prebiotic fibre supports bifidobacterial growth",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 120,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic food. Low FODMAP makes it suitable for IBS. Provides resistant starch which increases butyrate production, beneficial for colonocyte health and anti-inflammatory effects.",
+        "name": "Moong dal (mung bean lentil)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "pectin"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Cooked rice develops resistant starch upon cooling",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 80,
+        "fodmap": "low",
+        "gut_notes": "Mild prebiotic contribution. Low FODMAP. Depends on cooking and cooling method for resistant starch formation.",
+        "name": "Rice (in khichadi)",
+        "prebiotic_fibres": [
+          "resistant starch"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Fermented food contains live lactobacilli from fermentation process",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Lactic acid from fermentation creates unfavourable environment",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "fermented",
+        "estimated_grams": 30,
+        "fodmap": "high",
+        "gut_notes": "Contains probiotics from fermentation. High FODMAP content (mango, spices, oil) may trigger bloating/gas in sensitive individuals. Beneficial for those tolerating fermented foods but caution in IBS-D or dysbiosis.",
+        "name": "Mango pickle",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 3,
+        "probiotic": true
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Raw onion contains inulin and FOS which are prebiotic; fermentation provides probiotics",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Live cultures from fermentation process",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Lactic acid and antimicrobial compounds from fermentation",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "fermented",
+        "estimated_grams": 15,
+        "fodmap": "high",
+        "gut_notes": "High FODMAP from onion (fructans). Contains both prebiotics (inulin/FOS) and probiotics from fermentation. May cause symptoms in FODMAP-sensitive individuals despite prebiotic benefit. Quercetin provides anti-inflammatory benefits.",
+        "name": "Pickled onion slice",
+        "prebiotic_fibres": [
+          "inulin",
+          "FOS"
+        ],
+        "prebiotic_score": 5.5,
+        "probiotic": true
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-07 21:08",
+    "overall_gut_score": 6.8,
+    "gut_notes": "",
+    "date": "2026-06-07"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Breakfast or brunch featuring two slices of whole-grain toast (one with mashed avocado, one with butter/spread) and a hard-boiled egg seasoned with black pepper.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Rich in fructans (a type of FOS) and resistant starch which are fermented by this species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Utilizes fructans and resistant starch as a primary energy source.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Ferments fructans present in wheat to produce short-chain fatty acids.",
+            "name": "Lactobacillus acidophilus"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "A key degrader of resistant starch, producing beneficial short-chain fatty acids.",
+            "name": "Ruminococcus bromii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 35,
+        "fodmap": "high",
+        "gut_notes": "Provides fermentable fibers that act as prebiotics, supporting beneficial gut bacteria and SCFAs production. However, its high fructan content can cause digestive discomfort for individuals with IBS or SIBO.",
+        "name": "Whole-grain wheat bread",
+        "prebiotic_fibres": [
+          "fructans",
+          "resistant starch"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Ferments various fibers, including resistant starch, to produce butyrate, vital for gut health.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Contributes to butyrate production by fermenting dietary fibers from avocado.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Utilizes a range of dietary fibers, including GOS and resistant starch, present in avocado.",
+            "name": "Bifidobacterium animalis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Benefits from diverse plant fibers found in avocado, contributing to gut diversity.",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 60,
+        "fodmap": "medium",
+        "gut_notes": "An excellent source of monounsaturated fats, fiber, and polyphenols, promoting gut diversity and reducing inflammation. Its medium FODMAP (sorbitol) content may cause mild symptoms in sensitive individuals.",
+        "name": "Mashed avocado",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "galactooligosaccharides",
+          "fructans"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Rich in fructans (a type of FOS) and resistant starch which are fermented by this species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Utilizes fructans and resistant starch as a primary energy source.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Ferments fructans present in wheat to produce short-chain fatty acids.",
+            "name": "Lactobacillus acidophilus"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "A key degrader of resistant starch, producing beneficial short-chain fatty acids.",
+            "name": "Ruminococcus bromii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 35,
+        "fodmap": "high",
+        "gut_notes": "Similar to the other slice, this bread provides fermentable fibers for beneficial gut bacteria, contributing to microbial diversity and SCFA production. However, its high fructan content can be a concern for sensitive individuals.",
+        "name": "Whole-grain wheat bread",
+        "prebiotic_fibres": [
+          "fructans",
+          "resistant starch"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "dairy",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 10,
+        "fodmap": "low",
+        "gut_notes": "Primarily a source of fats and fat-soluble vitamins. While it doesn't directly feed gut bacteria, its butyrate content (especially in grass-fed butter) is crucial for nourishing colonocytes and maintaining gut barrier integrity.",
+        "name": "Butter",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 55,
+        "fodmap": "low",
+        "gut_notes": "An excellent source of high-quality protein, essential amino acids, and vital micronutrients (e.g., choline, Vitamin D, B12). While it doesn't directly feed gut microbes with fiber, its nutritional profile indirectly supports overall gut health and cellular function, contributing to gut repair and maintenance.",
+        "name": "Hard-boiled chicken egg",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 1,
+        "fodmap": "low",
+        "gut_notes": "Contains piperine, a bioactive compound with antioxidant and anti-inflammatory properties. These properties can indirectly benefit gut health by reducing oxidative stress and inflammation in the digestive tract, potentially enhancing nutrient absorption.",
+        "name": "Black pepper",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-08 11:06",
+    "overall_gut_score": 7.2,
+    "gut_notes": "",
+    "date": "2026-06-08"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A light snack consisting of a handful of green sprouts, one orange, and a slice of apple",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Inulin and FOS content directly stimulates growth",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Prebiotic fibers support butyrate-producing capacity",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Fermentable fiber substrate for SCFA production",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "medium",
+        "cooking_method": "raw",
+        "estimated_grams": 30,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic source. Raw form preserves enzyme activity and heat-sensitive polyphenols with anti-inflammatory effects. Supports beneficial anaerobes.",
+        "name": "Green sprouts (unspecified variety)",
+        "prebiotic_fibres": [
+          "inulin",
+          "FOS",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin fermentation provides selective growth substrate",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Polyphenols support mucus-layer integrity and growth",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Pectin fermentation generates butyrate precursors",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "High vitamin C and limonene content provide antioxidant and anti-inflammatory benefits. Pectin supports healthy mucus barrier. Low FODMAP when whole fruit consumed.",
+        "name": "Orange",
+        "prebiotic_fibres": [
+          "pectin",
+          "inulin"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Inulin and pectin co-fermentation stimulates growth",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Polysaccharide fermentation supports butyrate production",
+            "name": "Roseburia spp."
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Pectin degradation provides metabolic substrate",
+            "name": "Bacteroides vulgatus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 50,
+        "fodmap": "low",
+        "gut_notes": "Excellent source of quercetin and other polyphenols with antimicrobial and anti-inflammatory properties. Pectin promotes beneficial bacterial diversity. Skin-on consumption (if applicable) enhances prebiotic value.",
+        "name": "Apple slice",
+        "prebiotic_fibres": [
+          "pectin",
+          "inulin"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-08 14:13",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-08"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "One raw banana 120 gm",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Pectin and inulin selectively feed this beneficial species, promoting butyrate production",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch and pectin provide substrate for fermentation",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Prebiotic fibres promote growth of this butyrate-producer",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 120,
+        "fodmap": "low",
+        "gut_notes": "Raw banana provides excellent prebiotic fibre profile with pectin, resistant starch, and trace inulin. Low FODMAP content ensures good tolerability. Rich in polyphenols and magnesium with potent anti-inflammatory effects. Promotes mucus-layer health and strengthens intestinal barrier. Ripeness level affects resistant starch content\u2014greener bananas have higher resistant starch.",
+        "name": "Banana (raw, unripe to medium ripeness)",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch",
+          "inulin"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-08 14:59",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-08"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Milk coffee and lemon cake slice",
+    "foods": [
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Lactose in milk can reduce butyrate-producing bacteria abundance",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "High lactose may inhibit short-chain fatty acid producers",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "medium",
+        "cooking_method": "boiled",
+        "estimated_grams": 250,
+        "fodmap": "high",
+        "gut_notes": "Lactose may cause dysbiosis in lactose-sensitive individuals. Coffee's polyphenols offer minimal anti-inflammatory benefit. No prebiotic value.",
+        "name": "Milk coffee",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 1,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Refined sugars and refined flour promote pathogenic gram-negative bacteria proliferation",
+            "name": "Escherichia coli"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Refined carbohydrates reduce colonisation resistance",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Refined sugars dysbiose beneficial bifidobacteria",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Lack of fibre reduces mucus-layer bacteria",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "baked",
+        "estimated_grams": 80,
+        "fodmap": "high",
+        "gut_notes": "Highly refined carbohydrates and added sugars provide empty calories with zero prebiotic fibre. Promotes pathogenic blooming and depletes beneficial taxa. High FODMAP due to concentrated sugars.",
+        "name": "Lemon cake slice",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-08 15:53",
+    "overall_gut_score": 3.8,
+    "gut_notes": "",
+    "date": "2026-06-08"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Kimchi (70ml) and 5 idli with sambar",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Primary lactic acid bacterium in kimchi fermentation; directly consumed as live culture",
+            "name": "Lactobacillus plantarum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Common kimchi fermentation species; provides colonisation support",
+            "name": "Lactobacillus brevis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Prebiotic fibres support growth; post-biotic metabolites enhance colonisation",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Lactic acid production lowers pH, creating hostile environment for pathogenic species",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "fermented",
+        "estimated_grams": 70,
+        "fodmap": "low",
+        "gut_notes": "Excellent probiotic source with capsaicinoids providing anti-inflammatory benefits. Garlic and ginger add antimicrobial compounds. Direct microbial inoculation supports dysbiosis recovery.",
+        "name": "Kimchi",
+        "prebiotic_fibres": [
+          "pectin",
+          "inulin"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": true
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Fermented rice-lentil base provides resistant starch; butyrate-producer",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Benefits from resistant starch after fermentation and steaming",
+            "name": "Roseburia faecis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "steamed",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "Traditional fermented preparation (overnight fermentation) creates resistant starch. Steaming preserves structure for colonic delivery. Easily digestible with low inflammatory load.",
+        "name": "Idli (5 pieces)",
+        "prebiotic_fibres": [
+          "resistant starch"
+        ],
+        "prebiotic_score": 5.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Onion and garlic rich in inulin and FOS; primary substrate for this keystone species",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Polyphenols from spices (turmeric, fenugreek) support mucus-layer health",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Fibre-rich vegetables and legumes provide fermentation substrate",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Mixed vegetable fibres support butyrate production",
+            "name": "Roseburia spp."
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "simmered",
+        "estimated_grams": 200,
+        "fodmap": "medium",
+        "gut_notes": "Turmeric (curcumin) and fenugreek provide potent anti-inflammatory polyphenols. Legumes (lentils/peas in sambar) deliver prebiotic fibre and resistant starch. Spices have antimicrobial properties targeting pathogens while sparing beneficial species.",
+        "name": "Sambar",
+        "prebiotic_fibres": [
+          "inulin",
+          "FOS",
+          "pectin"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-08 19:20",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-08"
   }
 ]
