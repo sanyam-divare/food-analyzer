@@ -11,6 +11,7 @@ let gutProfile        = null;
 let gutDailyOffset = 0;  // 0 = today, -1 = yesterday, -2 = two days ago
 let gutWeekOffset   = 0;  // 0 = current week, -1 = last week
 let gutMonthOffset  = 0;
+let gutDailyData = null;  // stores today's scorecard data
 
 function initGutMode() {
     console.log('🦠 Gut mode initialised');
@@ -195,7 +196,14 @@ async function loadGutScorecard() {
                                </p>`
                             : ''}
                     </div>`;
+            // } else {
+            //     renderDailyScorecard(container, data);
+            // }
             } else {
+                // Clear summary cache before rendering new day
+                const oldPanel = document.getElementById('day-summary-panel');
+                if (oldPanel) oldPanel.innerHTML = '';
+            
                 renderDailyScorecard(container, data);
             }
 
@@ -2000,10 +2008,105 @@ function renderPlantDiversity(plants, count, target=30) {
     </div>`;
 }
 
+// function renderDailyScorecard(container, data) {
+//     const s = data.daily_gut_score||0, sc = gutScoreColor(s);
+//     container.innerHTML = `
+//         <div class="gut-overall-score" style="border-color:${sc}">
+//             <div class="gut-score-circle" style="background:${sc}">
+//                 <span class="gut-score-num">${s}</span>
+//                 <span class="gut-score-label">/ 10</span>
+//             </div>
+//             <div class="gut-score-info">
+//                 <div class="gut-score-title">
+//                     ${gutScoreEmoji(s)} Daily Gut Score
+//                 </div>
+//                 <div class="gut-score-notes">
+//                     ${data.meal_count} meals · 
+//                     ${data.plant_count} plants · 
+//                     FODMAP: <span style="color:${fodmapColor(data.fodmap_worst)}">
+//                         ${(data.fodmap_worst||'low').toUpperCase()}
+//                     </span>
+//                 </div>
+//             </div>
+//         </div>
+//         <div class="gut-scores-grid">
+//             <div class="gut-score-tile">
+//                 <span class="gut-tile-label">🌱 Prebiotic</span>
+//                 <span class="gut-tile-value" 
+//                       style="color:${gutScoreColor(data.avg_prebiotic)}">
+//                     ${data.avg_prebiotic}/10
+//                 </span>
+//                 ${scoreBar(data.avg_prebiotic)}
+//             </div>
+//             <div class="gut-score-tile">
+//                 <span class="gut-tile-label">🔥 Anti-Inflam</span>
+//                 <span class="gut-tile-value"
+//                       style="color:${gutScoreColor(data.avg_antiinflam)}">
+//                     ${data.avg_antiinflam}/10
+//                 </span>
+//                 ${scoreBar(data.avg_antiinflam)}
+//             </div>
+//             <div class="gut-score-tile">
+//                 <span class="gut-tile-label">🦠 Probiotic</span>
+//                 <span class="gut-tile-value"
+//                       style="color:${data.probiotic_meals>0?'#22c55e':'#ef4444'}">
+//                     ${data.probiotic_meals>0?'✅ Yes':'❌ None'}
+//                 </span>
+//             </div>
+//             <div class="gut-score-tile">
+//                 <span class="gut-tile-label">🌿 FODMAP</span>
+//                 <span class="gut-tile-value"
+//                       style="color:${fodmapColor(data.fodmap_worst)}">
+//                     ${(data.fodmap_worst||'low').toUpperCase()}
+//                 </span>
+//             </div>
+//         </div>
+//         <div class="gut-section">
+//             <div class="gut-section-title">
+//                 🦠 Bacteria Nourished 
+//                 <span class="gut-section-hint">tap to expand</span>
+//             </div>
+//             ${renderBacteriaFed(data.bacteria_fed||{})}
+//         </div>
+//         <div class="gut-section">
+//             <div class="gut-section-title">
+//                 ⚠️ Bacteria Harmed
+//                 <span class="gut-section-hint">tap to expand</span>
+//             </div>
+//             ${renderBacteriaHarmed(data.bacteria_harmed||{})}
+//         </div>
+//         <div class="gut-section">
+//             ${renderPlantDiversity(
+//                 data.plant_diversity||[], data.plant_count||0, 30)}
+//         </div>`;
+// }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Daily Gut Summary — tap score circle to expand
+// Add these functions to gut_app.js
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Summary trigger — added to renderDailyScorecard ──────────────────────────
+// Replace your existing gut-overall-score div with this version
+// that includes the tap-to-expand summary button
+
 function renderDailyScorecard(container, data) {
-    const s = data.daily_gut_score||0, sc = gutScoreColor(s);
+    gutDailyData = data;
+    const s  = data.daily_gut_score || 0;
+    const sc = gutScoreColor(s);
+
+    // Only show summary button if 2+ meals logged
+    const hasSummary = (data.meal_count || 0) >= 2;
+
     container.innerHTML = `
-        <div class="gut-overall-score" style="border-color:${sc}">
+        <!-- Score circle — tappable if summary available -->
+        <div class="gut-overall-score"
+             style="border-color:${sc};
+                    ${hasSummary ? 'cursor:pointer' : ''}"
+             ${hasSummary
+                ? `onclick="toggleDaySummary(this)"`
+                // ? `onclick="toggleDaySummary(this, ${JSON.stringify(data).replace(/"/g, '&quot;')})"`
+                : ''}>
             <div class="gut-score-circle" style="background:${sc}">
                 <span class="gut-score-num">${s}</span>
                 <span class="gut-score-label">/ 10</span>
@@ -2013,18 +2116,34 @@ function renderDailyScorecard(container, data) {
                     ${gutScoreEmoji(s)} Daily Gut Score
                 </div>
                 <div class="gut-score-notes">
-                    ${data.meal_count} meals · 
-                    ${data.plant_count} plants · 
+                    ${data.meal_count} meals ·
+                    ${data.plant_count} plants ·
                     FODMAP: <span style="color:${fodmapColor(data.fodmap_worst)}">
-                        ${(data.fodmap_worst||'low').toUpperCase()}
+                        ${(data.fodmap_worst || 'low').toUpperCase()}
                     </span>
                 </div>
+                ${hasSummary ? `
+                    <div class="summary-tap-hint">
+                        📋 Tap for your day summary
+                    </div>` : `
+                    <div class="summary-tap-hint" style="color:#94a3b8">
+                        Log 2+ meals to unlock day summary
+                    </div>`}
             </div>
+            ${hasSummary ? `
+                <span class="summary-expand-arrow">›</span>` : ''}
         </div>
+
+        <!-- Summary panel — hidden by default -->
+        <div class="day-summary-panel" id="day-summary-panel"
+             style="display:none">
+        </div>
+
+        <!-- Rest of scorecard -->
         <div class="gut-scores-grid">
             <div class="gut-score-tile">
                 <span class="gut-tile-label">🌱 Prebiotic</span>
-                <span class="gut-tile-value" 
+                <span class="gut-tile-value"
                       style="color:${gutScoreColor(data.avg_prebiotic)}">
                     ${data.avg_prebiotic}/10
                 </span>
@@ -2041,35 +2160,501 @@ function renderDailyScorecard(container, data) {
             <div class="gut-score-tile">
                 <span class="gut-tile-label">🦠 Probiotic</span>
                 <span class="gut-tile-value"
-                      style="color:${data.probiotic_meals>0?'#22c55e':'#ef4444'}">
-                    ${data.probiotic_meals>0?'✅ Yes':'❌ None'}
+                      style="color:${data.probiotic_meals > 0
+                                     ? '#22c55e' : '#ef4444'}">
+                    ${data.probiotic_meals > 0 ? '✅ Yes' : '❌ None'}
                 </span>
             </div>
             <div class="gut-score-tile">
                 <span class="gut-tile-label">🌿 FODMAP</span>
                 <span class="gut-tile-value"
                       style="color:${fodmapColor(data.fodmap_worst)}">
-                    ${(data.fodmap_worst||'low').toUpperCase()}
+                    ${(data.fodmap_worst || 'low').toUpperCase()}
                 </span>
             </div>
         </div>
         <div class="gut-section">
             <div class="gut-section-title">
-                🦠 Bacteria Nourished 
+                🦠 Bacteria Nourished
                 <span class="gut-section-hint">tap to expand</span>
             </div>
-            ${renderBacteriaFed(data.bacteria_fed||{})}
+            ${renderBacteriaFed(data.bacteria_fed || {})}
         </div>
         <div class="gut-section">
             <div class="gut-section-title">
                 ⚠️ Bacteria Harmed
                 <span class="gut-section-hint">tap to expand</span>
             </div>
-            ${renderBacteriaHarmed(data.bacteria_harmed||{})}
+            ${renderBacteriaHarmed(data.bacteria_harmed || {})}
         </div>
         <div class="gut-section">
             ${renderPlantDiversity(
-                data.plant_diversity||[], data.plant_count||0, 30)}
+                data.plant_diversity || [],
+                data.plant_count || 0, 30)}
+        </div>`;
+}
+
+// ── Toggle summary panel ──────────────────────────────────────────────────────
+// function toggleDaySummary(scoreEl, data) {
+//     const panel = document.getElementById('day-summary-panel');
+//     const arrow = scoreEl.querySelector('.summary-expand-arrow');
+//     if (!panel) return;
+
+//     const isOpen = panel.style.display !== 'none';
+//     if (isOpen) {
+//         panel.style.display = 'none';
+//         if (arrow) arrow.textContent = '›';
+//         return;
+//     }
+
+//     // Build summary if not already built
+//     if (!panel.innerHTML) {
+//         panel.innerHTML = buildDaySummary(data);
+//     }
+
+//     panel.style.display = 'block';
+//     if (arrow) arrow.textContent = '↓';
+//     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+// }
+function toggleDaySummary(scoreEl) {
+    const panel = document.getElementById('day-summary-panel');
+    const arrow = scoreEl.querySelector('.summary-expand-arrow');
+    if (!panel) return;
+
+    const isOpen = panel.style.display !== 'none';
+    if (isOpen) {
+        panel.style.display = 'none';
+        if (arrow) arrow.textContent = '›';
+        return;
+    }
+
+    // Build summary if not already built
+    if (!panel.innerHTML.trim()) {
+        const isToday = gutDailyOffset === 0;
+        if (!gutDailyData) {
+            panel.innerHTML = '<p class="hint" style="padding:12px">No data available.</p>';
+        } else {
+            panel.innerHTML = buildDaySummary(gutDailyData, isToday);
+        }
+    }
+
+    panel.style.display = 'block';
+    if (arrow) arrow.textContent = '↓';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Build the summary HTML ────────────────────────────────────────────────────
+function buildDaySummary(data, isToday = true) {
+    const score         = data.daily_gut_score || 0;
+    const mealCount     = data.meal_count      || 0;
+    const plantCount    = data.plant_count     || 0;
+    const bacteriaFed   = data.bacteria_fed    || {};
+    const bacteriaHarmed= data.bacteria_harmed || {};
+    const name          = (gutProfile && gutProfile.name)
+                          ? gutProfile.name.split(' ')[0]
+                          : 'there';
+
+    // ── Opening line based on score ───────────────────────────────────────
+    const opening = getOpeningLine(score, name, mealCount, bacteriaFed);
+
+    // ── Today's wins ──────────────────────────────────────────────────────
+    const wins = buildWins(score, bacteriaFed, plantCount, data.probiotic_meals);
+
+    // ── Tomorrow's priorities ─────────────────────────────────────────────
+    const priorities = buildPriorities(bacteriaFed, bacteriaHarmed, data);
+
+    // ── One insight ───────────────────────────────────────────────────────
+    const insight = buildInsight(score, bacteriaHarmed, data);
+
+    // ── Motivation close ──────────────────────────────────────────────────
+    const close = getClosingLine(score, isToday);
+
+    return `
+        <div class="summary-header">
+            <span class="summary-title">📋 Your Gut Day</span>
+            <span class="summary-date">
+                ${(() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + gutDailyOffset);
+                    return d.toLocaleDateString('en-AU', {
+                        weekday: 'long', day: 'numeric', month: 'short'
+                    });
+                })()}
+            </span>
+        </div>
+
+        <!-- Opening -->
+        <div class="summary-opening">${opening}</div>
+
+        <!-- Wins -->
+        ${wins ? `
+            <div class="summary-section">
+                <div class="summary-section-title">✅ Today's wins</div>
+                ${wins}
+            </div>` : ''}
+
+        <!-- Priorities -->
+        ${priorities ? `
+            <div class="summary-section">
+                <div class="summary-section-title">
+                    🎯 Tomorrow's priorities
+                </div>
+                ${priorities}
+            </div>` : ''}
+
+        <!-- Insight -->
+        ${insight ? `
+            <div class="summary-section">
+                <div class="summary-section-title">💡 One insight</div>
+                <div class="summary-insight">${insight}</div>
+            </div>` : ''}
+
+        <!-- Close -->
+        <div class="summary-close">${close}</div>`;
+}
+
+// ── Opening line ──────────────────────────────────────────────────────────────
+function getOpeningLine(score, name, mealCount, bacteriaFed) {
+    const fedCount = Object.keys(bacteriaFed).length;
+
+    if (score >= 8.5) return `
+        <strong>Outstanding gut day, ${name}! 🏆</strong><br>
+        A score like ${score} doesn't happen without real effort.
+        Your gut bacteria are thriving today.`;
+
+    if (score >= 7.5) return `
+        <strong>Strong day for your gut, ${name}! 💪</strong><br>
+        ${score}/10 is well above average. Your food choices
+        today are making a real difference to your microbiome.`;
+
+    if (score >= 6.5) return `
+        <strong>A solid gut day, ${name} 🌱</strong><br>
+        ${score}/10 shows you're on the right track.
+        A few tweaks tomorrow and you'll be hitting 7+.`;
+
+    if (score >= 5.5) return `
+        <strong>A mixed day for your gut, ${name} ⚠️</strong><br>
+        ${score}/10 means your gut got some support but
+        needed more. ${fedCount > 0
+            ? `${fedCount} bacteria were fed which is a good start.`
+            : 'Let\'s focus on feeding the right bacteria tomorrow.'}`;
+
+    if (score >= 4) return `
+        <strong>Your gut needed more today, ${name} 🔄</strong><br>
+        ${score}/10 is below where we want to be.
+        Don't worry — one day doesn't define your gut health.
+        Tomorrow is a fresh start.`;
+
+    return `
+        <strong>Tough day, ${name} — let's reset tomorrow 💙</strong><br>
+        A ${score}/10 tells us your gut didn't get the support
+        it needed today. That's OK. What matters is what
+        you do tomorrow morning.`;
+}
+
+// ── Wins section ──────────────────────────────────────────────────────────────
+function buildWins(score, bacteriaFed, plantCount, probioticMeals) {
+    const wins = [];
+    const fedEntries = Object.entries(bacteriaFed);
+
+    // Top fed bacteria
+    if (fedEntries.length > 0) {
+        const top = fedEntries
+            .sort((a, b) => b[1].count - a[1].count)
+            .slice(0, 2);
+        top.forEach(([name, data]) => {
+            const genus = name.split(' ')[0];
+            wins.push(getBacteriaWin(genus, name, data.count));
+        });
+    }
+
+    // Plant diversity
+    if (plantCount >= 10) {
+        wins.push(`
+            <div class="summary-win-item">
+                🌱 <strong>${plantCount} different plants</strong> eaten today —
+                ${plantCount >= 20
+                    ? 'exceptional plant diversity!'
+                    : plantCount >= 15
+                    ? 'great plant variety!'
+                    : 'good plant diversity.'}
+            </div>`);
+    }
+
+    // Probiotic
+    if (probioticMeals > 0) {
+        wins.push(`
+            <div class="summary-win-item">
+                🦠 <strong>Probiotic food</strong> consumed —
+                live cultures supporting your gut lining.
+            </div>`);
+    }
+
+    // Score itself
+    if (score >= 7) {
+        wins.push(`
+            <div class="summary-win-item">
+                📊 <strong>${score}/10 gut score</strong> —
+                above the healthy threshold of 7.
+            </div>`);
+    }
+
+    return wins.length
+        ? `<div class="summary-wins">${wins.join('')}</div>`
+        : '';
+}
+
+function getBacteriaWin(genus, fullName, count) {
+    const messages = {
+        'Faecalibacterium': `
+            <div class="summary-win-item">
+                ✅ <strong>${genus}</strong> fed ${count}x today —
+                your key anti-inflammatory bacteria is active.
+            </div>`,
+        'Bifidobacterium': `
+            <div class="summary-win-item">
+                ✅ <strong>${genus}</strong> fed ${count}x today —
+                supporting your immune system and gut barrier.
+            </div>`,
+        'Lactobacillus': `
+            <div class="summary-win-item">
+                ✅ <strong>${genus}</strong> fed ${count}x today —
+                helping maintain a healthy gut pH.
+            </div>`,
+        'Akkermansia': `
+            <div class="summary-win-item">
+                ✅ <strong>${genus}</strong> fed ${count}x today —
+                your gut lining is getting protection.
+            </div>`,
+        'Roseburia': `
+            <div class="summary-win-item">
+                ✅ <strong>${genus}</strong> fed ${count}x today —
+                butyrate production supporting colon health.
+            </div>`,
+    };
+    return messages[genus] || `
+        <div class="summary-win-item">
+            ✅ <strong>${genus}</strong> fed ${count}x today —
+            beneficial bacteria getting good support.
+        </div>`;
+}
+
+// ── Tomorrow's priorities ─────────────────────────────────────────────────────
+function buildPriorities(bacteriaFed, bacteriaHarmed, data) {
+    const priorities = [];
+
+    // From profile — bacteria not fed today
+    if (gutProfile && gutProfile.bacteria_boost) {
+        const unfed = gutProfile.bacteria_boost.filter(b => {
+            const genus = b.name.split(' ')[0].toLowerCase();
+            return !Object.keys(bacteriaFed).some(fed =>
+                fed.toLowerCase().includes(genus)
+            );
+        }).slice(0, 2);
+
+        unfed.forEach(b => {
+            const genus = b.name.split(' ')[0];
+            const food  = getBacteriaFood(genus);
+            priorities.push(`
+                <div class="summary-priority-item">
+                    <span class="priority-badge priority-red">❌ Missed</span>
+                    <div>
+                        <strong>${b.name}</strong> not fed today.<br>
+                        <span class="priority-action">
+                            Tomorrow: ${food}
+                        </span>
+                    </div>
+                </div>`);
+        });
+    }
+
+    // From food targets — check what was missed
+    if (gutProfile && gutProfile.food_targets) {
+        const missedFoods = gutProfile.food_targets
+            .filter(t => {
+                const name = t.food.toLowerCase();
+                const plants = (data.plant_diversity || []);
+                return !plants.some(p => p.includes(name.split(' ')[0]));
+            })
+            .slice(0, 2);
+
+        missedFoods.forEach(t => {
+            if (priorities.length >= 3) return;
+            priorities.push(`
+                <div class="summary-priority-item">
+                    <span class="priority-badge priority-orange">
+                        🎯 Target
+                    </span>
+                    <div>
+                        <strong>${t.food}</strong>
+                        (${t.amount_grams}g ${t.frequency})<br>
+                        <span class="priority-action">
+                            ${t.alternatives && t.alternatives.length
+                                ? `Or try: ${t.alternatives[0]}`
+                                : 'Add to your first meal tomorrow'}
+                        </span>
+                    </div>
+                </div>`);
+        });
+    }
+
+    // Harmed bacteria — what to avoid
+    const harmedEntries = Object.keys(bacteriaHarmed);
+    if (harmedEntries.length > 0 && priorities.length < 3) {
+        const genus = harmedEntries[0].split(' ')[0];
+        priorities.push(`
+            <div class="summary-priority-item">
+                <span class="priority-badge priority-purple">💡 Note</span>
+                <div>
+                    <strong>${harmedEntries[0]}</strong> was harmed today.<br>
+                    <span class="priority-action">
+                        ${getHarmedAdvice(genus)}
+                    </span>
+                </div>
+            </div>`);
+    }
+
+    return priorities.length ? `
+        <div class="summary-priorities">
+            ${priorities.join('')}
+        </div>` : '';
+}
+
+// ── Food suggestions for bacteria ─────────────────────────────────────────────
+function getBacteriaFood(genus) {
+    const foods = {
+        'Faecalibacterium': 'oats or cooked & cooled rice at breakfast',
+        'Bifidobacterium':  'plain yoghurt or banana',
+        'Lactobacillus':    'dahi, kefir or fermented foods',
+        'Akkermansia':      'green banana or garlic (cooked)',
+        'Roseburia':        'oats, legumes or cooked vegetables',
+        'Succinivibrio':    'fresh fruits and vegetables',
+        'Selenomonas':      'leafy greens and vegetables',
+        'Alloprevotella':   'nuts, seeds or olive oil',
+        'Muribaculaceae':   'dietary fibre — oats, vegetables',
+        'Sphingomonas':     'plant foods and antioxidants',
+    };
+    return foods[genus] || 'prebiotic-rich foods like oats or vegetables';
+}
+
+// ── Harmed bacteria advice ────────────────────────────────────────────────────
+function getHarmedAdvice(genus) {
+    const advice = {
+        'Roseburia':         'Reduce fried foods — steam or bake instead tomorrow',
+        'Faecalibacterium':  'Avoid processed foods and excess sugar tomorrow',
+        'Bifidobacterium':   'Cut back on alcohol and processed snacks',
+        'Lactobacillus':     'Limit antibiotics and processed foods',
+        'Akkermansia':       'Reduce saturated fats and processed meat',
+    };
+    return advice[genus]
+        || 'Balance tomorrow with more plant-based whole foods';
+}
+
+// ── One insight ───────────────────────────────────────────────────────────────
+function buildInsight(score, bacteriaHarmed, data) {
+    const harmedList   = Object.keys(bacteriaHarmed);
+    const fodmap       = data.fodmap_worst || 'low';
+    const plantCount   = data.plant_count  || 0;
+    const probiotics   = data.probiotic_meals || 0;
+
+    // Priority order of insights
+    if (harmedList.length > 0) {
+        const genus = harmedList[0].split(' ')[0];
+        return `<strong>${harmedList[0]}</strong> was harmed today, likely
+                from high-fat or processed foods.
+                ${getHarmedAdvice(genus)}`;
+    }
+
+    if (fodmap === 'high') {
+        return `Your highest FODMAP meal today may cause bloating or
+                discomfort for IBS. Tomorrow, try cooking onion and
+                garlic thoroughly, and swap apples for bananas.`;
+    }
+
+    if (plantCount < 5) {
+        return `Only ${plantCount} different plants today. Aim for
+                10+ daily — each new plant feeds different bacteria.
+                Try adding one new vegetable to each meal tomorrow.`;
+    }
+
+    if (probiotics === 0) {
+        return `No probiotic foods today. Even a small serve of plain
+                dahi or yoghurt daily can meaningfully boost your
+                Lactobacillus and Bifidobacterium levels over time.`;
+    }
+
+    if (score >= 7) {
+        return `Consistency is everything in gut health. Repeating
+                today's food choices for 4-6 weeks gives your
+                beneficial bacteria time to genuinely multiply
+                and colonise.`;
+    }
+
+    return `Your gut microbiome responds to what you eat within
+            24-48 hours. Tomorrow's choices directly affect how
+            you feel in 2 days — that's how fast the bacteria respond.`;
+}
+
+// ── Closing line ──────────────────────────────────────────────────────────────
+// function getClosingLine(score) {
+//     if (score >= 8) return `
+//         <div class="summary-close-text">
+//             🌟 Days like today are what gut recovery looks like.
+//             Keep this up consistently and your next test results
+//             will reflect it.
+//         </div>`;
+
+//     if (score >= 7) return `
+//         <div class="summary-close-text">
+//             💪 You're building the right habits.
+//             Gut health is a marathon — consistency over 4-8 weeks
+//             is what moves the needle on your bacteria levels.
+//         </div>`;
+
+//     if (score >= 5) return `
+//         <div class="summary-close-text">
+//             🌱 Every meal is a new opportunity.
+//             Your gut bacteria respond within 24 hours —
+//             tomorrow morning is your fresh start.
+//         </div>`;
+
+//     return `
+//         <div class="summary-close-text">
+//             💙 One day doesn't define your gut journey.
+//             Focus on your first meal tomorrow —
+//             start with something prebiotic like oats or banana.
+//         </div>`;
+// }
+function getClosingLine(score, isToday = true) {
+    const dayWord = isToday ? 'tomorrow morning' : 'today';
+    const tense   = isToday ? 'is' : 'was';
+
+    if (score >= 8) return `
+        <div class="summary-close-text">
+            🌟 ${isToday
+                ? 'Days like today are what gut recovery looks like. Keep this up!'
+                : 'This was an outstanding gut day. Results like this build up over time.'}
+        </div>`;
+
+    if (score >= 7) return `
+        <div class="summary-close-text">
+            💪 ${isToday
+                ? 'You\'re building the right habits. Consistency over 4-8 weeks moves the needle.'
+                : 'A solid day. Stringing days like this together is how gut health improves.'}
+        </div>`;
+
+    if (score >= 5) return `
+        <div class="summary-close-text">
+            🌱 ${isToday
+                ? 'Every meal is a new opportunity. Tomorrow morning is your fresh start.'
+                : 'Room to improve — but every day is a new data point on your journey.'}
+        </div>`;
+
+    return `
+        <div class="summary-close-text">
+            💙 ${isToday
+                ? 'Focus on your first meal tomorrow — start with something prebiotic.'
+                : 'One tough day doesn\'t define your gut journey. Keep going.'}
         </div>`;
 }
 

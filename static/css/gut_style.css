@@ -1475,3 +1475,163 @@
 .ribbon-slot-label {
     font-weight: 700;
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   Daily Summary Panel — gut_style.css additions
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Tap hint on score circle */
+.summary-tap-hint {
+    font-size: .7rem;
+    color: #0d5c38;
+    font-weight: 600;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Expand arrow on score circle */
+.summary-expand-arrow {
+    font-size: 1.2rem;
+    color: #0d5c38;
+    flex-shrink: 0;
+    font-weight: 700;
+    transition: transform .2s;
+}
+
+/* ── Summary panel ───────────────────────────────── */
+.day-summary-panel {
+    background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+    border: 1.5px solid #bbf7d0;
+    border-radius: 14px;
+    padding: 18px;
+    margin: 12px 0;
+    animation: summarySlideIn .3s ease;
+}
+
+@keyframes summarySlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #bbf7d0;
+}
+
+.summary-title {
+    font-size: .9rem;
+    font-weight: 700;
+    color: #0d5c38;
+}
+
+.summary-date {
+    font-size: .72rem;
+    color: #64748b;
+}
+
+/* Opening paragraph */
+.summary-opening {
+    font-size: .85rem;
+    color: #0f172a;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: white;
+    border-radius: 10px;
+    border-left: 3px solid #22c55e;
+}
+
+/* Section titles */
+.summary-section {
+    margin-bottom: 14px;
+}
+
+.summary-section-title {
+    font-size: .75rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 8px;
+}
+
+/* Win items */
+.summary-wins { display: flex; flex-direction: column; gap: 6px; }
+
+.summary-win-item {
+    font-size: .82rem;
+    color: #0f172a;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dcfce7;
+    line-height: 1.5;
+}
+
+/* Priority items */
+.summary-priorities { display: flex; flex-direction: column; gap: 8px; }
+
+.summary-priority-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: .82rem;
+    color: #0f172a;
+    line-height: 1.5;
+}
+
+.priority-badge {
+    font-size: .68rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.priority-red    { background: #fee2e2; color: #dc2626; }
+.priority-orange { background: #ffedd5; color: #ea580c; }
+.priority-purple { background: #ede9fe; color: #7c3aed; }
+
+.priority-action {
+    font-size: .75rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Insight */
+.summary-insight {
+    font-size: .82rem;
+    color: #0f172a;
+    line-height: 1.6;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 8px;
+    border-left: 3px solid #f59e0b;
+}
+
+/* Closing */
+.summary-close {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #bbf7d0;
+}
+
+.summary-close-text {
+    font-size: .8rem;
+    color: #475569;
+    line-height: 1.6;
+    font-style: italic;
+    text-align: center;
+}
