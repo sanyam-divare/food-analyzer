@@ -1126,8 +1126,38 @@ def history():
 # 2. Add the new routes below
 # 3. Add DAILY_TARGETS constant near top of file
 
+# @app.before_request
+# def global_pin_check():
+#     open_paths     = ['/static/', '/auth/', '/debug/', '/clear-cache']
+#     open_endpoints = ['index', 'static', 'debug_pin', 'clear_cache']
 
+#     if request.endpoint in open_endpoints:
+#         return None
+#     if any(request.path.startswith(p) for p in open_paths):
+#         return None
 
+# @app.route('/debug/pin')
+# def debug_pin():
+#     return '''
+#     <script>
+#     var pin = localStorage.getItem('food_analyzer_pin');
+#     document.write('<h2>Stored PIN: ' + pin + '</h2>');
+#     document.write('<h2>Length: ' + (pin ? pin.length : 0) + '</h2>');
+#     document.write('<br><button onclick="localStorage.clear();location.reload()">Clear & Reload</button>');
+#     </script>
+#     '''
+
+# # Add to app.py temporarily
+# @app.route('/clear-cache')
+# def clear_cache():
+#     return '''
+#     <script>
+#     localStorage.clear();
+#     sessionStorage.clear();
+#     alert("Cache cleared! Redirecting...");
+#     window.location.href = "/";
+#     </script>
+#     '''
 # ── Meal time categorization ──────────────────────────
 def get_meal_category(timestamp_str):
     """
@@ -2886,6 +2916,39 @@ def global_pin_check():
 #
 # For the demo, Option A is easiest — uncomment it and add it to app.py
 
+@app.before_request
+def global_pin_check():
+    open_paths     = ['/static/', '/auth/']
+    open_endpoints = ['index', 'static']
+
+    if request.endpoint in open_endpoints:
+        return None
+    if any(request.path.startswith(p) for p in open_paths):
+        return None
+
+    pin = (
+        request.headers.get('X-App-Pin') or
+        request.args.get('pin') or
+        (request.get_json(silent=True) or {}).get('pin') or
+        ''
+    ).strip()
+
+    # ← ADD THIS DEBUG LINE
+
+    try:
+        from supabase_db import validate_pin as db_validate_pin
+        if db_validate_pin(pin):
+            return None
+    except Exception as e:
+        print(f'[AUTH] Supabase error: {e}')
+
+    if pin in VALID_PINS:
+        return None
+
+    return jsonify({
+        "error": "Invalid PIN",
+        "code":  "AUTH_FAILED"
+    }), 401
 
 if __name__ == '__main__':
     # Initialize cache memory pool right before bootup
