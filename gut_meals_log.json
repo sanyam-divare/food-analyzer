@@ -2497,5 +2497,293 @@
     "overall_gut_score": 7.8,
     "gut_notes": "",
     "date": "2026-06-08"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Oatmeal bowl with raisins and diced apple",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Beta-glucan fermentation produces butyrate, primary energy source for this keystone species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch and beta-glucan promote SCFA production",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Beta-glucan oligosaccharides selectively feed bifidobacteria",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 50,
+        "fodmap": "low",
+        "gut_notes": "High-quality soluble fibre source with demonstrated anti-inflammatory effects via butyrate production. Excellent for microbiota diversity.",
+        "name": "Oatmeal (rolled oats)",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Inulin and fructose oligosaccharides support growth",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Polyphenols may indirectly support mucus-degrading bacteria",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 30,
+        "fodmap": "high",
+        "gut_notes": "High FODMAP content due to concentrated fructose and sorbitol. May cause bloating in FODMAP-sensitive individuals. Contains polyphenols with antioxidant properties.",
+        "name": "Raisins (dried grapes)",
+        "prebiotic_fibres": [
+          "inulin",
+          "pectin"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Apple pectin is primary substrate for bifidogenic fermentation",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin fermentation supports butyrate production",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin oligosaccharides promote SCFA-producing bacteria",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic source with skin intact (higher pectin content). Low FODMAP when raw. Rich in quercetin and polyphenols with anti-inflammatory and antioxidant effects. Supports epithelial barrier integrity.",
+        "name": "Apple (diced, with skin)",
+        "prebiotic_fibres": [
+          "pectin",
+          "inulin"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-09 08:56",
+    "overall_gut_score": 8.1,
+    "gut_notes": "",
+    "date": "2026-06-09"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A single whole egg.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 55,
+        "fodmap": "low",
+        "gut_notes": "Eggs are a low FODMAP, highly nutritious food providing high-quality protein, choline, selenium, and vitamins A, D, and E. These nutrients are essential for overall health, which indirectly supports a healthy gut environment. Choline, in particular, is vital for liver function and bile production, which aids in fat digestion. While eggs do not contain prebiotic fibers to directly feed specific gut bacteria, their nutrient profile contributes to cellular health and reduces inflammation, fostering an environment where beneficial gut bacteria can thrive. They do not contain compounds known to harm gut bacteria.",
+        "name": "Whole Egg",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-09 10:02",
+    "overall_gut_score": 7,
+    "gut_notes": "",
+    "date": "2026-06-09"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Kimchi drink with sugar, fried steamed rice, and spinach paratha",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Primary probiotic in kimchi fermentation; survives passage to colon",
+            "name": "Lactobacillus plantarum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Common kimchi LAB strain; produces bacteriocins and SCFA",
+            "name": "Lactobacillus brevis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Kimchi fermentation starter; produces dextrans",
+            "name": "Leuconostoc mesenteroides"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Lactobacillus produces bacteriocins inhibiting pathogenic strains",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "category": "fermented",
+        "confidence": "medium",
+        "cooking_method": "fermented",
+        "estimated_grams": 250,
+        "fodmap": "medium",
+        "gut_notes": "Excellent probiotic source with anti-inflammatory polyphenols (capsaicin, quercetin). However, consuming as sweetened drink may impair probiotic viability and increase sugar fermentation by pathogenic bacteria.",
+        "name": "Kimchi (fermented vegetable drink)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 4,
+        "probiotic": true
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Rapidly ferments simple sugars producing lactic acid",
+            "name": "Streptococcus mutans"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Opportunistic pathobiont favored by high sugar environment",
+            "name": "Fusobacterium nucleatum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Sugar-rich environment inhibits butyrate-producing species",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 5,
+        "fodmap": "low",
+        "gut_notes": "Pure simple sugar with no prebiotic benefit. Rapidly fermented by pathogenic bacteria, reducing pH and increasing intestinal permeability. Counteracts probiotic benefits of kimchi.",
+        "name": "Added sugar (teaspoon)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Minimal prebiotic potential; white rice has low resistant starch when fried",
+            "name": "Bacteroides vulgatus"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "High heat cooking destroys resistant starch; promotes gram-negative dysbiosis",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Fried preparation with oxidized oils impairs butyrate production",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "grain",
+        "confidence": "medium",
+        "cooking_method": "fried",
+        "estimated_grams": 200,
+        "fodmap": "low",
+        "gut_notes": "White rice offers minimal gut benefits. Frying increases oxidative stress and advanced glycation end products (AGEs), promoting inflammation. Destroys heat-sensitive resistant starch. Potential dysbiotic shift from repeated reheating and frying.",
+        "name": "Fried steamed rice",
+        "prebiotic_fibres": [
+          "resistant_starch"
+        ],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Spinach inulin and fructans selectively feed Bifidobacterium species",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Fiber substrate for butyrate production; anti-inflammatory pathway",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Polyphenols (lutein, quercetin) upregulate mucus-layer health",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Spinach polyphenols have mild antimicrobial properties",
+            "name": "Escherichia coli"
+          }
+        ],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "fried",
+        "estimated_grams": 150,
+        "fodmap": "high",
+        "gut_notes": "Spinach provides excellent prebiotic fiber, polyphenols, and anti-inflammatory compounds (lutein, kaempferol). However, high FODMAP content (fructans, GOS) may trigger bloating/IBS symptoms. Frying significantly reduces polyphenol bioavailability and adds pro-inflammatory oxidized lipids. Contains oxalates which may bind minerals.",
+        "name": "Spinach paratha (Indian flatbread with spinach)",
+        "prebiotic_fibres": [
+          "inulin",
+          "pectin"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-09 20:55",
+    "overall_gut_score": 6.1,
+    "gut_notes": "",
+    "date": "2026-06-09"
   }
 ]

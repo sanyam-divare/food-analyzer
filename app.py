@@ -2767,53 +2767,116 @@ def fitness_debug():
 
 # ── 2. Add a PIN validation route ────────────────────────────────────────────
 
+# In app.py — update only validate_pin route
 @app.route('/auth/validate', methods=['POST'])
 def validate_pin():
-    """Frontend calls this to validate PIN on first launch."""
-    data       = request.get_json() or {}
-    pin        = data.get('pin', '').strip().lower()
-    patient_id = VALID_PINS.get(pin)
+    data = request.get_json() or {}
+    pin  = data.get('pin', '').strip()
 
-    if not patient_id:
-        return jsonify({"valid": False,  "error": "Invalid PIN"}), 401
+    # Try Supabase first
+    try:
+        from supabase_db import validate_pin as db_validate_pin
+        patient = db_validate_pin(pin)
+        if patient:
+            return jsonify({
+                "valid":      True,
+                "patient_id": "guest",  # keep as guest for JSON compat
+                "name":       patient['name'],
+                "message":    "Access granted"
+            })
+    except Exception as e:
+        print(f'Supabase auth failed, trying local: {e}')
+        # Fallback to local VALID_PINS
+        patient_id = VALID_PINS.get(pin.lower())
+        if patient_id:
+            return jsonify({
+                "valid":      True,
+                "patient_id": patient_id,
+                "message":    "Access granted (local)"
+            })
 
-    return jsonify({
-        "valid":      True,
-        "patient_id": patient_id,
-        "message":    "Access granted"
-    })
+    return jsonify({"valid": False, "error": "Invalid PIN"}), 401
+# @app.route('/auth/validate', methods=['POST'])
+# def validate_pin():
+#     """Frontend calls this to validate PIN on first launch."""
+#     data       = request.get_json() or {}
+#     pin        = data.get('pin', '').strip().lower()
+#     patient_id = VALID_PINS.get(pin)
+
+#     if not patient_id:
+#         return jsonify({"valid": False,  "error": "Invalid PIN"}), 401
+
+#     return jsonify({
+#         "valid":      True,
+#         "patient_id": patient_id,
+#         "message":    "Access granted"
+#     })
 
 
 # ── 3. Protect your existing routes with @require_pin ────────────────────────
 #
 # Option A — protect ALL routes at once (simplest):
 #
+
+# @app.before_request
+# def global_pin_check():
+#     # Always allow these
+#     open_routes = ['validate_pin', 'static', 'index']
+#     if request.endpoint in open_routes:
+#         return None
+
+#     # Skip PIN check for static files
+#     if request.path.startswith('/static/'):
+#         return None
+
+#     if request.path.startswith('/auth/'):
+#         return None
+
+#     # Get PIN from header, query param, or body
+#     pin = (
+#         request.headers.get('X-App-Pin') or
+#         request.args.get('pin') or
+#         ''
+#     ).strip().lower()
+
+#     if pin not in VALID_PINS:
+#         return jsonify({
+#             "error": "Invalid PIN",
+#             "code":  "AUTH_FAILED"
+#         }), 401
 @app.before_request
 def global_pin_check():
-    # Always allow these
-    open_routes = ['validate_pin', 'static', 'index']
-    if request.endpoint in open_routes:
+    open_paths     = ['/static/', '/auth/']
+    open_endpoints = ['index', 'static']
+
+    if request.endpoint in open_endpoints:
+        return None
+    if any(request.path.startswith(p) for p in open_paths):
         return None
 
-    # Skip PIN check for static files
-    if request.path.startswith('/static/'):
-        return None
-
-    if request.path.startswith('/auth/'):
-        return None
-
-    # Get PIN from header, query param, or body
     pin = (
         request.headers.get('X-App-Pin') or
         request.args.get('pin') or
+        (request.get_json(silent=True) or {}).get('pin') or
         ''
-    ).strip().lower()
+    ).strip()
 
-    if pin not in VALID_PINS:
-        return jsonify({
-            "error": "Invalid PIN",
-            "code":  "AUTH_FAILED"
-        }), 401
+    # Try Supabase first, fallback to local
+    try:
+        from supabase_db import validate_pin as db_validate_pin
+        if db_validate_pin(pin):
+            return None
+    except Exception:
+        pass
+
+    # Local fallback
+    if pin.lower() in VALID_PINS:
+        return None
+
+    return jsonify({
+        "error": "Invalid PIN",
+        "code":  "AUTH_FAILED"
+    }), 401
 #
 # Option B — protect individual routes:
 # @app.route('/analyze', methods=['POST'])

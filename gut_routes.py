@@ -6,6 +6,14 @@ from flask import Blueprint, jsonify, request
 from datetime import datetime
 import json, os
 
+# from supabase_db import (
+#     load_gut_meals,
+#     load_gut_profile,
+#     save_gut_profile,
+#     save_gut_meal,
+#     validate_pin as db_validate_pin
+# )
+
 from gut_engine import (
     analyze_gut_with_claude,
     analyze_gut_with_gemini,
