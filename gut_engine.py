@@ -67,6 +67,51 @@ Respond ONLY in this exact JSON format, no other text:
     ]
 }"""
 
+DAILY_ANALYSIS_PROMPT = """
+You are a clinical gut health analyst reviewing a patient's complete food log.
+
+Patient profile:
+- Bacteria to BOOST (currently low): {bacteria_boost}
+- Bacteria to REDUCE (currently high): {bacteria_reduce}
+- Doctor's food targets: {food_targets}
+- Known condition: IBS / gut dysbiosis
+
+Today's complete food log in chronological sequence:
+{day_log}
+
+Analyse the ENTIRE day holistically — not each meal in isolation.
+Consider:
+1. Meal SEQUENCING — did the order of eating help or hurt?
+2. Cumulative FODMAP load across the day
+3. Bacteria NET EFFECT for each target bacteria
+4. Food INTERACTIONS — did any foods cancel each other's benefits?
+5. TRUE daily score — more accurate than average of meal scores.
+
+Return ONLY valid JSON, no markdown, no explanation outside JSON:
+{{
+  "true_daily_score": 6.2,
+  "score_adjustment": -0.6,
+  "score_reason": "one line why true score differs from average",
+  "sequencing_grade": "good|fair|poor",
+  "sequencing_insight": "2-3 sentence insight about meal order today",
+  "fodmap_status": "within range|borderline|exceeded",
+  "fodmap_insight": "1-2 sentences about cumulative FODMAP load",
+  "bacteria_net_effect": {{
+    "BacteriaName": {{
+      "status": "well supported|partially supported|undermined|not fed",
+      "reason": "brief reason"
+    }}
+  }},
+  "key_interaction": "Most important food interaction today (1 sentence)",
+  "tomorrow_priorities": [
+    "Specific action 1",
+    "Specific action 2",
+    "Specific action 3"
+  ],
+  "narrative": "2-3 sentence human-friendly summary of the day"
+}}
+"""
+
 
 def analyze_gut_with_claude(image_base64, mime_type="image/jpeg"):
     """Analyze food image with gut-specific prompt using Claude"""
@@ -380,88 +425,6 @@ def build_daily_gut_scorecard(meals, date):
     }
 
 
-# def build_weekly_gut_scorecard(all_meals, week_start_date):
-#     """
-#     Aggregates gut meals for 7 days into a weekly scorecard.
-#     week_start_date: 'YYYY-MM-DD' string for Monday of the week
-#     """
-#     from datetime import datetime, timedelta
-
-#     # Build list of 7 dates
-#     start = datetime.strptime(week_start_date, "%Y-%m-%d")
-#     week_dates = [
-#         (start + timedelta(days=i)).strftime("%Y-%m-%d")
-#         for i in range(7)
-#     ]
-
-#     # Group meals by date
-#     daily_scorecards = []
-#     all_plants_week  = set()
-#     all_bacteria_fed = {}
-#     gut_scores_by_day = {}
-
-#     for date in week_dates:
-#         day_meals = [
-#             m for m in all_meals
-#             if m.get('timestamp', '').startswith(date)
-#             or m.get('date', '') == date
-#         ]
-#         scorecard = build_daily_gut_scorecard(day_meals, date)
-#         daily_scorecards.append(scorecard)
-
-#         # Accumulate weekly data
-#         if scorecard['daily_gut_score'] > 0:
-#             gut_scores_by_day[date] = scorecard['daily_gut_score']
-
-#         all_plants_week.update(scorecard['plant_diversity'])
-
-#         for name, data in scorecard['bacteria_fed'].items():
-#             if name not in all_bacteria_fed:
-#                 all_bacteria_fed[name] = {
-#                     'count':      0,
-#                     'total_strength': 0,
-#                     'avg_strength':   0
-#                 }
-#             all_bacteria_fed[name]['count']          += data['count']
-#             all_bacteria_fed[name]['total_strength'] += data['total_strength']
-
-#     # Calculate avg strength per bacteria
-#     for name, data in all_bacteria_fed.items():
-#         if data['count'] > 0:
-#             data['avg_strength'] = round(
-#                 data['total_strength'] / data['count'], 1
-#             )
-
-#     # Sort bacteria by count descending
-#     sorted_bacteria = dict(
-#         sorted(all_bacteria_fed.items(),
-#                key=lambda x: x[1]['count'],
-#                reverse=True)
-#     )
-
-#     scores = list(gut_scores_by_day.values())
-#     avg_score = round(sum(scores) / len(scores), 1) if scores else 0
-
-#     best_day  = max(gut_scores_by_day, key=gut_scores_by_day.get) \
-#                 if gut_scores_by_day else None
-#     worst_day = min(gut_scores_by_day, key=gut_scores_by_day.get) \
-#                 if gut_scores_by_day else None
-
-#     return {
-#         'week_start':        week_start_date,
-#         'week_end':          week_dates[-1],
-#         'daily_scorecards':  daily_scorecards,
-#         'gut_scores_by_day': gut_scores_by_day,
-#         'avg_gut_score':     avg_score,
-#         'best_day':          best_day,
-#         'best_day_score':    gut_scores_by_day.get(best_day, 0),
-#         'worst_day':         worst_day,
-#         'worst_day_score':   gut_scores_by_day.get(worst_day, 0),
-#         'bacteria_fed':      sorted_bacteria,
-#         'plant_diversity':   sorted(list(all_plants_week)),
-#         'plant_count':       len(all_plants_week),
-#         'total_meals':       sum(s['meal_count'] for s in daily_scorecards)
-#     }
 
 def build_weekly_gut_scorecard(all_meals, week_start):
     """
@@ -833,3 +796,126 @@ def check_bacteria_progress_today(patient_profile, meals_today):
         })
 
     return progress
+
+def analyse_full_day_with_claude(day_meals, patient_profile):
+    """
+    Send entire day's food log to Claude for holistic gut analysis.
+    Returns structured JSON with sequencing, FODMAP load, bacteria
+    net effect and tomorrow's priorities.
+    """
+    import os, json, requests
+
+    CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
+    if not CLAUDE_API_KEY:
+        return {"error": "Missing CLAUDE_API_KEY"}
+
+    if not day_meals:
+        return {"error": "No meals to analyse"}
+
+    # ── Build chronological food log for Claude ───────────────────────────
+    day_log_lines = []
+    for meal in sorted(day_meals, key=lambda x: x.get('timestamp', '')):
+        time  = meal.get('timestamp', '')[-5:] or 'Unknown time'
+        foods = meal.get('foods', [])
+        food_list = ', '.join(
+            f"{f.get('name','?')} ({f.get('estimated_grams',0)}g)"
+            for f in foods
+        )
+        score = meal.get('overall_gut_score', 0)
+        day_log_lines.append(
+            f"  {time}: {food_list} [meal score: {score}/10]"
+        )
+
+    day_log = '\n'.join(day_log_lines)
+
+    # ── Extract profile data ───────────────────────────────────────────────
+    bacteria_boost = ', '.join(
+        b.get('name', '') for b in
+        patient_profile.get('bacteria_boost', [])
+    ) or 'Not specified'
+
+    bacteria_reduce = ', '.join(
+        b.get('name', '') for b in
+        patient_profile.get('bacteria_reduce', [])
+    ) or 'Not specified'
+
+    food_targets = ', '.join(
+        f"{t.get('food','')} {t.get('amount_grams',0)}g {t.get('frequency','')}"
+        for t in patient_profile.get('food_targets', [])
+    ) or 'Not specified'
+
+    # ── Build prompt ──────────────────────────────────────────────────────
+    prompt = DAILY_ANALYSIS_PROMPT.format(
+        bacteria_boost  = bacteria_boost,
+        bacteria_reduce = bacteria_reduce,
+        food_targets    = food_targets,
+        day_log         = day_log
+    )
+
+    try:
+        response = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         CLAUDE_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json"
+            },
+            json={
+                "model":      "claude-haiku-4-5-20251001",
+                "max_tokens": 1500,
+                "messages": [{
+                    "role":    "user",
+                    "content": prompt
+                }]
+            },
+            timeout=30
+        )
+
+        if response.status_code != 200:
+            return {"error": f"Claude error {response.status_code}"}
+
+        # text = response.json()['content'][0]['text'].strip()
+
+        # # Strip markdown if present
+        # if '```' in text:
+        #     text = text.split('```')[1]
+        #     if text.startswith('json'):
+        #         text = text[4:]
+        #     text = text.split('```')[0]
+
+        # return json.loads(text.strip())
+
+        text = response.json()['content'][0]['text'].strip()
+
+        # Debug — see what Claude returned
+        print(f'[daily_analysis] Raw response: {text[:200]}')
+
+        # Strip markdown code fences robustly
+        if '```' in text:
+            # Extract content between first ``` and last ```
+            parts = text.split('```')
+            # parts[1] is the content inside the fences
+            if len(parts) >= 3:
+                text = parts[1]
+            else:
+                text = parts[1] if len(parts) > 1 else text
+            # Remove language identifier (json, python etc)
+            if text.startswith('json'):
+                text = text[4:]
+            elif text.startswith('JSON'):
+                text = text[4:]
+            text = text.strip()
+
+        # Find JSON object — start from first {
+        start = text.find('{')
+        end   = text.rfind('}')
+        if start != -1 and end != -1:
+            text = text[start:end+1]
+
+        print(f'[daily_analysis] Cleaned JSON: {text[:100]}')
+        return json.loads(text)
+
+    except json.JSONDecodeError as e:
+        return {"error": f"JSON parse error: {e}"}
+    except Exception as e:
+        return {"error": f"Analysis failed: {e}"}

@@ -12,6 +12,18 @@ let gutDailyOffset = 0;  // 0 = today, -1 = yesterday, -2 = two days ago
 let gutWeekOffset   = 0;  // 0 = current week, -1 = last week
 let gutMonthOffset  = 0;
 let gutDailyData = null;  // stores today's scorecard data
+let gutDailyAnalysis = null;  // cached AI day analysis
+
+// ── Meal time edit ────────────────────────────────────────────────────────────
+const MEAL_SLOTS = [
+    { label: '🌅 Breakfast',    time: '08:00' },
+    { label: '🌤️ Mid-morning',  time: '10:30' },
+    { label: '☀️ Lunch',        time: '13:00' },
+    { label: '🍵 Snack',        time: '16:00' },
+    { label: '🌆 Dinner',       time: '19:30' },
+    { label: '🌙 Late night',   time: '21:30' },
+];
+
 
 function initGutMode() {
     console.log('🦠 Gut mode initialised');
@@ -638,8 +650,8 @@ function renderDayRibbon(date, meals) {
             const foods  = meal.foods || [];
             const fCount = foods.length;
             const mealId = `hist-${date}-${idx}`;
+            const ts     = meal.timestamp || '';
 
-            // Count unique bacteria fed
             const allBact = new Set();
             foods.forEach(f =>
                 (f.bacteria_fed || []).forEach(b =>
@@ -647,23 +659,15 @@ function renderDayRibbon(date, meals) {
                 )
             );
 
-            // Short food names for preview
-            const foodPreview = foods
-                .slice(0, 3)
-                .map(f => f.name)
-                .join(', ')
+            const foodPreview = foods.slice(0, 3).map(f => f.name).join(', ')
                 + (foods.length > 3 ? ` +${foods.length - 3}` : '');
 
             return `
-                <div class="ribbon-meal-card"
-                     onclick="toggleHistoryMeal('${mealId}')">
-                    <div class="ribbon-meal-row">
-                        <!-- Score badge -->
+                <div class="ribbon-meal-card">
+                    <div class="ribbon-meal-row"
+                        onclick="toggleHistoryMeal('${mealId}')">
                         <div class="ribbon-score-badge"
-                             style="background:${sc}">
-                            ${s}
-                        </div>
-                        <!-- Meal info -->
+                            style="background:${sc}">${s}</div>
                         <div class="ribbon-meal-info">
                             <div class="ribbon-meal-foods">
                                 ${foodPreview}
@@ -672,19 +676,79 @@ function renderDayRibbon(date, meals) {
                                 ${time ? `🕐 ${time}` : ''}
                                 · ${fCount} food${fCount !== 1 ? 's' : ''}
                                 ${allBact.size
-                                    ? ` · 🦠 ${allBact.size}`
-                                    : ''}
+                                    ? ` · 🦠 ${allBact.size}` : ''}
                             </div>
                         </div>
+                        <button class="meal-edit-btn"
+                                onclick="event.stopPropagation();
+                                        showEditMealTime(
+                                        '${ts}',
+                                        '${foodPreview.replace(/'/g,"\\'")
+                                                        .replace(/"/g,'\\"')}')">
+                            ✏️
+                        </button>
                         <span class="hist-expand-arrow">›</span>
                     </div>
-
-                    <!-- Full detail panel -->
                     <div class="hist-meal-detail" id="${mealId}">
                         ${renderHistoryMealDetail(meal)}
                     </div>
                 </div>`;
         }).join('');
+
+        // const mealItems = slotMeals.map(({ meal, idx }) => {
+        //     const s      = meal.overall_gut_score || 0;
+        //     const sc     = s >= 7 ? '#22c55e' : s >= 5 ? '#f59e0b' : '#ef4444';
+        //     const time   = (meal.timestamp || '').slice(11, 16);
+        //     const foods  = meal.foods || [];
+        //     const fCount = foods.length;
+        //     const mealId = `hist-${date}-${idx}`;
+
+        //     // Count unique bacteria fed
+        //     const allBact = new Set();
+        //     foods.forEach(f =>
+        //         (f.bacteria_fed || []).forEach(b =>
+        //             allBact.add(typeof b === 'object' ? b.name : b)
+        //         )
+        //     );
+
+        //     // Short food names for preview
+        //     const foodPreview = foods
+        //         .slice(0, 3)
+        //         .map(f => f.name)
+        //         .join(', ')
+        //         + (foods.length > 3 ? ` +${foods.length - 3}` : '');
+
+        //     return `
+        //         <div class="ribbon-meal-card"
+        //              onclick="toggleHistoryMeal('${mealId}')">
+        //             <div class="ribbon-meal-row">
+        //                 <!-- Score badge -->
+        //                 <div class="ribbon-score-badge"
+        //                      style="background:${sc}">
+        //                     ${s}
+        //                 </div>
+        //                 <!-- Meal info -->
+        //                 <div class="ribbon-meal-info">
+        //                     <div class="ribbon-meal-foods">
+        //                         ${foodPreview}
+        //                     </div>
+        //                     <div class="ribbon-meal-stats">
+        //                         ${time ? `🕐 ${time}` : ''}
+        //                         · ${fCount} food${fCount !== 1 ? 's' : ''}
+        //                         ${allBact.size
+        //                             ? ` · 🦠 ${allBact.size}`
+        //                             : ''}
+        //                     </div>
+        //                 </div>
+        //                 <span class="hist-expand-arrow">›</span>
+        //             </div>
+
+        //             <!-- Full detail panel -->
+        //             <div class="hist-meal-detail" id="${mealId}">
+        //                 ${renderHistoryMealDetail(meal)}
+        //             </div>
+        //         </div>`;
+        // }).join('');
 
         return `
             <div class="ribbon-slot">
@@ -2092,21 +2156,15 @@ function renderPlantDiversity(plants, count, target=30) {
 
 function renderDailyScorecard(container, data) {
     gutDailyData = data;
-    const s  = data.daily_gut_score || 0;
-    const sc = gutScoreColor(s);
-
-    // Only show summary button if 2+ meals logged
+    const s          = data.daily_gut_score || 0;
+    const sc         = gutScoreColor(s);
     const hasSummary = (data.meal_count || 0) >= 2;
 
     container.innerHTML = `
-        <!-- Score circle — tappable if summary available -->
+        <!-- Score circle -->
         <div class="gut-overall-score"
-             style="border-color:${sc};
-                    ${hasSummary ? 'cursor:pointer' : ''}"
-             ${hasSummary
-                ? `onclick="toggleDaySummary(this)"`
-                // ? `onclick="toggleDaySummary(this, ${JSON.stringify(data).replace(/"/g, '&quot;')})"`
-                : ''}>
+             style="border-color:${sc};${hasSummary ? 'cursor:pointer' : ''}"
+             ${hasSummary ? 'onclick="toggleDaySummary(this)"' : ''}>
             <div class="gut-score-circle" style="background:${sc}">
                 <span class="gut-score-num">${s}</span>
                 <span class="gut-score-label">/ 10</span>
@@ -2122,24 +2180,35 @@ function renderDailyScorecard(container, data) {
                         ${(data.fodmap_worst || 'low').toUpperCase()}
                     </span>
                 </div>
-                ${hasSummary ? `
-                    <div class="summary-tap-hint">
-                        📋 Tap for your day summary
-                    </div>` : `
-                    <div class="summary-tap-hint" style="color:#94a3b8">
-                        Log 2+ meals to unlock day summary
-                    </div>`}
+                <div class="summary-tap-hint"
+                     style="${hasSummary ? '' : 'color:#94a3b8'}">
+                    ${hasSummary
+                        ? '📋 Tap for your day summary'
+                        : 'Log 2+ meals to unlock day summary'}
+                </div>
             </div>
-            ${hasSummary ? `
-                <span class="summary-expand-arrow">›</span>` : ''}
+            ${hasSummary
+                ? '<span class="summary-expand-arrow">›</span>'
+                : ''}
         </div>
 
-        <!-- Summary panel — hidden by default -->
+        <!-- Summary panel — OUTSIDE score div -->
         <div class="day-summary-panel" id="day-summary-panel"
-             style="display:none">
-        </div>
+             style="display:none"></div>
 
-        <!-- Rest of scorecard -->
+        <!-- AI button — OUTSIDE score div, full width -->
+        ${hasSummary ? `
+            <div class="ai-analysis-bar">
+                <button class="ai-analysis-btn"
+                        id="ai-analysis-btn"
+                        onclick="loadDayAnalysis()">
+                    ✨ Get AI Day Analysis
+                </button>
+            </div>
+            <div id="ai-analysis-panel" style="display:none"></div>
+        ` : ''}
+
+        <!-- Score tiles -->
         <div class="gut-scores-grid">
             <div class="gut-score-tile">
                 <span class="gut-tile-label">🌱 Prebiotic</span>
@@ -2173,27 +2242,128 @@ function renderDailyScorecard(container, data) {
                 </span>
             </div>
         </div>
-        <div class="gut-section">
-            <div class="gut-section-title">
-                🦠 Bacteria Nourished
-                <span class="gut-section-hint">tap to expand</span>
-            </div>
-            ${renderBacteriaFed(data.bacteria_fed || {})}
-        </div>
-        <div class="gut-section">
-            <div class="gut-section-title">
-                ⚠️ Bacteria Harmed
-                <span class="gut-section-hint">tap to expand</span>
-            </div>
-            ${renderBacteriaHarmed(data.bacteria_harmed || {})}
-        </div>
+
+        ${renderBacteriaRibbon(
+            data.bacteria_fed    || {},
+            data.bacteria_harmed || {}
+        )}
+
         <div class="gut-section">
             ${renderPlantDiversity(
                 data.plant_diversity || [],
-                data.plant_count || 0, 30)}
+                data.plant_count     || 0, 30)}
+        </div>`;
+}
+function renderBacteriaRibbon(bacteriaFed, bacteriaHarmed) {
+    const fedCount    = Object.keys(bacteriaFed).length;
+    const harmedCount = Object.keys(bacteriaHarmed).length;
+
+    // ── Overall fed strength for color fill ───────────────────────────────
+    const avgStrength = fedCount > 0
+        ? Object.values(bacteriaFed)
+              .reduce((sum, b) => sum + (b.avg_strength || 0), 0) / fedCount
+        : 0;
+
+    const fedColor  = avgStrength >= 7 ? '#22c55e'
+                    : avgStrength >= 5 ? '#f59e0b' : '#ef4444';
+    const fedPct    = Math.min(100, Math.round((avgStrength / 10) * 100));
+    const fedLabel  = fedCount > 0
+        ? `${fedCount} bacteria fed · avg ${avgStrength.toFixed(1)}/10`
+        : 'None fed today';
+
+    // ── Harmed ribbon ─────────────────────────────────────────────────────
+    const harmColor  = '#f9a8d4';  // soft pink — not alarming
+    const harmBg     = 'rgba(249,168,212,0.12)';
+    const harmBorder = '#f9a8d4';
+    const harmLabel  = harmedCount > 0
+        ? `${harmedCount} bacteria affected`
+        : 'None harmed today ✅';
+
+    return `
+        <!-- Bacteria Nourished — collapsible ribbon -->
+        <div class="gut-section">
+            <div class="bact-ribbon bact-ribbon-fed"
+                 onclick="toggleRibbon('ribbon-fed', 'arrow-fed')"
+                 style="border-color:${fedColor};
+                        background:${fedColor}18">
+                <div class="bact-ribbon-left">
+                    <span class="bact-ribbon-icon">🦠</span>
+                    <div>
+                        <div class="bact-ribbon-title"
+                             style="color:${fedColor}">
+                            Bacteria Nourished
+                        </div>
+                        <div class="bact-ribbon-sub">${fedLabel}</div>
+                    </div>
+                </div>
+                <div class="bact-ribbon-right">
+                    <div class="bact-ribbon-bar-wrap">
+                        <div class="bact-ribbon-bar-bg">
+                            <div class="bact-ribbon-bar-fill"
+                                 style="width:${fedPct}%;
+                                        background:${fedColor}">
+                            </div>
+                        </div>
+                        <span class="bact-ribbon-pct"
+                              style="color:${fedColor}">
+                            ${fedPct}%
+                        </span>
+                    </div>
+                    <span class="bact-ribbon-arrow"
+                          id="arrow-fed">›</span>
+                </div>
+            </div>
+            <div class="bact-ribbon-detail"
+                 id="ribbon-fed">
+                ${renderBacteriaFed(bacteriaFed)}
+            </div>
+        </div>
+
+        <!-- Bacteria Harmed — collapsible ribbon -->
+        <div class="gut-section">
+            <div class="bact-ribbon"
+                 onclick="toggleRibbon('ribbon-harmed', 'arrow-harmed')"
+                 style="border-color:${harmBorder};
+                        background:${harmBg}">
+                <div class="bact-ribbon-left">
+                    <span class="bact-ribbon-icon">
+                        ${harmedCount > 0 ? '⚠️' : '✅'}
+                    </span>
+                    <div>
+                        <div class="bact-ribbon-title"
+                             style="color:${harmedCount > 0
+                                ? '#f472b6' : '#22c55e'}">
+                            Bacteria Affected
+                        </div>
+                        <div class="bact-ribbon-sub">${harmLabel}</div>
+                    </div>
+                </div>
+                <div class="bact-ribbon-right">
+                    ${harmedCount > 0
+                        ? `<span class="bact-ribbon-count"
+                                 style="background:rgba(249,168,212,.2);
+                                        color:#f472b6">
+                               ${harmedCount}
+                           </span>`
+                        : ''}
+                    <span class="bact-ribbon-arrow"
+                          id="arrow-harmed">›</span>
+                </div>
+            </div>
+            <div class="bact-ribbon-detail"
+                 id="ribbon-harmed">
+                ${renderBacteriaHarmed(bacteriaHarmed)}
+            </div>
         </div>`;
 }
 
+function toggleRibbon(sectionId, arrowId) {
+    const section = document.getElementById(sectionId);
+    const arrow   = document.getElementById(arrowId);
+    if (!section) return;
+    const isOpen  = section.classList.toggle('open');
+    if (arrow) arrow.textContent = isOpen ? '↓' : '›';
+}
 // ── Toggle summary panel ──────────────────────────────────────────────────────
 // function toggleDaySummary(scoreEl, data) {
 //     const panel = document.getElementById('day-summary-panel');
@@ -2520,6 +2690,258 @@ function buildPriorities(bacteriaFed, bacteriaHarmed, data) {
         </div>` : '';
 }
 
+
+// ── Main analysis function ────────────────────────────────────────────────────
+async function loadDayAnalysis() {
+    const btn   = document.getElementById('ai-analysis-btn');
+    const panel = document.getElementById('ai-analysis-panel');
+    if (!panel) return;
+
+    // Toggle off if already open
+    if (panel.style.display !== 'none') {
+        panel.style.display = 'none';
+        if (btn) btn.textContent = '✨ Get AI Day Analysis';
+        return;
+    }
+
+    // Show loading state
+    if (btn) {
+        btn.textContent = '⏳ Analysing your day...';
+        btn.disabled    = true;
+    }
+    panel.style.display = 'block';
+    panel.innerHTML = `
+        <div class="ai-analysis-loading">
+            <div class="spinner"></div>
+            <p>Claude is reviewing your entire day...</p>
+            <p style="font-size:.75rem;color:#94a3b8;margin-top:4px">
+                Checking sequencing, FODMAP load & interactions
+            </p>
+        </div>`;
+
+    try {
+        const today = new Date();
+        today.setDate(today.getDate() + gutDailyOffset);
+        const date  = today.toLocaleDateString('en-CA');
+
+        const res  = await fetch('/gut/daily-analysis', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                patient_id: gutPatientId,
+                date:       date
+            })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            panel.innerHTML = `
+                <div class="ai-analysis-error">
+                    ⚠️ ${data.error}
+                </div>`;
+            if (btn) {
+                btn.textContent = '✨ Get AI Day Analysis';
+                btn.disabled    = false;
+            }
+            return;
+        }
+
+        gutDailyAnalysis = data;
+        renderDayAnalysis(panel, data);
+        if (btn) {
+            btn.textContent = '✨ AI Analysis ↑ tap to close';
+            btn.disabled    = false;
+        }
+
+    } catch (err) {
+        panel.innerHTML = `
+            <div class="ai-analysis-error">
+                Could not load analysis: ${err.message}
+            </div>`;
+        if (btn) {
+            btn.textContent = '✨ Get AI Day Analysis';
+            btn.disabled    = false;
+        }
+    }
+}
+
+// ── Render analysis results ───────────────────────────────────────────────────
+function renderDayAnalysis(panel, data) {
+    const trueScore    = data.true_daily_score || 0;
+    const adjustment   = data.score_adjustment || 0;
+    const adjSign      = adjustment >= 0 ? '+' : '';
+    const trueColor    = gutScoreColor(trueScore);
+    const adjColor     = adjustment >= 0 ? '#22c55e' : '#ef4444';
+
+    // Sequencing grade color
+    const seqColor = data.sequencing_grade === 'good'  ? '#22c55e'
+                   : data.sequencing_grade === 'fair'  ? '#f59e0b'
+                   :                                     '#ef4444';
+
+    // FODMAP status color
+    const fodmapColor = data.fodmap_status === 'within range' ? '#22c55e'
+                      : data.fodmap_status === 'borderline'   ? '#f59e0b'
+                      :                                         '#ef4444';
+
+    // Bacteria net effect rows
+    const bacteriaRows = Object.entries(
+        data.bacteria_net_effect || {}
+    ).map(([name, info]) => {
+        const statusColor =
+            info.status === 'well supported'     ? '#22c55e' :
+            info.status === 'partially supported' ? '#f59e0b' :
+            info.status === 'undermined'          ? '#ef4444' :
+                                                    '#94a3b8';
+        const statusIcon =
+            info.status === 'well supported'     ? '✅' :
+            info.status === 'partially supported' ? '⚠️' :
+            info.status === 'undermined'          ? '❌' : '○';
+        const genus = name.split(' ')[0];
+
+        return `
+            <div class="analysis-bacteria-row">
+                <div class="analysis-bacteria-left">
+                    <span class="analysis-bacteria-icon">
+                        ${statusIcon}
+                    </span>
+                    <span class="analysis-bacteria-name">${genus}</span>
+                </div>
+                <div class="analysis-bacteria-right">
+                    <span class="analysis-bacteria-status"
+                          style="color:${statusColor}">
+                        ${info.status}
+                    </span>
+                    <div class="analysis-bacteria-reason">
+                        ${info.reason || ''}
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+
+    // Tomorrow's priorities
+    const priorities = (data.tomorrow_priorities || [])
+        .map((p, i) => `
+            <div class="analysis-priority">
+                <span class="analysis-priority-num">${i + 1}</span>
+                <span class="analysis-priority-text">${p}</span>
+            </div>`
+        ).join('');
+
+    panel.innerHTML = `
+        <div class="ai-analysis-card">
+
+            <!-- Header -->
+            <div class="analysis-header">
+                <div class="analysis-header-left">
+                    <span class="analysis-badge">✨ AI Analysis</span>
+                    <span class="analysis-meals">
+                        ${data.meal_count} meals reviewed
+                    </span>
+                </div>
+            </div>
+
+            <!-- True score vs average -->
+            <div class="analysis-score-row">
+                <div class="analysis-true-score"
+                     style="border-color:${trueColor}">
+                    <div class="analysis-score-circle"
+                         style="background:${trueColor}">
+                        <span class="analysis-score-num">
+                            ${trueScore}
+                        </span>
+                        <span class="analysis-score-label">/ 10</span>
+                    </div>
+                    <div>
+                        <div class="analysis-score-title">
+                            True Day Score
+                        </div>
+                        <div class="analysis-score-adj"
+                             style="color:${adjColor}">
+                            ${adjSign}${adjustment} vs meal average
+                        </div>
+                        <div class="analysis-score-reason">
+                            ${data.score_reason || ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Narrative -->
+            <div class="analysis-narrative">
+                ${data.narrative || ''}
+            </div>
+
+            <!-- Sequencing -->
+            <div class="analysis-section">
+                <div class="analysis-section-header">
+                    <span class="analysis-section-title">
+                        🔄 Meal Sequencing
+                    </span>
+                    <span class="analysis-grade"
+                          style="color:${seqColor}">
+                        ${(data.sequencing_grade || '').toUpperCase()}
+                    </span>
+                </div>
+                <div class="analysis-section-body">
+                    ${data.sequencing_insight || ''}
+                </div>
+            </div>
+
+            <!-- FODMAP load -->
+            <div class="analysis-section">
+                <div class="analysis-section-header">
+                    <span class="analysis-section-title">
+                        🌿 FODMAP Load
+                    </span>
+                    <span class="analysis-grade"
+                          style="color:${fodmapColor}">
+                        ${(data.fodmap_status || '').toUpperCase()}
+                    </span>
+                </div>
+                <div class="analysis-section-body">
+                    ${data.fodmap_insight || ''}
+                </div>
+            </div>
+
+            <!-- Key interaction -->
+            ${data.key_interaction ? `
+                <div class="analysis-section">
+                    <div class="analysis-section-title">
+                        ⚡ Key Interaction
+                    </div>
+                    <div class="analysis-section-body">
+                        ${data.key_interaction}
+                    </div>
+                </div>` : ''}
+
+            <!-- Bacteria net effect -->
+            ${bacteriaRows ? `
+                <div class="analysis-section">
+                    <div class="analysis-section-title">
+                        🦠 Bacteria Net Effect
+                    </div>
+                    <div class="analysis-bacteria-list">
+                        ${bacteriaRows}
+                    </div>
+                </div>` : ''}
+
+            <!-- Tomorrow's priorities -->
+            ${priorities ? `
+                <div class="analysis-section">
+                    <div class="analysis-section-title">
+                        🎯 Tomorrow's Priorities
+                    </div>
+                    <div class="analysis-priorities">
+                        ${priorities}
+                    </div>
+                </div>` : ''}
+
+            <div class="analysis-disclaimer">
+                ⚠️ AI analysis — validate with your practitioner
+            </div>
+        </div>`;
+}
+
 // ── Food suggestions for bacteria ─────────────────────────────────────────────
 function getBacteriaFood(genus) {
     const foods = {
@@ -2708,4 +3130,132 @@ function renderMonthlyScorecard(container, data) {
         <div class="gut-section"><div class="gut-section-title">🥗 Most Eaten Foods</div>${topFoods||'<p class="hint">No meals yet.</p>'}</div>
         <div class="gut-section">${renderPlantDiversity(data.plant_diversity||[],data.plant_count||0,120)}</div>
         ${Object.keys(data.bacteria_harmed||{}).length?`<div class="gut-section"><div class="gut-section-title">⚠️ Bacteria Harmed</div>${renderBacteriaHarmed(data.bacteria_harmed)}</div>`:''}`;
+}
+
+
+function showEditMealTime(oldTimestamp, mealDesc) {
+    const existing = document.getElementById('edit-time-modal');
+    if (existing) existing.remove();
+
+    const currentDate = oldTimestamp.slice(0, 10);
+    const today       = new Date().toLocaleDateString('en-CA');
+    const yesterday   = new Date(Date.now() - 86400000)
+                        .toLocaleDateString('en-CA');
+
+    const slotButtons = MEAL_SLOTS.map(slot => `
+        <button class="time-slot-btn"
+                onclick="selectTimeSlot('${currentDate}',
+                         '${slot.time}', '${oldTimestamp}')">
+            ${slot.label}
+        </button>`).join('');
+
+    const modal = document.createElement('div');
+    modal.id    = 'edit-time-modal';
+    modal.className = 'edit-time-overlay';
+    modal.innerHTML = `
+        <div class="edit-time-modal">
+            <div class="edit-time-header">
+                <div class="edit-time-title">✏️ Edit Meal Time</div>
+                <button class="edit-time-close"
+                        onclick="closeEditModal()">✕</button>
+            </div>
+            <div class="edit-time-desc">
+                ${mealDesc || 'This meal'}
+            </div>
+            <div class="edit-time-section-label">📅 Which day?</div>
+            <div class="edit-date-row">
+                <button class="edit-date-btn active"
+                        onclick="selectEditDate('${today}', this)">
+                    Today
+                </button>
+                <button class="edit-date-btn"
+                        onclick="selectEditDate('${yesterday}', this)">
+                    Yesterday
+                </button>
+                <input type="date"
+                       id="edit-custom-date"
+                       class="edit-date-input"
+                       value="${currentDate}"
+                       max="${today}"
+                       onchange="selectEditDate(this.value, null)">
+            </div>
+            <div class="edit-time-section-label">🕐 What time?</div>
+            <div class="edit-slots-grid">
+                ${slotButtons}
+            </div>
+            <div class="edit-time-section-label">
+                Or set exact time:
+            </div>
+            <div class="edit-exact-row">
+                <input type="time"
+                       id="edit-exact-time"
+                       class="edit-time-input"
+                       value="${oldTimestamp.slice(11, 16)}">
+                <button class="btn-green"
+                        onclick="saveExactTime('${oldTimestamp}')">
+                    Save
+                </button>
+            </div>
+        </div>`;
+
+    document.body.appendChild(modal);
+    modal._selectedDate = currentDate;
+}
+
+function selectEditDate(date, btn) {
+    const modal = document.getElementById('edit-time-modal');
+    if (!modal) return;
+    modal._selectedDate = date;
+    document.querySelectorAll('.edit-date-btn')
+            .forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const dateInput = document.getElementById('edit-custom-date');
+    if (dateInput) dateInput.value = date;
+}
+
+function selectTimeSlot(date, time, oldTimestamp) {
+    const modal = document.getElementById('edit-time-modal');
+    const selectedDate = modal?._selectedDate || date;
+    saveMealTime(oldTimestamp, `${selectedDate} ${time}`);
+}
+
+function saveExactTime(oldTimestamp) {
+    const modal     = document.getElementById('edit-time-modal');
+    const timeInput = document.getElementById('edit-exact-time');
+    if (!timeInput || !timeInput.value) return;
+    const selectedDate = modal?._selectedDate ||
+                         oldTimestamp.slice(0, 10);
+    saveMealTime(oldTimestamp, `${selectedDate} ${timeInput.value}`);
+}
+
+async function saveMealTime(oldTimestamp, newTimestamp) {
+    try {
+        const res = await fetch('/gut/meal/update-time', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                patient_id:    gutPatientId,
+                old_timestamp: oldTimestamp,
+                new_timestamp: newTimestamp
+            })
+        });
+        const result = await res.json();
+        if (result.error) {
+            alert('Could not update: ' + result.error); return;
+        }
+        closeEditModal();
+        loadGutHistory();
+        if (gutActiveTab === 'scorecard') {
+            loadGutScorecard();
+        }
+        showMessage('✅ Meal time updated!');
+        setTimeout(() => clearError(), 2000);
+    } catch (err) {
+        alert('Update failed: ' + err.message);
+    }
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-time-modal');
+    if (modal) modal.remove();
 }

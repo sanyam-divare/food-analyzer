@@ -28,6 +28,7 @@ from gut_engine import (
     get_empty_profile,
     check_food_targets_today,
     check_bacteria_progress_today,
+    analyse_full_day_with_claude
 )
 
 gut_bp = Blueprint('gut', __name__, url_prefix='/gut')
@@ -303,4 +304,145 @@ def gut_food_plan():
 
     except Exception as e:
         import traceback; print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+@gut_bp.route('/meal/update-time', methods=['POST'])
+def gut_update_meal_time():
+    '''Update meal timestamp — identified by old timestamp'''
+    try:
+        data          = request.get_json() or {}
+        patient_id    = data.get('patient_id', 'guest')
+        old_timestamp = data.get('old_timestamp', '')
+        new_timestamp = data.get('new_timestamp', '')
+
+        if not old_timestamp or not new_timestamp:
+            return jsonify({"error": "Missing timestamps"}), 400
+
+        log_file = 'gut_meals_log.json'
+        if not os.path.exists(log_file):
+            return jsonify({"error": "No meal log found"}), 404
+
+        with open(log_file, 'r') as f:
+            meals = json.load(f)
+
+        # Find and update the meal
+        found = False
+        for meal in meals:
+            if (meal.get('patient_id') == patient_id and
+                    meal.get('timestamp') == old_timestamp):
+                meal['timestamp'] = new_timestamp
+                meal['date']      = new_timestamp[:10]
+                found = True
+                break
+
+        if not found:
+            return jsonify({"error": "Meal not found"}), 404
+
+        with open(log_file, 'w') as f:
+            json.dump(meals, f, indent=2)
+
+        return jsonify({
+            "status":        "updated",
+            "new_timestamp": new_timestamp,
+            "new_date":      new_timestamp[:10]
+        })
+
+    except Exception as e:
+        import traceback; print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+
+# @gut_bp.route('/daily-analysis', methods=['POST'])
+# def gut_daily_analysis():
+#     ROUTE_CODE = '''
+#     @gut_bp.route('/daily-analysis', methods=['POST'])
+#     def gut_daily_analysis():
+#         """
+#         AI holistic analysis of entire day food log.
+#         Considers sequencing, FODMAP load, food interactions.
+#         """
+#         try:
+#             data       = request.get_json() or {}
+#             patient_id = data.get('patient_id', 'guest')
+#             date       = data.get('date', get_today_str())
+
+#             # Load profile and today meals
+#             from gut_engine import (
+#                 load_gut_profile,
+#                 analyse_full_day_with_claude
+#             )
+
+#             profile   = load_gut_profile(patient_id)
+#             all_meals = load_gut_meals(patient_id)
+
+#             day_meals = [
+#                 m for m in all_meals
+#                 if m.get('timestamp', '')[:10] == date
+#                 or m.get('date', '') == date
+#             ]
+
+#             if len(day_meals) < 2:
+#                 return jsonify({
+#                     "error": "Log at least 2 meals for a day analysis"
+#                 }), 400
+
+#             analysis = analyse_full_day_with_claude(day_meals, profile)
+
+#             if analysis.get('error'):
+#                 return jsonify({"error": analysis['error']}), 500
+
+#             # Add meal count and date to response
+#             analysis['meal_count'] = len(day_meals)
+#             analysis['date']       = date
+
+#             return jsonify(analysis)
+
+#         except Exception as e:
+#             import traceback; print(traceback.format_exc())
+#             return jsonify({"error": str(e)}), 500
+#     '''
+@gut_bp.route('/daily-analysis', methods=['POST'])
+def gut_daily_analysis():
+    """AI holistic analysis of entire day food log."""
+    try:
+        data       = request.get_json() or {}
+        patient_id = data.get('patient_id', 'guest')
+        date       = data.get('date', get_today_str())
+
+        # Load profile
+        from gut_engine import (
+            load_gut_profile,
+            analyse_full_day_with_claude
+        )
+        profile   = load_gut_profile(patient_id)
+
+        # Load today's meals
+        all_meals = load_gut_meals(patient_id)
+        day_meals = [
+            m for m in all_meals
+            if m.get('timestamp', '')[:10] == date
+            or m.get('date', '') == date
+        ]
+
+        if len(day_meals) < 2:
+            return jsonify({
+                "error": "Log at least 2 meals for a day analysis"
+            }), 400
+
+        analysis = analyse_full_day_with_claude(day_meals, profile)
+
+        if not analysis:
+            return jsonify({"error": "Analysis returned empty"}), 500
+
+        if analysis.get('error'):
+            return jsonify({"error": analysis['error']}), 500
+
+        analysis['meal_count'] = len(day_meals)
+        analysis['date']       = date
+
+        return jsonify(analysis)
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500

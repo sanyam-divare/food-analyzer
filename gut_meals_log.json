@@ -2785,5 +2785,507 @@
     "overall_gut_score": 6.1,
     "gut_notes": "",
     "date": "2026-06-09"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A glass of oat banana smoothie",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Beta-glucans fermented to butyrate, primary fuel source for this key anti-inflammatory species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan fermentation supports butyrate production",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch and beta-glucan utilisation",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic source. Beta-glucans have proven anti-inflammatory effects and support barrier function.",
+        "name": "Oats",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Pectin fermentation, primary bifidogenic fruit fibre",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and starch utilisation",
+            "name": "Bacteroides vulgatus"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Secondary fermentation of pectin metabolites",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 120,
+        "fodmap": "low",
+        "gut_notes": "Pectin content supports mucus-producing bacteria. Potassium and polyphenols provide additional anti-inflammatory benefits. Resistant starch increases with ripeness variation.",
+        "name": "Banana",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-10 09:38",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-10"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Chai with toast rusk",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "beverage",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 250,
+        "fodmap": "low",
+        "gut_notes": "Black tea and spices (ginger, cardamom, cloves) contain polyphenols with anti-inflammatory properties. No prebiotic or probiotic content. Low FODMAP if milk is not excessive.",
+        "name": "Chai (spiced tea)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Refined carbohydrates rapidly fermented by facultative anaerobes",
+            "name": "Escherichia coli"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Low fibre content provides minimal substrate for beneficial butyrate-producing bacteria",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Refined wheat product stripped of bran and germ. Minimal fibre, negligible prebiotic value. Rapidly digestible carbohydrates may dysbiose microbiota toward pathogenic gram-negatives.",
+        "name": "Toast rusk",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-10 09:41",
+    "overall_gut_score": 4.8,
+    "gut_notes": "",
+    "date": "2026-06-10"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A traditional Indian meal consisting of whole wheat chapatis, spiced potato (aloo sabzi), and a side of raw sliced carrots and cucumbers.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Ferments fructans (FOS) and resistant starch present in whole wheat, producing beneficial short-chain fatty acids.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Benefits from dietary fibers including resistant starch, contributing to butyrate production which is crucial for gut barrier health.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Utilizes resistant starch and other complex carbohydrates from whole wheat, acting as a primary butyrate producer.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "cooked",
+        "estimated_grams": 160,
+        "fodmap": "high",
+        "gut_notes": "Rich in dietary fiber and resistant starch, supporting butyrate-producing bacteria. However, fructans can be problematic for individuals with IBS or FODMAP sensitivities, potentially causing bloating and gas.",
+        "name": "Whole Wheat Chapatis",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "FOS"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Benefits from resistant starch, common in cooked and cooled potatoes, contributing to a healthy gut microbiota.",
+            "name": "Bifidobacterium pseudocatenulatum"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Many species within this family are known to ferment resistant starch, producing butyrate and other SCFAs.",
+            "name": "Lachnospiraceae family members"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "cooked",
+        "estimated_grams": 180,
+        "fodmap": "low",
+        "gut_notes": "A source of resistant starch, which acts as a prebiotic, fostering beneficial bacteria. The spices (like cumin) contribute to anti-inflammatory effects within the gut.",
+        "name": "Aloo Sabzi (Spiced Potatoes)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "pectin"
+        ],
+        "prebiotic_score": 5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Highly efficient at degrading pectin, a soluble fiber found in carrots, contributing to fiber fermentation.",
+            "name": "Bacteroides ovatus"
+          },
+          {
+            "impact_strength": 4,
+            "mechanism": "Can ferment various soluble fibers, including pectin, supporting its growth and activity.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 50,
+        "fodmap": "low",
+        "gut_notes": "Provides soluble fiber (pectin) and powerful antioxidants like beta-carotene, promoting gut motility and reducing oxidative stress and inflammation.",
+        "name": "Raw Carrots (sliced)",
+        "prebiotic_fibres": [
+          "pectin"
+        ],
+        "prebiotic_score": 4,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Mainly hydrating due to high water content. Offers a small amount of dietary fiber and phytonutrients that support general gut health and aid in nutrient absorption.",
+        "name": "Raw Cucumbers (sliced)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-10 13:28",
+    "overall_gut_score": 7.3,
+    "gut_notes": "",
+    "date": "2026-06-10"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Single apple (Bravo variety) 100gm consumed raw",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Pectin in apple skin is selectively fermented by Bifidobacterium species",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch and pectin fermentation produces butyrate, supporting this key anti-inflammatory species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin fermentation substrate for butyrate production",
+            "name": "Roseburia species"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Excellent gut health food. High pectin content (especially in skin) provides soluble fibre for prebiotic effect. Contains polyphenols (quercetin) with anti-inflammatory properties. Low FODMAP makes it suitable for sensitive guts. Supports short-chain fatty acid production. No pathogenic bacteria promotion identified.",
+        "name": "Bravo Apple",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-10 17:45",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-10"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Yoplait yogurt, 110g serving",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Starter culture commonly present in yogurt; survives GI transit to support gut microbiota",
+            "name": "Lactobacillus bulgaricus"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Co-culture yogurt starter; produces lactase aiding lactose digestion",
+            "name": "Streptococcus thermophilus"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "If present as added probiotic strain; may be supported by yogurt matrix",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Lactic acid production creates hostile environment for pathogenic species",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 110,
+        "fodmap": "low",
+        "gut_notes": "Live culture yogurt provides transient but valuable probiotic benefit. Lactose content minimal due to bacterial fermentation. Anti-inflammatory through butyrate-like compounds and immunomodulatory peptides. Limited prebiotic effect without added inulin/FOS. Suitable for most FODMAP-restricted diets in this portion size.",
+        "name": "Yoplait Yogurt",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": true
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-10 13:00",
+    "overall_gut_score": 7.1,
+    "gut_notes": "",
+    "date": "2026-06-10"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Hot beverage with milk, sugar, and coffee",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Polyphenols (chlorogenic acid, caffeic acid) are metabolised by gut bacteria into short-chain fatty acids",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "brewed",
+        "estimated_grams": 5,
+        "fodmap": "low",
+        "gut_notes": "Polyphenol content provides anti-inflammatory benefits and feeds beneficial butyrate-producing bacteria. No prebiotics or probiotics.",
+        "name": "Coffee",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Lactose provides minor prebiotic effect in some individuals; milk proteins may support microbial diversity",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Heating milk denatures beneficial lactic acid bacteria if present; may reduce probiotic content",
+            "name": "Lactobacillus species"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "heated",
+        "estimated_grams": 200,
+        "fodmap": "low",
+        "gut_notes": "Minimal prebiotic value. Heating may reduce any native probiotics. Lactose provides minor substrate for fermentation in lactase-persistent individuals.",
+        "name": "Milk",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 1,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Readily fermentable simple sugar promotes pathogenic bacterial overgrowth",
+            "name": "Streptococcus mutans"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Simple sugars can promote opportunistic pathogenic species",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "High sugar intake shifts microbiota composition away from beneficial butyrate producers",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "dissolved",
+        "estimated_grams": 10,
+        "fodmap": "low",
+        "gut_notes": "No prebiotic value. Simple sugar promotes dysbiosis and pathogenic bacterial growth. May increase intestinal inflammation and compromise barrier function.",
+        "name": "Sugar (added)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-10 10:30",
+    "overall_gut_score": 4.2,
+    "gut_notes": "",
+    "date": "2026-06-10"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Mild black tea with one teaspoon of sugar",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Polyphenols (catechins, theaflavins) in black tea are metabolized by gut bacteria producing butyrate, which feeds this beneficial species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Tea polyphenols may enhance mucus layer integrity supporting this mucin-degrading bacterium",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "beverage",
+        "confidence": "high",
+        "cooking_method": "brewed",
+        "estimated_grams": 240,
+        "fodmap": "low",
+        "gut_notes": "Black tea polyphenols provide antioxidant and anti-inflammatory benefits to gut epithelium. No significant prebiotic fibre content.",
+        "name": "Black tea (brewed)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 2,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Simple sugar rapidly fermented by pathogenic gram-negative bacteria",
+            "name": "Escherichia coli"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Sucrose fermentation promotes growth of opportunistic pathogenic species",
+            "name": "Clostridium difficile"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Rapid sucrose fermentation by competing bacteria reduces selective advantage of beneficial bifidobacteria",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 5,
+        "fodmap": "high",
+        "gut_notes": "Simple sugar promotes dysbiosis and rapid fermentation of pathogenic bacteria. Small quantity (5g) limits impact but still unfavourable for long-term gut health.",
+        "name": "White sugar (sucrose)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-10 16:00",
+    "overall_gut_score": 5.8,
+    "gut_notes": "",
+    "date": "2026-06-10"
   }
 ]

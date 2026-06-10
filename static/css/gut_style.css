@@ -1635,3 +1635,596 @@
     font-style: italic;
     text-align: center;
 }
+/* ── Bacteria Ribbon ─────────────────────────────── */
+.bact-ribbon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #22c55e;
+    cursor: pointer;
+    transition: opacity .15s;
+    gap: 10px;
+}
+
+.bact-ribbon:active { opacity: 0.8; }
+
+.bact-ribbon-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.bact-ribbon-icon  { font-size: 1.2rem; flex-shrink: 0; }
+
+.bact-ribbon-title {
+    font-size: .82rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.bact-ribbon-sub {
+    font-size: .72rem;
+    color: #64748b;
+}
+
+.bact-ribbon-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Progress bar inside ribbon */
+.bact-ribbon-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bact-ribbon-bar-bg {
+    width: 60px;
+    height: 6px;
+    background: rgba(255,255,255,.15);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.bact-ribbon-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .5s ease;
+}
+
+.bact-ribbon-pct {
+    font-size: .72rem;
+    font-weight: 700;
+    width: 30px;
+}
+
+/* Count badge */
+.bact-ribbon-count {
+    font-size: .75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* Expand arrow */
+.bact-ribbon-arrow {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    width: 16px;
+    text-align: center;
+}
+
+/* Detail panel — hidden by default */
+.bact-ribbon-detail {
+    display: none;
+    padding: 10px 4px 4px;
+}
+
+.bact-ribbon-detail.open {
+    display: block;
+}
+/* ── Edit meal time modal ────────────────────────── */
+.meal-edit-btn {
+    background: transparent;
+    border: none;
+    font-size: .85rem;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+.meal-edit-btn:active { opacity: 1; }
+
+.edit-time-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 9998;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn .2s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.edit-time-modal {
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 36px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp .25s ease;
+}
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.edit-time-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.edit-time-title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+.edit-time-close {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: .85rem;
+    color: #64748b;
+}
+.edit-time-desc {
+    font-size: .78rem;
+    color: #64748b;
+    margin-bottom: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.edit-time-section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin: 12px 0 8px;
+}
+.edit-date-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.edit-date-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.edit-date-btn.active {
+    border-color: #0d5c38;
+    background: #f0fdf4;
+    color: #0d5c38;
+}
+.edit-date-input {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: .8rem;
+    color: #475569;
+    background: #f8fafc;
+    flex: 1;
+    min-width: 120px;
+}
+.edit-slots-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.time-slot-btn {
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+.time-slot-btn:active {
+    background: #f0fdf4;
+    border-color: #0d5c38;
+    color: #0d5c38;
+    transform: scale(.97);
+}
+.edit-exact-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 4px;
+}
+.edit-time-input {
+    flex: 1;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: .9rem;
+    color: #0f172a;
+    background: #f8fafc;
+}
+.edit-time-input:focus {
+    outline: none;
+    border-color: #0d5c38;
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   AI Day Analysis styles — append to gut_style.css
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Analysis trigger button ─────────────────────── */
+.ai-analysis-bar {
+    margin: 12px 0 0;
+    text-align: center;
+}
+
+.ai-analysis-btn {
+    background: linear-gradient(135deg, #0d5c38, #22c55e);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 24px;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .02em;
+    box-shadow: 0 2px 12px rgba(34,197,94,.3);
+    transition: all .2s;
+    width: 100%;
+}
+
+.ai-analysis-btn:active {
+    transform: scale(.97);
+    box-shadow: 0 1px 6px rgba(34,197,94,.2);
+}
+
+.ai-analysis-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ── Loading state ───────────────────────────────── */
+.ai-analysis-loading {
+    text-align: center;
+    padding: 24px;
+    color: #64748b;
+    font-size: .85rem;
+}
+
+.ai-analysis-error {
+    padding: 14px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    color: #dc2626;
+    font-size: .82rem;
+    margin-top: 8px;
+}
+
+/* ── Analysis card ───────────────────────────────── */
+.ai-analysis-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+    border: 1.5px solid #bbf7d0;
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 12px;
+    animation: summarySlideIn .3s ease;
+}
+
+/* Header */
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.analysis-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.analysis-badge {
+    background: linear-gradient(135deg, #0d5c38, #22c55e);
+    color: white;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 10px;
+}
+
+.analysis-meals {
+    font-size: .72rem;
+    color: #64748b;
+}
+
+/* True score box */
+.analysis-true-score {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border: 2px solid #22c55e;
+    border-radius: 12px;
+    background: white;
+    margin-bottom: 14px;
+}
+
+.analysis-score-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: white;
+}
+
+.analysis-score-num   { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.analysis-score-label { font-size: .6rem;  opacity: .85; }
+
+.analysis-score-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 3px;
+}
+
+.analysis-score-adj {
+    font-size: .78rem;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.analysis-score-reason {
+    font-size: .72rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* Narrative */
+.analysis-narrative {
+    font-size: .83rem;
+    color: #334155;
+    line-height: 1.6;
+    padding: 12px 14px;
+    background: white;
+    border-radius: 10px;
+    border-left: 3px solid #22c55e;
+    margin-bottom: 14px;
+}
+
+/* Sections */
+.analysis-section {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.analysis-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.analysis-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.analysis-section-title {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #475569;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.analysis-grade {
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+}
+
+.analysis-section-body {
+    font-size: .8rem;
+    color: #334155;
+    line-height: 1.5;
+}
+
+/* Bacteria list */
+.analysis-bacteria-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.analysis-bacteria-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 10px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.analysis-bacteria-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 110px;
+}
+
+.analysis-bacteria-icon { font-size: .9rem; }
+
+.analysis-bacteria-name {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.analysis-bacteria-right { flex: 1; }
+
+.analysis-bacteria-status {
+    font-size: .72rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.analysis-bacteria-reason {
+    font-size: .7rem;
+    color: #64748b;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Tomorrow priorities */
+.analysis-priorities {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.analysis-priority {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.analysis-priority-num {
+    width: 22px;
+    height: 22px;
+    background: #0d5c38;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.analysis-priority-text {
+    font-size: .8rem;
+    color: #334155;
+    line-height: 1.4;
+    flex: 1;
+}
+
+/* Disclaimer */
+.analysis-disclaimer {
+    font-size: .7rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+/* ── AI Analysis panel fixes ─────────────────────── */
+
+/* Force full width below score circle */
+#ai-analysis-panel {
+    width: 100%;
+    clear: both;
+    margin-top: 12px;
+}
+
+/* Analysis card full width */
+.ai-analysis-card {
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Fix score row layout */
+.analysis-true-score {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Fix bacteria rows — prevent overflow */
+.analysis-bacteria-row {
+    flex-wrap: wrap;
+}
+
+.analysis-bacteria-left {
+    width: auto;
+    min-width: 80px;
+    max-width: 120px;
+}
+
+.analysis-bacteria-right {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.analysis-bacteria-name {
+    font-size: .75rem;
+    word-break: break-word;
+}
+
+/* Fix score reason text wrapping */
+.analysis-score-reason {
+    font-size: .7rem;
+    word-break: break-word;
+    max-width: 200px;
+}
+
+/* AI button full width */
+.ai-analysis-bar {
+    width: 100%;
+    clear: both;
+}
+
+.ai-analysis-btn {
+    width: 100%;
+    box-sizing: border-box;
+}
