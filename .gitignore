@@ -13,3 +13,9 @@ food_vectors/venv/
 ngrok-v3-stable-linux-arm64.tgz
 google_token.json
 client_secrets.json
+node_modules/
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties

@@ -1,0 +1,13 @@
+{
+  "appId": "com.gutbooster.app",
+  "appName": "Gut Booster",
+  "webDir": "static",
+  "server": {
+    "url": "https://food-analyzer-5xg1.onrender.com",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

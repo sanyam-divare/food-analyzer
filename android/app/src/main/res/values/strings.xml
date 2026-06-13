@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gut Booster</string>
+    <string name="title_activity_main">Gut Booster</string>
+    <string name="package_name">com.gutbooster.app</string>
+    <string name="custom_url_scheme">com.gutbooster.app</string>
+</resources>

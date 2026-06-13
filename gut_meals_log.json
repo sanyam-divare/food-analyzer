@@ -3287,5 +3287,465 @@
     "overall_gut_score": 5.8,
     "gut_notes": "",
     "date": "2026-06-10"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Oat smoothie with raisins and banana",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan fermentation produces short-chain fatty acids that fuel this key anti-inflammatory species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Beta-glucan substrate supports butyrate production",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Resistant starch and beta-glucan provide fermentable substrate",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic source with strong anti-inflammatory potential through SCFA production",
+        "name": "Oats",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and resistant starch (especially in slightly unripe bananas) selectively feed Bifidobacterium species",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Fructooligosaccharide-like compounds and pectin fermentation",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Indirect support through SCFA production from pectin fermentation",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Good prebiotic source with well-tolerated FODMAP profile. Ripe bananas have more soluble pectin; slightly green bananas provide more resistant starch",
+        "name": "Banana",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Pectin and oligofructose in dried fruit support bifidogenic effects",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Polyphenols may indirectly support mucus-layer colonization",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "High sugar concentration in dried fruit may transiently favor pathogenic Clostridium overgrowth in sensitive individuals",
+            "name": "pathogenic Clostridium species"
+          }
+        ],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "dried",
+        "estimated_grams": 25,
+        "fodmap": "high",
+        "gut_notes": "HIGH FODMAP - contains concentrated fructose and sorbitol. May cause symptoms in IBS or FODMAP-sensitive individuals. Polyphenol content provides antioxidant benefits. Recommend caution in portions for sensitive users",
+        "name": "Raisins",
+        "prebiotic_fibres": [
+          "pectin",
+          "inulin"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-11 09:01",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-11"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A bowl containing soaked bread chunks, chia seeds, and fruit pieces (likely mango), served with dairy milk. It resembles a type of breakfast pudding or cereal.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 90,
+        "fodmap": "high",
+        "gut_notes": "Refined wheat bread is typically low in fiber and rich in rapidly digestible carbohydrates and fructans, making it a high FODMAP food. It provides minimal prebiotic support for beneficial gut bacteria and can contribute to dysbiosis if frequently consumed without sufficient other fibers. Fructans can cause bloating and gas in FODMAP-sensitive individuals.",
+        "name": "Soaked Wheat Bread Chunks",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in soluble fibers that are fermented by this species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Provides fermentable substrates supporting its growth.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "The mucilaginous fiber can promote its proliferation.",
+            "name": "Lactobacillus plantarum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 15,
+        "fodmap": "low",
+        "gut_notes": "Chia seeds are an excellent source of soluble and insoluble fiber, promoting gut regularity and feeding a diverse range of beneficial gut bacteria. Their high content of omega-3 fatty acids (ALA) and antioxidants contributes significantly to anti-inflammatory processes in the gut and body.",
+        "name": "Chia Seeds",
+        "prebiotic_fibres": [
+          "soluble fiber (mucilage)",
+          "insoluble fiber"
+        ],
+        "prebiotic_score": 9,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Some strains can ferment lactose.",
+            "name": "Bifidobacterium breve"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 180,
+        "fodmap": "high",
+        "gut_notes": "Regular dairy milk contains lactose, a disaccharide that can be a high FODMAP for individuals with lactose intolerance, leading to digestive symptoms. While it provides calcium and protein, it does not offer significant prebiotic fiber. For sensitive individuals, lactose-free or plant-based alternatives are preferable for gut health.",
+        "name": "Dairy Milk (full fat)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Contains fermentable sugars and some pectin.",
+            "name": "Bifidobacterium adolescentis"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Some components like pectin can support its growth.",
+            "name": "Lactobacillus rhamnosus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "medium",
+        "cooking_method": "cooked",
+        "estimated_grams": 40,
+        "fodmap": "high",
+        "gut_notes": "Mango is rich in vitamins, antioxidants, and some dietary fiber (including pectin), contributing to anti-inflammatory benefits. However, it is high in fructans and polyols, making it a high FODMAP fruit that can cause digestive distress in sensitive individuals. Cooking may slightly alter its FODMAP content but generally does not eliminate it.",
+        "name": "Cooked Mango Pieces",
+        "prebiotic_fibres": [
+          "pectin",
+          "some fructans"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-11 10:03",
+    "overall_gut_score": 6.5,
+    "gut_notes": "",
+    "date": "2026-06-11"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A single cappuccino beverage",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 30,
+        "fodmap": "low",
+        "gut_notes": "Coffee contains polyphenols with anti-inflammatory properties. No direct prebiotic or probiotic value. May stimulate gastric acid secretion.",
+        "name": "Espresso coffee (in cappuccino)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Lactose may be fermented by lactose-fermenting bacteria, potentially creating gas in lactose-sensitive individuals",
+            "name": "Lactobacillus species"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "steamed",
+        "estimated_grams": 150,
+        "fodmap": "medium",
+        "gut_notes": "Cow's milk contains lactose (medium FODMAP). Steaming may slightly reduce lactose. Not a prebiotic source. May cause bloating in lactose-intolerant individuals. Minimal probiotic content in standard pasteurised milk.",
+        "name": "Milk (in cappuccino)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-11 10:06",
+    "overall_gut_score": 4.5,
+    "gut_notes": "",
+    "date": "2026-06-11"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Oats with milk, raisins, and sugar",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan fermented to short-chain fatty acids, primary fuel for this anti-inflammatory species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Utilises beta-glucan fermentation products for butyrate synthesis",
+            "name": "Roseburia faecis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Moderate fermentation of oat beta-glucan",
+            "name": "Bifidobacterium adolescentis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Excellent prebiotic source. Beta-glucan is one of the most studied prebiotics for gut health, promoting anti-inflammatory short-chain fatty acid producers. Low FODMAP at this portion. Supports intestinal barrier function.",
+        "name": "Oats (rolled oats)",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "Lactose substrate, though minimal probiotic benefit unless fermented milk used",
+            "name": "Streptococcus thermophilus"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 2,
+            "mechanism": "Casein may slightly inhibit certain bifidobacterial species in sensitive individuals",
+            "name": "Bifidobacterium spp."
+          }
+        ],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Low FODMAP at 100ml (threshold is >100ml). Minimal prebiotic or probiotic benefit in regular pasteurised milk. Lactose content modest at this portion. No significant anti-inflammatory compounds. Neutral gut impact; not harmful but not beneficial.",
+        "name": "Milk (cow's milk)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Pectin and resistant starch fermentation",
+            "name": "Bacteroides vulgatus"
+          },
+          {
+            "impact_strength": 4,
+            "mechanism": "Polysaccharide utilisation from dried fruit",
+            "name": "Prevotella copri"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 15,
+        "fodmap": "low",
+        "gut_notes": "At 15g portion, classified as LOW FODMAP (threshold is >15g). Contains pectin and polyphenols with modest prebiotic and anti-inflammatory properties. Dried fruit concentrates sugars but portion is small enough to not trigger significant dysbiosis risk. Supports diverse microbiota.",
+        "name": "Raisins (dried)",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 1,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Simple sugar fermentation promotes pathogenic Clostridium species",
+            "name": "Clostridium perfringens"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Rapid fermentation of glucose favours potential pathobionts",
+            "name": "Escherichia coli"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Simple sugars reduce competitive advantage of slow-growing SCFA producers",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "Dysbiotic shift away from butyrate producers with refined sugar",
+            "name": "Roseburia spp."
+          }
+        ],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 10,
+        "fodmap": "low",
+        "gut_notes": "No prebiotic value. Simple sugar promotes dysbiotic, potentially pathogenic species. Increases inflammation markers. At 10g portion, impact is moderate rather than severe, but cumulative sugar intake is primary concern. Ideally replaced with honey or natural sweetness from fruit.",
+        "name": "Sugar (added)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-13 11:41",
+    "overall_gut_score": 6.8,
+    "gut_notes": "",
+    "date": "2026-06-13"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A bowl of raisins, approximately 60 grams",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Fermentable sugars and fiber promote butyrate-producing capacity",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Natural sugars support short-chain fatty acid production",
+            "name": "Roseburia species"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Modest prebiotic effect from pectin and natural sugars",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 3,
+            "mechanism": "May promote slight gas production in sensitive individuals",
+            "name": "Pathogenic Clostridium species"
+          }
+        ],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 60,
+        "fodmap": "high",
+        "gut_notes": "High FODMAP portion (60g exceeds 15g threshold). Rich in natural sugars that ferment readily, supporting beneficial bacteria but potentially causing bloating, gas, or cramping in IBS-D or FODMAP-sensitive individuals. Pectin content provides modest prebiotic activity. Best consumed in smaller quantities (20-30g) or with protein/fat to slow gastric emptying.",
+        "name": "Raisins",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch (minimal)"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-13 11:45",
+    "overall_gut_score": 6.2,
+    "gut_notes": "",
+    "date": "2026-06-13"
   }
 ]
