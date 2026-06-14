@@ -75,6 +75,58 @@ Respond ONLY in this exact JSON format, no other text:
     ]
 }"""
 
+def build_gut_prompt(patient_profile=None):
+    """Build personalised prompt based on patient profile."""
+    if not patient_profile:
+        return GUT_PROMPT
+
+    bacteria_boost = [
+        b.get('name', b) if isinstance(b, dict) else b
+        for b in patient_profile.get('bacteria_boost', [])
+    ]
+    bacteria_reduce = [
+        b.get('name', b) if isinstance(b, dict) else b
+        for b in patient_profile.get('bacteria_reduce', [])
+    ]
+    food_targets = [
+        f"{t.get('food','')} {t.get('amount_grams','')}g {t.get('frequency','')}"
+        for t in patient_profile.get('food_targets', [])
+    ]
+    foods_reduce = patient_profile.get('foods_reduce', [])
+
+    # Only personalise if profile has real data
+    if not bacteria_boost and not food_targets:
+        return GUT_PROMPT
+
+    patient_context = f"""
+
+PATIENT-SPECIFIC CONTEXT — personalise your analysis:
+
+Bacteria to BOOST (patient is deficient — prioritise feeding these):
+{chr(10).join(f'  - {b}' for b in bacteria_boost)}
+
+Bacteria to REDUCE (patient has excess — flag if food promotes these):
+{chr(10).join(f'  - {b}' for b in bacteria_reduce) if bacteria_reduce else '  None specified'}
+
+Doctor food targets (mention in gut_notes if this meal contains these):
+{chr(10).join(f'  - {t}' for t in food_targets) if food_targets else '  None specified'}
+
+Foods to flag (mention clearly in gut_notes if present):
+{chr(10).join(f'  - {f}' for f in foods_reduce) if foods_reduce else '  None specified'}
+
+When rating impact_strength for bacteria_fed:
+  - Score 8-10 if food directly feeds a BOOST bacteria
+  - Score 5-7 if food indirectly supports a BOOST bacteria
+  - Score 1-4 for minor or uncertain impact
+"""
+
+    # Insert patient context before IMPORTANT RULES
+    return GUT_PROMPT.replace(
+        'IMPORTANT RULES:',
+        patient_context + '\nIMPORTANT RULES:'
+    )
+
+
 DAILY_ANALYSIS_PROMPT = """
 You are a clinical gut health analyst reviewing a patient's complete food log.
 
@@ -120,8 +172,7 @@ Return ONLY valid JSON, no markdown, no explanation outside JSON:
 }}
 """
 
-
-def analyze_gut_with_claude(image_base64, mime_type="image/jpeg"):
+def analyze_gut_with_claude(image_base64, mime_type="image/jpeg", patient_profile=None):
     """Analyze food image with gut-specific prompt using Claude"""
     if not CLAUDE_API_KEY:
         return {"error": "Missing CLAUDE_API_KEY"}
@@ -149,7 +200,8 @@ def analyze_gut_with_claude(image_base64, mime_type="image/jpeg"):
                         },
                         {
                             "type": "text",
-                            "text": GUT_PROMPT
+                            "text": build_gut_prompt(patient_profile)
+
                         }
                     ]
                 }]
@@ -171,7 +223,7 @@ def analyze_gut_with_claude(image_base64, mime_type="image/jpeg"):
         return {"error": f"Claude gut analysis failed: {e}"}
 
 
-def analyze_gut_with_gemini(image_base64, mime_type="image/jpeg"):
+def analyze_gut_with_gemini(image_base64, mime_type="image/jpeg", patient_profile=None):
     """Analyze food image with gut-specific prompt using Gemini"""
     if not GEMINI_API_KEY:
         return {"error": "Missing GEMINI_API_KEY"}
@@ -181,7 +233,7 @@ def analyze_gut_with_gemini(image_base64, mime_type="image/jpeg"):
             "contents": [{
                 "parts": [
                     {"inline_data": {"mime_type": mime_type, "data": image_base64}},
-                    {"text": GUT_PROMPT}
+                    {"text": build_gut_prompt(patient_profile)}
                 ]
             }]
         }
@@ -199,7 +251,7 @@ def analyze_gut_with_gemini(image_base64, mime_type="image/jpeg"):
     except Exception as e:
         return {"error": f"Gemini gut analysis failed: {e}"}
 
-def analyze_gut_with_claude_text(voice_text):
+def analyze_gut_with_claude_text(voice_text, patient_profile=None):
     """Analyze text/voice description with gut-specific prompt"""
     if not CLAUDE_API_KEY:
         return {"error": "Missing CLAUDE_API_KEY"}
@@ -218,7 +270,7 @@ def analyze_gut_with_claude_text(voice_text):
                     "role": "user",
                     "content": f"Extract food items from this description: '{voice_text}'. "
                                f"Then analyse the gut health impact of each item.\n\n"
-                               f"{GUT_PROMPT}"
+                               f"{build_gut_prompt(patient_profile)}"
                 }]
             },
             timeout=30
@@ -318,6 +370,36 @@ def get_local_timestamp(timezone_str=None):
 # get_local_timestamp()
 
 # ── NEW: Scorecard functions below ───────────────
+def weighted_meal_score(meals):
+    """
+    Calculate gut score weighted by meal size (total grams).
+    Larger meals have more impact than small snacks.
+    """
+    weighted_sum  = 0
+    total_weight  = 0
+
+    for meal in meals:
+        score = meal.get('overall_gut_score', 0)
+        if not score:
+            continue
+
+        # Total grams in this meal
+        meal_grams = sum(
+            f.get('estimated_grams', 100)
+            for f in meal.get('foods', [])
+        )
+
+        # Minimum 50g so even small snacks count
+        meal_grams = max(meal_grams, 50)
+
+        weighted_sum += score * meal_grams
+        total_weight += meal_grams
+
+    if total_weight == 0:
+        return 0
+
+    return round(weighted_sum / total_weight, 1)
+
 
 def build_daily_gut_scorecard(meals, date):
     """
@@ -419,7 +501,7 @@ def build_daily_gut_scorecard(meals, date):
 
     return {
         'date':            date,
-        'daily_gut_score': safe_avg(gut_scores),
+        'daily_gut_score': weighted_meal_score(meals), #safe_avg(gut_scores),
         'bacteria_fed':    bacteria_fed,
         'bacteria_harmed': bacteria_harmed,
         'plant_diversity': sorted(list(plants_today)),
@@ -538,9 +620,10 @@ def build_weekly_gut_scorecard(all_meals, week_start):
                key=lambda x: x[1]['count'], reverse=True)
     )
 
-    avg_score = round(sum(gut_scores) / len(gut_scores), 1) \
-                if gut_scores else 0
-
+    # avg_score = round(sum(gut_scores) / len(gut_scores), 1) \
+    #             if gut_scores else 0
+    avg_score = weighted_meal_score(window_meals)
+    
     scores_only = [d['daily_gut_score']
                    for d in daily_scorecards
                    if d['daily_gut_score'] > 0]

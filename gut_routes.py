@@ -65,10 +65,19 @@ def gut_analyze():
 
         if not image_base64:
             return jsonify({"error": "No image provided"}), 400
+        
+        # Load patient profile for personalised prompt
+        profile = load_gut_profile(patient_id)
 
-        result = (analyze_gut_with_gemini(image_base64, mime_type)
+        result = (analyze_gut_with_gemini(image_base64, mime_type,
+                                          patient_profile=profile)
                   if provider == 'gemini'
-                  else analyze_gut_with_claude(image_base64, mime_type))
+                  else analyze_gut_with_claude(image_base64, mime_type,
+                                               patient_profile=profile))
+
+        # result = (analyze_gut_with_gemini(image_base64, mime_type)
+        #           if provider == 'gemini'
+        #           else analyze_gut_with_claude(image_base64, mime_type))
 
         if isinstance(result, dict) and result.get('error'):
             return jsonify({"error": result['error']}), 500
@@ -95,7 +104,11 @@ def gut_analyze_voice():
         if not text:
             return jsonify({"error": "No text provided"}), 400
 
-        result = analyze_gut_with_claude_text(text)
+        # Load patient profile for personalised prompt
+        profile = load_gut_profile(patient_id)
+
+        result = analyze_gut_with_claude_text(text,
+                                              patient_profile=profile)
 
         if isinstance(result, dict) and result.get('error'):
             return jsonify({"error": result['error']}), 500

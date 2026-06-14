@@ -1,168 +1,144 @@
 {
-  "patient_id": "guest",
-  "name": "Sanyam",
-  "test_date": "06/06/2026",
-  "test_provider": "MicrobioTx",
+  "patient_id": "jeet",
+  "name": "Jeet",
+  "test_date": "14/06/2026",
+  "test_provider": "",
   "doctor": "Dr Smith",
   "metrics": {
-    "evenness": 0.42,
-    "diversity": 1.6,
-    "fb_ratio": 2.4
+    "evenness": 40,
+    "diversity": 35,
+    "fb_ratio": 1.8
   },
   "functions": {
     "overall_health": {
-      "helpful": 52,
-      "harmful": 48
+      "helpful": 0,
+      "harmful": 100
     },
     "immunity": {
-      "helpful": 58,
-      "harmful": 42
+      "helpful": 0,
+      "harmful": 100
     },
     "gi_health": {
-      "helpful": 49,
-      "harmful": 51
+      "helpful": 0,
+      "harmful": 100
     },
     "mental_wellness": {
-      "helpful": 55,
-      "harmful": 45
+      "helpful": 0,
+      "harmful": 100
     },
     "weight_management": {
-      "helpful": 61,
-      "harmful": 39
+      "helpful": 0,
+      "harmful": 100
     },
     "sugar_metabolism": {
-      "helpful": 64,
-      "harmful": 36
+      "helpful": 0,
+      "harmful": 100
     }
   },
   "bacteria_boost": [
     {
-      "functions": [],
-      "level": "low",
-      "name": "Faecalibacterium prausnitzii"
+      "name": "Bifidobacterium longum",
+      "reason": "Reduces bloating and improves transit time"
     },
     {
-      "functions": [],
-      "level": "low",
-      "name": "Bifidobacterium longum"
+      "name": "Lactobacillus acidophilus",
+      "reason": "Improves lactose digestion, reduces gas"
     },
     {
-      "functions": [],
-      "level": "low",
-      "name": "Lactobacillus rhamnosus"
+      "name": "Akkermansia muciniphila",
+      "reason": "Strengthens gut lining, reduces permeability"
     },
     {
-      "functions": [],
-      "level": "low",
-      "name": "Akkermansia muciniphila"
+      "name": "Christensenellaceae",
+      "reason": "Linked to healthy BMI and gut motility"
     },
     {
-      "functions": [],
-      "level": "low",
-      "name": "Roseburia intestinalis"
+      "name": "Prevotella copri",
+      "reason": "Improves fibre fermentation efficiency"
     }
   ],
   "bacteria_reduce": [
     {
-      "functions": [],
-      "level": "high",
-      "name": "Proteobacteria"
+      "name": "Methanobrevibacter smithii",
+      "reason": "Produces methane gas causing bloating"
     },
     {
-      "functions": [],
-      "level": "high",
-      "name": "Clostridium perfringens"
-    },
-    {
-      "functions": [],
-      "level": "high",
-      "name": "Ruminococcus gnavus"
-    },
-    {
-      "functions": [],
-      "level": "high",
-      "name": "Bilophila wadsworthia"
-    },
-    {
-      "functions": [],
-      "level": "high",
-      "name": "Methanobrevibacter smithii"
+      "name": "Desulfovibrio",
+      "reason": "Produces hydrogen sulphide, slows motility"
     }
   ],
   "foods_add": [
-    "Ginger tea",
-    "Chia seed",
-    "steamed vegetables",
-    "rice",
-    "banana",
-    "yogurt"
+    "High-water vegetables",
+    "Probiotic foods",
+    "Soluble fibre",
+    "Warm liquids",
+    "Ginger tea"
   ],
   "foods_reduce": [
-    "Onion & garlic. Wheat bread",
-    "Apples & pears",
-    "Full-fat dairy",
-    "Processed meat",
-    "Alcohol",
+    "Processed foods",
+    "Red meat",
+    "Fried foods",
     "Carbonated drinks",
-    "Beans",
-    "Culiflower & cabbage",
-    "Coffee"
+    "Beans in large amounts",
+    "Cruciferous vegetables raw"
   ],
   "food_targets": [
     {
-      "alternatives": [],
-      "amount_grams": 100,
-      "feeds": "",
-      "food": "raw banana",
+      "alternatives": [
+        "Papaya",
+        "Pineapple"
+      ],
+      "amount_grams": 120,
+      "feeds": "Bifidobacterium longum",
+      "food": "Kiwi fruit",
       "frequency": "daily"
     },
     {
-      "alternatives": [],
-      "amount_grams": 200,
-      "feeds": "",
-      "food": "cooked rice",
+      "alternatives": [
+        "Dried figs",
+        "Dates"
+      ],
+      "amount_grams": 50,
+      "feeds": "Lactobacillus acidophilus",
+      "food": "Prunes",
       "frequency": "daily"
     },
     {
-      "alternatives": [],
+      "alternatives": [
+        "Psyllium husk"
+      ],
+      "amount_grams": 20,
+      "feeds": "Christensenellaceae",
+      "food": "Flaxseed",
+      "frequency": "daily"
+    },
+    {
+      "alternatives": [
+        "Ginger",
+        "Peppermint tea"
+      ],
+      "amount_grams": 80,
+      "feeds": "Prevotella copri",
+      "food": "Fennel (cooked)",
+      "frequency": "3x week"
+    },
+    {
+      "alternatives": [
+        "Kefir",
+        "Lassi"
+      ],
       "amount_grams": 150,
-      "feeds": "",
+      "feeds": "Lactobacillus acidophilus",
       "food": "Plain yoghurt",
       "frequency": "daily"
     },
     {
-      "alternatives": [],
-      "amount_grams": 80,
-      "feeds": "",
-      "food": "Cooked oats",
-      "frequency": "daily"
-    },
-    {
-      "alternatives": [],
-      "amount_grams": 10,
-      "feeds": "",
-      "food": "Garlic",
-      "frequency": "daily"
-    },
-    {
-      "alternatives": [],
-      "amount_grams": 100,
-      "feeds": "",
-      "food": "Steamed broccoli",
-      "frequency": "3x/week"
-    },
-    {
-      "alternatives": [],
-      "amount_grams": 80,
-      "feeds": "",
-      "food": "Boiled chickpeas",
-      "frequency": "3x/week"
-    },
-    {
-      "alternatives": [],
-      "amount_grams": 15,
-      "feeds": "",
-      "food": "Flaxseed",
+      "alternatives": [
+        "Any cooked vegetables"
+      ],
+      "amount_grams": 150,
+      "feeds": "Bifidobacterium longum",
+      "food": "Steamed vegetables",
       "frequency": "daily"
     }
   ]

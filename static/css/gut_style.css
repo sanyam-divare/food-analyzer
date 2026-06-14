@@ -2228,3 +2228,113 @@
     width: 100%;
     box-sizing: border-box;
 }
+/* ── Profile danger zone ─────────────────────────── */
+.profile-danger-zone {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn-logout {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-clear-data {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1.5px solid #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   Profile Templates — append to gut_style.css
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Template grid ───────────────────────────────── */
+.template-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.template-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+}
+
+.template-card:active {
+    transform: scale(.96);
+    box-shadow: 0 2px 12px rgba(0,0,0,.1);
+}
+
+.template-emoji {
+    font-size: 1.8rem;
+    margin-bottom: 6px;
+}
+
+.template-label {
+    font-size: .82rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.template-desc {
+    font-size: .68rem;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+/* ── Divider ─────────────────────────────────────── */
+.template-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 12px;
+    color: #94a3b8;
+    font-size: .78rem;
+}
+
+.template-divider::before,
+.template-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+/* ── Manual setup button ─────────────────────────── */
+.btn-outline-green {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1.5px solid #0d5c38;
+    background: transparent;
+    color: #0d5c38;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.btn-outline-green:active {
+    background: #f0fdf4;
+}

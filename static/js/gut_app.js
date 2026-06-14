@@ -4,7 +4,8 @@
 
 let gutCurrentResults = null;
 let gutMealTimestamp  = null;
-let gutPatientId      = localStorage.getItem('gutPatientId') || 'guest';
+let gutPatientId   = localStorage.getItem('gut_patient_id')   || 'guest';
+let gutPatientName = localStorage.getItem('gut_patient_name')  || 'Guest';
 let gutScorecardView  = 'daily';
 let gutActiveTab      = 'scorecard';
 let gutProfile        = null;
@@ -912,17 +913,442 @@ function renderHistoryMealDetail(meal) {
 
 
 // ── TAB 4: PROFILE ────────────────────────────────────────────────────────────
+// async function loadGutProfile() {
+//     const container = document.getElementById('gut-profile-content');
+//     if (!container) return;
+//     try {
+//         const res  = await fetch(`/gut/profile?patient_id=${gutPatientId}`);
+//         gutProfile = await res.json();
+//         renderProfileForm(container, gutProfile);
+//     } catch (err) {
+//         container.innerHTML = `<p class="hint">Could not load profile: ${err.message}</p>`;
+//     }
+// }
+
 async function loadGutProfile() {
     const container = document.getElementById('gut-profile-content');
     if (!container) return;
-    try {
-        const res  = await fetch(`/gut/profile?patient_id=${gutPatientId}`);
-        gutProfile = await res.json();
-        renderProfileForm(container, gutProfile);
-    } catch (err) {
-        container.innerHTML = `<p class="hint">Could not load profile: ${err.message}</p>`;
+
+    const res  = await fetch(
+        `/gut/profile?patient_id=${gutPatientId}`
+    );
+    gutProfile = await res.json();
+
+    // Auto-populate name from login if profile is empty
+    if (!gutProfile.name && gutPatientName) {
+        gutProfile.name = gutPatientName;
+    }
+
+    // Check if new patient (empty profile)
+    const isNewPatient = !gutProfile.bacteria_boost?.length
+                      && !gutProfile.food_targets?.length;
+
+    if (isNewPatient) {
+        renderEmptyProfile(gutPatientName);
+    } else {
+        renderProfileForm(container, gutProfile);  // ← fixed
     }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PROFILE TEMPLATES — Add to gut_app.js
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Template definitions ──────────────────────────────────────────────────────
+const GUT_PROFILE_TEMPLATES = {
+
+    ibs: {
+        label:       'IBS',
+        emoji:       '🦠',
+        description: 'Irritable Bowel Syndrome — bacteria & food targets',
+        color:       '#22c55e',
+        test_provider: 'MicrobioTx',
+        bacteria_boost: [
+            { name: 'Faecalibacterium prausnitzii',
+              reason: 'Key anti-inflammatory, reduced in IBS' },
+            { name: 'Bifidobacterium longum',
+              reason: 'Reduces gut permeability and bloating' },
+            { name: 'Lactobacillus rhamnosus',
+              reason: 'Reduces IBS severity and pain' },
+            { name: 'Akkermansia muciniphila',
+              reason: 'Strengthens gut lining and mucus layer' },
+            { name: 'Roseburia intestinalis',
+              reason: 'Produces butyrate, reduces inflammation' },
+        ],
+        bacteria_reduce: [
+            { name: 'Proteobacteria',
+              reason: 'Elevated in IBS, promotes inflammation' },
+            { name: 'Bilophila wadsworthia',
+              reason: 'Produces hydrogen sulphide, worsens IBS' },
+        ],
+        food_targets: [
+            { food: 'Green banana',    amount_grams: 100,
+              frequency: 'daily',
+              feeds: 'Akkermansia muciniphila',
+              alternatives: ['Slightly unripe banana'] },
+            { food: 'Cooked oats',     amount_grams: 80,
+              frequency: 'daily',
+              feeds: 'Faecalibacterium prausnitzii',
+              alternatives: ['Overnight oats', 'Oat porridge'] },
+            { food: 'Plain yoghurt',   amount_grams: 150,
+              frequency: 'daily',
+              feeds: 'Lactobacillus rhamnosus',
+              alternatives: ['Dahi', 'Kefir'] },
+            { food: 'Cooked rice (cooled)', amount_grams: 200,
+              frequency: 'daily',
+              feeds: 'Bifidobacterium longum',
+              alternatives: ['Cooled pasta'] },
+            { food: 'Garlic (cooked)', amount_grams: 10,
+              frequency: 'daily',
+              feeds: 'Roseburia intestinalis',
+              alternatives: ['Garlic powder'] },
+            { food: 'Steamed broccoli', amount_grams: 100,
+              frequency: '3x week',
+              feeds: 'Faecalibacterium prausnitzii',
+              alternatives: ['Cauliflower', 'Brussels sprouts'] },
+            { food: 'Flaxseed',        amount_grams: 15,
+              frequency: 'daily',
+              feeds: 'Bifidobacterium longum',
+              alternatives: ['Chia seeds'] },
+            { food: 'Boiled chickpeas', amount_grams: 80,
+              frequency: '3x week',
+              feeds: 'Roseburia intestinalis',
+              alternatives: ['Lentils', 'Split peas'] },
+        ],
+        foods_add:    ['Fermented foods', 'Soluble fibre',
+                       'Cooked vegetables', 'Resistant starch'],
+        foods_reduce: ['Raw onion', 'Apples', 'Wheat in large amounts',
+                       'Fried foods', 'Alcohol', 'Artificial sweeteners'],
+        metrics: { evenness: 45, diversity: 40, fb_ratio: 2.1 },
+    },
+
+    bloating: {
+        label:       'Bloating & Constipation',
+        emoji:       '🫧',
+        description: 'Reduce gas, improve motility',
+        color:       '#f59e0b',
+        test_provider: '',
+        bacteria_boost: [
+            { name: 'Bifidobacterium longum',
+              reason: 'Reduces bloating and improves transit time' },
+            { name: 'Lactobacillus acidophilus',
+              reason: 'Improves lactose digestion, reduces gas' },
+            { name: 'Akkermansia muciniphila',
+              reason: 'Strengthens gut lining, reduces permeability' },
+            { name: 'Christensenellaceae',
+              reason: 'Linked to healthy BMI and gut motility' },
+            { name: 'Prevotella copri',
+              reason: 'Improves fibre fermentation efficiency' },
+        ],
+        bacteria_reduce: [
+            { name: 'Methanobrevibacter smithii',
+              reason: 'Produces methane gas causing bloating' },
+            { name: 'Desulfovibrio',
+              reason: 'Produces hydrogen sulphide, slows motility' },
+        ],
+        food_targets: [
+            { food: 'Kiwi fruit',      amount_grams: 120,
+              frequency: 'daily',
+              feeds: 'Bifidobacterium longum',
+              alternatives: ['Papaya', 'Pineapple'] },
+            { food: 'Prunes',          amount_grams: 50,
+              frequency: 'daily',
+              feeds: 'Lactobacillus acidophilus',
+              alternatives: ['Dried figs', 'Dates'] },
+            { food: 'Flaxseed',        amount_grams: 20,
+              frequency: 'daily',
+              feeds: 'Christensenellaceae',
+              alternatives: ['Psyllium husk'] },
+            { food: 'Fennel (cooked)', amount_grams: 80,
+              frequency: '3x week',
+              feeds: 'Prevotella copri',
+              alternatives: ['Ginger', 'Peppermint tea'] },
+            { food: 'Plain yoghurt',   amount_grams: 150,
+              frequency: 'daily',
+              feeds: 'Lactobacillus acidophilus',
+              alternatives: ['Kefir', 'Lassi'] },
+            { food: 'Steamed vegetables', amount_grams: 150,
+              frequency: 'daily',
+              feeds: 'Bifidobacterium longum',
+              alternatives: ['Any cooked vegetables'] },
+        ],
+        foods_add:    ['High-water vegetables', 'Probiotic foods',
+                       'Soluble fibre', 'Warm liquids', 'Ginger tea'],
+        foods_reduce: ['Processed foods', 'Red meat', 'Fried foods',
+                       'Carbonated drinks', 'Beans in large amounts',
+                       'Cruciferous vegetables raw'],
+        metrics: { evenness: 40, diversity: 35, fb_ratio: 1.8 },
+    },
+
+    skin_hair: {
+        label:       'Skin & Hair',
+        emoji:       '✨',
+        description: 'Gut-skin axis — clear skin, healthy hair',
+        color:       '#8b5cf6',
+        test_provider: '',
+        bacteria_boost: [
+            { name: 'Lactobacillus reuteri',
+              reason: 'Produces skin-protective compounds, reduces inflammation' },
+            { name: 'Bifidobacterium breve',
+              reason: 'Improves skin hydration and elasticity' },
+            { name: 'Lactobacillus plantarum',
+              reason: 'Reduces skin inflammation and acne-causing bacteria' },
+            { name: 'Akkermansia muciniphila',
+              reason: 'Reduces systemic inflammation linked to skin issues' },
+            { name: 'Lactobacillus acidophilus',
+              reason: 'Reduces cortisol-related skin flare-ups' },
+        ],
+        bacteria_reduce: [
+            { name: 'Clostridium perfringens',
+              reason: 'Produces toxins linked to skin inflammation' },
+            { name: 'Fusobacterium nucleatum',
+              reason: 'Linked to systemic inflammation affecting skin' },
+        ],
+        food_targets: [
+            { food: 'Kefir or dahi',   amount_grams: 150,
+              frequency: 'daily',
+              feeds: 'Lactobacillus reuteri',
+              alternatives: ['Plain yoghurt', 'Fermented buttermilk'] },
+            { food: 'Pumpkin seeds',   amount_grams: 30,
+              frequency: 'daily',
+              feeds: 'Bifidobacterium breve',
+              alternatives: ['Sunflower seeds', 'Hemp seeds'] },
+            { food: 'Turmeric (with pepper)', amount_grams: 5,
+              frequency: 'daily',
+              feeds: 'Lactobacillus plantarum',
+              alternatives: ['Turmeric milk', 'Golden paste'] },
+            { food: 'Walnuts',         amount_grams: 30,
+              frequency: 'daily',
+              feeds: 'Akkermansia muciniphila',
+              alternatives: ['Flaxseed', 'Chia seeds'] },
+            { food: 'Berries',         amount_grams: 80,
+              frequency: 'daily',
+              feeds: 'Lactobacillus acidophilus',
+              alternatives: ['Pomegranate', 'Amla'] },
+            { food: 'Green vegetables', amount_grams: 100,
+              frequency: 'daily',
+              feeds: 'Bifidobacterium breve',
+              alternatives: ['Spinach', 'Methi', 'Coriander'] },
+        ],
+        foods_add:    ['Antioxidant-rich foods', 'Omega-3 foods',
+                       'Collagen-supporting foods', 'Fermented foods',
+                       'Zinc-rich foods'],
+        foods_reduce: ['Sugar', 'Dairy in excess', 'Processed foods',
+                       'Alcohol', 'Trans fats', 'High-glycemic foods'],
+        metrics: { evenness: 50, diversity: 55, fb_ratio: 1.5 },
+    },
+
+    oral_health: {
+        label:       'Oral & Gut Health',
+        emoji:       '🦷',
+        description: 'Oral microbiome linked to gut health',
+        color:       '#3b82f6',
+        test_provider: '',
+        bacteria_boost: [
+            { name: 'Streptococcus salivarius',
+              reason: 'Protective oral bacteria, reduces bad breath' },
+            { name: 'Lactobacillus reuteri',
+              reason: 'Reduces gum inflammation and oral pathogens' },
+            { name: 'Bifidobacterium animalis',
+              reason: 'Supports oral-gut immune connection' },
+            { name: 'Veillonella parvula',
+              reason: 'Converts lactate, protects against dental issues' },
+        ],
+        bacteria_reduce: [
+            { name: 'Porphyromonas gingivalis',
+              reason: 'Key gum disease pathogen, linked to gut dysbiosis' },
+            { name: 'Fusobacterium nucleatum',
+              reason: 'Bridges oral-gut inflammation pathway' },
+        ],
+        food_targets: [
+            { food: 'Green tea',       amount_grams: 200,
+              frequency: 'daily',
+              feeds: 'Streptococcus salivarius',
+              alternatives: ['White tea', 'Matcha'] },
+            { food: 'Raw carrot',      amount_grams: 80,
+              frequency: 'daily',
+              feeds: 'Veillonella parvula',
+              alternatives: ['Celery', 'Cucumber'] },
+            { food: 'Plain yoghurt',   amount_grams: 150,
+              frequency: 'daily',
+              feeds: 'Lactobacillus reuteri',
+              alternatives: ['Kefir', 'Probiotic milk'] },
+            { food: 'Cranberry juice (unsweetened)', amount_grams: 100,
+              frequency: '3x week',
+              feeds: 'Streptococcus salivarius',
+              alternatives: ['Fresh cranberries'] },
+            { food: 'Parsley (fresh)', amount_grams: 10,
+              frequency: 'daily',
+              feeds: 'Bifidobacterium animalis',
+              alternatives: ['Mint', 'Coriander'] },
+            { food: 'Vitamin C foods', amount_grams: 80,
+              frequency: 'daily',
+              feeds: 'Lactobacillus reuteri',
+              alternatives: ['Amla', 'Guava', 'Bell pepper'] },
+        ],
+        foods_add:    ['Probiotic foods', 'Crunchy raw vegetables',
+                       'Green tea', 'Vitamin C foods', 'Calcium-rich foods'],
+        foods_reduce: ['Sugar', 'Acidic drinks', 'Alcohol',
+                       'Processed snacks', 'Sticky foods'],
+        metrics: { evenness: 55, diversity: 50, fb_ratio: 1.6 },
+    },
+};
+
+
+// ── Updated renderEmptyProfile with template selector ─────────────────────────
+function renderEmptyProfile(name) {
+    const container = document.getElementById('gut-profile-content');
+    if (!container) return;
+
+    const templateCards = Object.entries(GUT_PROFILE_TEMPLATES)
+        .map(([key, t]) => `
+            <div class="template-card"
+                 onclick="applyTemplate('${key}')"
+                 style="border-color:${t.color}20;
+                        background:${t.color}08">
+                <div class="template-emoji">${t.emoji}</div>
+                <div class="template-label"
+                     style="color:${t.color}">
+                    ${t.label}
+                </div>
+                <div class="template-desc">
+                    ${t.description}
+                </div>
+            </div>`
+        ).join('');
+
+    container.innerHTML = `
+        <div class="welcome-card">
+            <div class="welcome-emoji">🦠</div>
+            <h2 class="welcome-title">
+                Welcome, ${name || 'there'}!
+            </h2>
+            <p class="welcome-sub">
+                Start with a template based on your
+                gut health goal — your practitioner
+                can customise it for you.
+            </p>
+
+            <!-- Template grid -->
+            <div class="template-grid">
+                ${templateCards}
+            </div>
+
+            <!-- Divider -->
+            <div class="template-divider">
+                <span>or</span>
+            </div>
+
+            <!-- Manual setup -->
+            <button class="btn-outline-green"
+                    onclick="showFullProfileForm()">
+                ✏️ Set up manually
+            </button>
+        </div>`;
+}
+
+
+// ── Apply template to profile ─────────────────────────────────────────────────
+function applyTemplate(templateKey) {
+    const t = GUT_PROFILE_TEMPLATES[templateKey];
+    if (!t) return;
+
+    // Merge template into current profile
+    gutProfile = {
+        ...gutProfile,
+        test_provider:   t.test_provider || '',
+        bacteria_boost:  t.bacteria_boost,
+        bacteria_reduce: t.bacteria_reduce,
+        food_targets:    t.food_targets,
+        foods_add:       t.foods_add,
+        foods_reduce:    t.foods_reduce,
+        metrics:         t.metrics,
+    };
+
+    // Show profile form pre-filled
+    const container = document.getElementById('gut-profile-content');
+    if (!container) return;
+
+    // Show confirmation banner then form
+    renderProfileForm(container, gutProfile);
+
+    // Add template banner at top
+    const banner = document.createElement('div');
+    banner.className = 'template-applied-banner';
+    banner.style.cssText = `
+        background: ${t.color}15;
+        border: 1.5px solid ${t.color}40;
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        font-size: .82rem;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    banner.innerHTML = `
+        <span style="font-size:1.1rem">${t.emoji}</span>
+        <div>
+            <strong>${t.label} template applied</strong><br>
+            <span style="color:#64748b;font-size:.75rem">
+                Review and customise, then tap Save Profile
+            </span>
+        </div>`;
+
+    container.insertBefore(banner, container.firstChild);
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+// ── showFullProfileForm (manual setup) ────────────────────────────────────────
+function showFullProfileForm() {
+    const container = document.getElementById('gut-profile-content');
+    if (!container) return;
+    renderProfileForm(container, gutProfile);
+}
+
+
+// function renderEmptyProfile(name) {
+//     const container = document.getElementById('gut-profile-content');
+//     if (!container) return;
+//     container.innerHTML = `
+//         <div class="welcome-card">
+//             <div class="welcome-emoji">🦠</div>
+//             <h2 class="welcome-title">
+//                 Welcome, ${name}!
+//             </h2>
+//             <p class="welcome-sub">
+//                 Let's set up your gut health profile.
+//                 You'll need your gut test report to fill this in —
+//                 or your practitioner can do it for you.
+//             </p>
+//             <div class="welcome-steps">
+//                 <div class="welcome-step">
+//                     <span class="step-num">1</span>
+//                     <span>Enter your test details</span>
+//                 </div>
+//                 <div class="welcome-step">
+//                     <span class="step-num">2</span>
+//                     <span>Add bacteria to track</span>
+//                 </div>
+//                 <div class="welcome-step">
+//                     <span class="step-num">3</span>
+//                     <span>Set your food targets</span>
+//                 </div>
+//             </div>
+//             <button class="btn-green"
+//                     onclick="showFullProfileForm()">
+//                 🚀 Set Up My Profile
+//             </button>
+//         </div>`;
+// }
+
+// function showFullProfileForm() {
+//     const container = document.getElementById('gut-profile-content');
+//     if (!container) return;
+//     renderProfileForm(container, gutProfile);
+// }
 
 function renderProfileForm(container, profile) {
     const bb = profile.bacteria_boost  || [];
@@ -1087,7 +1513,35 @@ function renderProfileForm(container, profile) {
             <button class="btn-analyze" onclick="saveGutProfile()" style="width:100%">
                 💾 Save Profile
             </button>
+        </div>
+        <div class="profile-danger-zone">
+            <button class="btn-logout" onclick="logoutUser()">
+                🚪 Logout
+            </button>
+            <button class="btn-clear-data" 
+                    onclick="confirmClearData()">
+                🗑️ Clear My Data
+            </button>
         </div>`;
+}
+
+function logoutUser() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    localStorage.removeItem('gut_patient_id');
+    localStorage.removeItem('gut_patient_name');
+    localStorage.removeItem('food_analyzer_pin');
+    // Reload — PIN screen will appear
+    location.reload();
+}
+
+function confirmClearData() {
+    if (!confirm(
+        'This clears your local session only — ' +
+        'your meals and profile are safely stored. ' +
+        'Continue?'
+    )) return;
+    localStorage.clear();
+    location.reload();
 }
 
 // function buildSmartReminders(fp, bp) {

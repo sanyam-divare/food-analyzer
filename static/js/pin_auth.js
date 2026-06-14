@@ -95,25 +95,54 @@ function hidePinError() {
     if (el) el.style.display = 'none';
 }
 
+// async function validatePin(pin) {
+//     try {
+//         const res  = await fetch('/auth/validate', {
+//             method:  'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body:    JSON.stringify({ pin: pin.toLowerCase() })
+//         });
+//         const data = await res.json();
+//         if (data.valid) {
+//             // Store patient_id globally
+//             window.appPatientId = data.patient_id;
+//             // Sync to gut tracker
+//             if (typeof gutPatientId !== 'undefined') {
+//                 gutPatientId = data.patient_id;
+//             }
+//             return true;
+//         }
+//         return false;
+//     } catch {
+//         return false;
+//     }
+// }
+
 async function validatePin(pin) {
     try {
         const res  = await fetch('/auth/validate', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ pin: pin.toLowerCase() })
+            body:    JSON.stringify({ pin: pin })
         });
         const data = await res.json();
         if (data.valid) {
-            // Store patient_id globally
+            // Save both id and name
+            localStorage.setItem('gut_patient_id',   data.patient_id);
+            localStorage.setItem('gut_patient_name',  data.name);
+            localStorage.setItem(PIN_STORAGE,         pin);
+
             window.appPatientId = data.patient_id;
-            // Sync to gut tracker
+            window.appPatientName = data.name;
+
             if (typeof gutPatientId !== 'undefined') {
                 gutPatientId = data.patient_id;
             }
             return true;
         }
         return false;
-    } catch {
+    } catch (e) {
+        console.error('PIN validation error:', e);
         return false;
     }
 }

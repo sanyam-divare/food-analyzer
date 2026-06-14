@@ -58,8 +58,9 @@ GOOGLE_FIT_AVAILABLE = True  # since you import directly at top
 # Add new patients here as Mrunal onboards them
 VALID_PINS = {
     '20262026':  'guest',       # demo / doctor visit
-    '20242024': 'Sanyam',   # first real patient
+    '20242024': 'guest',   # Sanyam first real patient
     '20252025':  'Jeet',   # second patient
+    '11111111':  'testpatient',
 }
 
 def check_pin(request):
@@ -2808,72 +2809,65 @@ def validate_pin():
         from supabase_db import validate_pin as db_validate_pin
         patient = db_validate_pin(pin)
         if patient:
-            return jsonify({
-                "valid":      True,
-                "patient_id": "guest",  # keep as guest for JSON compat
-                "name":       patient['name'],
-                "message":    "Access granted"
-            })
-    except Exception as e:
-        print(f'Supabase auth failed, trying local: {e}')
-        # Fallback to local VALID_PINS
-        patient_id = VALID_PINS.get(pin.lower())
-        if patient_id:
+            name = patient['name']
+            name_to_id = {
+                'guest':       'guest',
+                'sanyam':      'guest',
+                'jeet':        'jeet',
+                'testpatient': 'testpatient',
+            }
+            patient_id = name_to_id.get(name.lower(), name.lower())
             return jsonify({
                 "valid":      True,
                 "patient_id": patient_id,
-                "message":    "Access granted (local)"
+                "name":       name,
+                "message":    "Access granted"
             })
+    except Exception as e:
+        print(f'Supabase auth error: {e}')
+
+    # Fallback to local VALID_PINS
+    # (runs if Supabase returns None OR throws exception)
+    patient_id = VALID_PINS.get(pin)
+    if patient_id:
+        return jsonify({
+            "valid":      True,
+            "patient_id": patient_id,
+            "name":       patient_id.title(),
+            "message":    "Access granted (local)"
+        })
 
     return jsonify({"valid": False, "error": "Invalid PIN"}), 401
+
 # @app.route('/auth/validate', methods=['POST'])
 # def validate_pin():
-#     """Frontend calls this to validate PIN on first launch."""
-#     data       = request.get_json() or {}
-#     pin        = data.get('pin', '').strip().lower()
-#     patient_id = VALID_PINS.get(pin)
+#     data = request.get_json() or {}
+#     pin  = data.get('pin', '').strip()
 
-#     if not patient_id:
-#         return jsonify({"valid": False,  "error": "Invalid PIN"}), 401
+#     # Try Supabase first
+#     try:
+#         from supabase_db import validate_pin as db_validate_pin
+#         patient = db_validate_pin(pin)
+#         if patient:
+#             return jsonify({
+#                 "valid":      True,
+#                 "patient_id": "guest",  # keep as guest for JSON compat
+#                 "name":       patient['name'],
+#                 "message":    "Access granted"
+#             })
+#     except Exception as e:
+#         print(f'Supabase auth failed, trying local: {e}')
+#         # Fallback to local VALID_PINS
+#         patient_id = VALID_PINS.get(pin.lower())
+#         if patient_id:
+#             return jsonify({
+#                 "valid":      True,
+#                 "patient_id": patient_id,
+#                 "message":    "Access granted (local)"
+#             })
 
-#     return jsonify({
-#         "valid":      True,
-#         "patient_id": patient_id,
-#         "message":    "Access granted"
-#     })
+#     return jsonify({"valid": False, "error": "Invalid PIN"}), 401
 
-
-# ── 3. Protect your existing routes with @require_pin ────────────────────────
-#
-# Option A — protect ALL routes at once (simplest):
-#
-
-# @app.before_request
-# def global_pin_check():
-#     # Always allow these
-#     open_routes = ['validate_pin', 'static', 'index']
-#     if request.endpoint in open_routes:
-#         return None
-
-#     # Skip PIN check for static files
-#     if request.path.startswith('/static/'):
-#         return None
-
-#     if request.path.startswith('/auth/'):
-#         return None
-
-#     # Get PIN from header, query param, or body
-#     pin = (
-#         request.headers.get('X-App-Pin') or
-#         request.args.get('pin') or
-#         ''
-#     ).strip().lower()
-
-#     if pin not in VALID_PINS:
-#         return jsonify({
-#             "error": "Invalid PIN",
-#             "code":  "AUTH_FAILED"
-#         }), 401
 @app.before_request
 def global_pin_check():
     open_paths     = ['/static/', '/auth/']
