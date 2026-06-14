@@ -4,8 +4,15 @@
 
 let gutCurrentResults = null;
 let gutMealTimestamp  = null;
-let gutPatientId   = localStorage.getItem('gut_patient_id')   || 'guest';
-let gutPatientName = localStorage.getItem('gut_patient_name')  || 'Guest';
+let gutPatientId   = 'guest';
+let gutPatientName = 'Guest';
+
+// Called after PIN auth to sync patient identity
+function syncPatientFromStorage() {
+    gutPatientId   = localStorage.getItem('gut_patient_id')  || 'guest';
+    gutPatientName = localStorage.getItem('gut_patient_name') || 'Guest';
+    console.log('Patient synced:', gutPatientId, gutPatientName);
+}
 let gutScorecardView  = 'daily';
 let gutActiveTab      = 'scorecard';
 let gutProfile        = null;
@@ -14,6 +21,7 @@ let gutWeekOffset   = 0;  // 0 = current week, -1 = last week
 let gutMonthOffset  = 0;
 let gutDailyData = null;  // stores today's scorecard data
 let gutDailyAnalysis = null;  // cached AI day analysis
+let gutProfileLoaded = false;
 
 // ── Meal time edit ────────────────────────────────────────────────────────────
 const MEAL_SLOTS = [
@@ -26,8 +34,25 @@ const MEAL_SLOTS = [
 ];
 
 
+// Called by pin_auth.js after successful login
+function onPinSuccess() {
+    // Now gut_app.js is loaded, read from localStorage
+    gutPatientId   = localStorage.getItem('gut_patient_id')  || 'guest';
+    gutPatientName = localStorage.getItem('gut_patient_name') || 'Guest';
+    gutProfileLoaded = false;  // reset profile cache
+
+    console.log('Login success:', gutPatientId, gutPatientName);
+
+    // Re-render dashboard with correct patient
+    renderGutDashboard();
+}
+
 function initGutMode() {
     console.log('🦠 Gut mode initialised');
+    // Read patient from localStorage (set by pin_auth.js)
+    gutPatientId   = localStorage.getItem('gut_patient_id')  || 'guest';
+    gutPatientName = localStorage.getItem('gut_patient_name') || 'Guest';
+    console.log('Patient:', gutPatientId, gutPatientName);
     renderGutDashboard();
 }
 
@@ -122,8 +147,8 @@ function renderGutDashboard() {
         </div>`;
 
     loadGutScorecard();
-    loadGutHistory();
-    loadGutProfile();
+    // loadGutHistory();
+    // loadGutProfile();
 }
 
 function showGutTab(tab, btn) {
@@ -135,7 +160,8 @@ function showGutTab(tab, btn) {
         if (panel) panel.style.display = t === tab ? 'block' : 'none';
     });
     if (tab === 'plan')    loadGutFoodPlan();
-    if (tab === 'history') loadGutHistory();
+        if (tab === 'history') loadGutHistory();
+        if (tab === 'profile') loadGutProfile();
 }
 
 // ── TAB 1: SCORECARD ─────────────────────────────────────────────────────────
@@ -926,6 +952,12 @@ function renderHistoryMealDetail(meal) {
 // }
 
 async function loadGutProfile() {
+    // Use cached profile if already loaded
+    if (gutProfileLoaded && gutProfile?.bacteria_boost) {
+        const container = document.getElementById('gut-profile-content');
+        if (container && container.children.length > 0) return;
+    }
+
     const container = document.getElementById('gut-profile-content');
     if (!container) return;
 
@@ -948,6 +980,8 @@ async function loadGutProfile() {
     } else {
         renderProfileForm(container, gutProfile);  // ← fixed
     }
+    gutProfile = await res.json();
+    gutProfileLoaded = true;  // ← mark cached
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
