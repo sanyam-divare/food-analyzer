@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <header>
+    <header><div class="header-shimmer"></div>
         <h1>🍽️ Gut Booster</h1>
         <p>AI Powered Gut Health Tracker</p>
         <button onclick="location.reload()"
@@ -63,56 +63,76 @@
         ══════════════════════════════════════════════════ -->
         <div id="shared-input-section">
 
-            <!-- Camera card -->
-            <div class="card">
-                <h2>📷 Take a Photo</h2>
-                <div class="camera-container">
-                    <video id="camera-preview" autoplay playsinline
-                           style="display:none"></video>
-                    <canvas id="canvas" style="display:none"></canvas>
-                    <img id="photo-preview" style="display:none"
-                         alt="Food photo">
-                    <div class="camera-placeholder"
-                         id="camera-placeholder">🍽️</div>
+            <!-- ── Compact input bar ── -->
+            <div class="input-bar-card" id="input-bar">
+
+                <!-- Text input row -->
+                <div class="input-bar-row">
+                    <input type="text"
+                           id="manual-text-input"
+                           placeholder="What did you eat?"
+                           class="input-bar-text"
+                           autocomplete="off"/>
+                    <button onclick="useTypedText()"
+                            class="input-bar-send">→</button>
                 </div>
-                <div class="button-group">
-                    <button class="btn-primary"
-                            onclick="startCamera()">📷 Camera</button>
-                    <button class="btn-success"
-                            onclick="capturePhoto()"
-                            id="capture-btn"
-                            style="display:none">✅ Capture</button>
-                    <button class="btn-secondary"
-                            onclick="uploadPhoto()">📁 Upload</button>
+
+                <!-- Action buttons row -->
+                <div class="input-bar-actions">
+                    <button class="input-action-btn"
+                            id="camera-action-btn"
+                            onclick="openCameraOverlay()">
+                        <span class="input-action-icon">📷</span>
+                        <span class="input-action-label">Camera</span>
+                    </button>
+                    <button class="input-action-btn"
+                            id="voice-action-btn"
+                            onclick="toggleVoice()">
+                        <span class="input-action-icon">🎤</span>
+                        <span class="input-action-label">Voice</span>
+                    </button>
+                    <button class="input-action-btn"
+                            onclick="document.getElementById('file-input').click()">
+                        <span class="input-action-icon">📁</span>
+                        <span class="input-action-label">Upload</span>
+                    </button>
                     <input type="file" id="file-input"
                            accept="image/*" style="display:none"
                            onchange="handleFileUpload(event)">
                 </div>
-            </div>
 
-            <!-- Voice card -->
-            <div class="card">
-                <h2>🎤 Voice Input</h2>
-                <p class="hint">
-                    Say what you ate — e.g. "I had rice and
-                    chicken curry with salad"
-                </p>
-                <div class="voice-container">
-                    <button class="btn-voice" id="voice-btn"
-                            onclick="toggleVoice()">
-                        🎤 Tap to Speak
-                    </button>
-                    <div id="voice-text" class="voice-text"></div>
+                <!-- Voice recording bar -->
+                <div id="voice-recording-bar" style="display:none"
+                     class="voice-recording-bar">
+                    <div class="voice-pulse"></div>
+                    <span id="voice-text" class="voice-recording-text">
+                        Listening...
+                    </span>
                 </div>
-                <!-- Health voice analyze button -->
-                <button class="btn-primary"
+
+                <!-- Analyze buttons -->
+                <button class="btn-analyze-bar"
+                        onclick="analyzePhoto()"
+                        id="analyze-btn"
+                        style="display:none">
+                    🤖 Analyze with AI
+                </button>
+
+                <button class="btn-analyze-bar gut-analyze"
+                        onclick="gutAnalyzePhoto()"
+                        id="gut-analyze-btn"
+                        style="display:none">
+                    🦠 Analyze Gut Impact
+                </button>
+
+                <button class="btn-analyze-bar"
                         onclick="analyzeVoice()"
                         id="analyze-voice-btn"
                         style="display:none">
                     🔍 Analyze Food
                 </button>
-                <!-- Gut voice analyze button -->
-                <button class="btn-primary"
+
+                <button class="btn-analyze-bar gut-analyze"
                         onclick="gutAnalyzeVoice(voiceText)"
                         id="gut-analyze-voice-btn"
                         style="display:none">
@@ -120,44 +140,42 @@
                 </button>
             </div>
 
-            <!-- Type your meal -->
-            <div class="voice-or-type">
-                <div class="voice-divider">
-                    <span>or type your meal</span>
+            <!-- Camera overlay -->
+            <div id="camera-overlay" style="display:none"
+                 class="camera-overlay">
+                <div class="camera-overlay-header">
+                    <button class="camera-overlay-close"
+                            onclick="closeCameraOverlay()">✕ Cancel</button>
+                    <span class="camera-overlay-title">📷 Take Photo</span>
+                    <div style="width:60px"></div>
                 </div>
-                <div class="type-input-row">
-                    <input type="text"
-                           id="manual-text-input"
-                           placeholder="e.g. 2 eggs, toast with butter, orange juice"
-                           class="manual-text-input"/>
-                    <button onclick="useTypedText()"
-                            class="type-submit-btn">→</button>
+                <div class="camera-overlay-body">
+                    <video id="camera-preview" autoplay playsinline
+                           class="camera-overlay-video"
+                           style="display:none"></video>
+                    <canvas id="canvas" style="display:none"></canvas>
+                    <img id="photo-preview" style="display:none"
+                         class="camera-overlay-preview" alt="Food photo">
+                    <div class="camera-overlay-placeholder"
+                         id="camera-placeholder">🍽️</div>
+                </div>
+                <div class="camera-overlay-footer">
+                    <button class="camera-btn-secondary"
+                            onclick="closeCameraOverlay()">Cancel</button>
+                    <button class="camera-btn-capture"
+                            id="capture-btn"
+                            style="display:none"
+                            onclick="capturePhoto()">⬤</button>
+                    <button class="camera-btn-primary"
+                            onclick="startCamera()">📷 Open Camera</button>
                 </div>
             </div>
 
-            <!-- Health photo analyze button -->
-            <button class="btn-analyze"
-                    onclick="analyzePhoto()"
-                    id="analyze-btn"
-                    style="display:none">
-                🤖 Analyze with AI
-            </button>
-
-            <!-- Gut photo analyze button -->
-            <button class="btn-analyze"
-                    onclick="gutAnalyzePhoto()"
-                    id="gut-analyze-btn"
-                    style="display:none">
-                🦠 Analyze Gut Impact
-            </button>
-
-            <!-- Health loading -->
+            <!-- Loading states -->
             <div id="loading" style="display:none" class="loading">
                 <div class="spinner"></div>
                 <p>AI is analyzing your food...</p>
             </div>
-
-            <!-- Gut loading -->
             <div id="gut-loading" style="display:none" class="loading">
                 <div class="spinner"></div>
                 <p>Analysing gut bacteria impact...</p>

@@ -405,6 +405,7 @@ function showTab(tab) {
 
 // ── Camera ────────────────────────────────────────
 async function startCamera() {
+    openCameraOverlay();  // ← add this first line
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment' }
@@ -698,48 +699,125 @@ function startVoice() {
     voiceRecognition = new SR();
     voiceRecognition.continuous     = false;
     voiceRecognition.interimResults = true;
-    voiceRecognition.lang           = 'en-US';
+    voiceRecognition.lang           = 'en-AU';
 
     voiceRecognition.onresult = e => {
-        const t = Array.from(e.results).map(r => r[0].transcript).join('');
-        document.getElementById('voice-text').textContent = t;
+        const t = Array.from(e.results)
+                    .map(r => r[0].transcript)
+                    .join('');
         voiceText = t;
+
+        // Update the voice-text inside recording bar
+        const voiceTextEl = document.getElementById('voice-text');
+        if (voiceTextEl) voiceTextEl.textContent = t || 'Listening...';
     };
 
     voiceRecognition.onend = () => {
         isRecording = false;
-        const btn   = document.getElementById('voice-btn');
-        btn.textContent = '🎤 Tap to Speak';
-        btn.classList.remove('recording');
+        
+        // Stop the pulse animation but KEEP bar visible
+        const voiceBtn = document.getElementById('voice-action-btn');
+        if (voiceBtn) voiceBtn.classList.remove('recording');
 
-        if (voiceText) {
+        if (voiceText.trim()) {
+            // Show captured text — keep bar visible until analyze tapped
+            const voiceTextEl = document.getElementById('voice-text');
+            if (voiceTextEl) {
+                voiceTextEl.textContent = `✅ "${voiceText.trim()}"`;
+                voiceTextEl.style.color = '#0d5c38';
+            }
+
+            // Show analyze button
             const mode = getCurrentMode();
             if (mode === 'gut') {
-                document.getElementById('gut-analyze-voice-btn').style.display = 'block';
-                document.getElementById('analyze-voice-btn').style.display     = 'none';
+                document.getElementById('gut-analyze-voice-btn')
+                        .style.display = 'block';
+                document.getElementById('analyze-voice-btn')
+                        .style.display = 'none';
             } else {
-                document.getElementById('analyze-voice-btn').style.display     = 'block';
-                document.getElementById('gut-analyze-voice-btn').style.display = 'none';
+                document.getElementById('analyze-voice-btn')
+                        .style.display = 'block';
+                document.getElementById('gut-analyze-voice-btn')
+                        .style.display = 'none';
             }
+        } else {
+            updateVoiceUI(false);
         }
     };
 
     voiceRecognition.onerror = e => {
         isRecording = false;
-        document.getElementById('voice-btn').classList.remove('recording');
-        alert('Voice error: ' + e.error);
+        updateVoiceUI(false);
+        if (e.error !== 'no-speech') {
+            alert('Voice error: ' + e.error);
+        }
     };
 
+    updateVoiceUI(true);
     voiceRecognition.start();
     isRecording = true;
-    const btn   = document.getElementById('voice-btn');
-    btn.textContent = '⏹️ Stop Recording';
-    btn.classList.add('recording');
 }
+// function startVoice() {
+//     voiceText = '';
 
-function stopVoice() { if (voiceRecognition) voiceRecognition.stop(); }
+//     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+//     voiceRecognition = new SR();
+//     voiceRecognition.continuous     = true;
+//     voiceRecognition.interimResults = false;  // ← FALSE fixes duplicates
+//     voiceRecognition.lang           = 'en-AU';
+
+//     voiceRecognition.onresult = e => {
+//         // Only final results — no interim accumulation
+//         for (let i = e.resultIndex; i < e.results.length; i++) {
+//             if (e.results[i].isFinal) {
+//                 voiceText += e.results[i][0].transcript + ' ';
+//             }
+//         }
+
+//         const voiceTextEl = document.getElementById('voice-text');
+//         if (voiceTextEl) {
+//             voiceTextEl.textContent = voiceText.trim() || 'Listening...';
+//         }
+//     };
+
+//     voiceRecognition.onend = () => {
+//         isRecording = false;
+//         updateVoiceUI(false);
+
+//         if (voiceText.trim()) {
+//             const mode = getCurrentMode();
+//             if (mode === 'gut') {
+//                 document.getElementById('gut-analyze-voice-btn')
+//                         .style.display = 'block';
+//                 document.getElementById('analyze-voice-btn')
+//                         .style.display = 'none';
+//             } else {
+//                 document.getElementById('analyze-voice-btn')
+//                         .style.display = 'block';
+//                 document.getElementById('gut-analyze-voice-btn')
+//                         .style.display = 'none';
+//             }
+//         }
+//     };
+
+//     voiceRecognition.onerror = e => {
+//         isRecording = false;
+//         updateVoiceUI(false);
+//         if (e.error !== 'no-speech') {
+//             alert('Voice error: ' + e.error);
+//         }
+//     };
+
+//     updateVoiceUI(true);
+//     voiceRecognition.start();
+//     isRecording = true;
+// }
+
+
+function stopVoice() { if (voiceRecognition) voiceRecognition.stop(); isRecording = false; updateVoiceUI(false); }
 
 async function analyzeVoice() {
+    updateVoiceUI(false);
     if (!voiceText) { showError('Please speak your meal description first.'); return; }
 
     // Route to gut analysis if in gut mode
@@ -1283,3 +1361,41 @@ window.addEventListener('beforeinstallprompt', e => {
 document.addEventListener('DOMContentLoaded', initModeSelector);
 
 
+
+function openCameraOverlay() {
+    const overlay = document.getElementById('camera-overlay');
+    if (overlay) overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+}
+
+function closeCameraOverlay() {
+    const overlay = document.getElementById('camera-overlay');
+    if (overlay) overlay.style.display = 'none';
+    const video = document.getElementById('camera-preview');
+    if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach(t => t.stop());
+        video.srcObject = null;
+        video.style.display = 'none';
+    }
+    const captureBtn = document.getElementById('capture-btn');
+    if (captureBtn) captureBtn.style.display = 'none';
+    const placeholder = document.getElementById('camera-placeholder');
+    if (placeholder) placeholder.style.display = 'flex';
+    const preview = document.getElementById('photo-preview');
+    if (preview) preview.style.display = 'none';
+}
+
+function updateVoiceUI(isRecording) {
+    const voiceBtn  = document.getElementById('voice-action-btn');
+    const recordBar = document.getElementById('voice-recording-bar');
+    const voiceTextEl = document.getElementById('voice-text');
+
+    if (isRecording) {
+        if (voiceBtn)    voiceBtn.classList.add('recording');
+        if (recordBar)   recordBar.style.display = 'flex';
+        if (voiceTextEl) voiceTextEl.textContent = 'Listening...';
+    } else {
+        if (voiceBtn)    voiceBtn.classList.remove('recording');
+        if (recordBar)   recordBar.style.display = 'none';
+    }
+}

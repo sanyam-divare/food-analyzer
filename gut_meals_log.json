@@ -4408,5 +4408,432 @@
     "overall_gut_score": 4.2,
     "gut_notes": "Quick logged \u2014 same as previous Coffee",
     "quick_logged": true
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Traditional Indian vegetarian meal comprising lentil bhaji (fritter), chapati (flatbread), varan (lentil curry), and bhat (rice)",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Lentil resistant starch and fibre are primary substrates for butyrate production by this species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Lentil oligosaccharides and inulin content feed this BOOST bacterium",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "mechanism": "Fried preparation and potential high-heat damage may create some harmful compounds, though legume polyphenols are antimicrobial",
+            "name": "Clostridium perfringens"
+          }
+        ],
+        "category": "protein",
+        "confidence": "medium",
+        "cooking_method": "fried",
+        "estimated_grams": 80,
+        "fodmap": "medium",
+        "gut_notes": "FLAGGED: Fried preparation reduces antioxidant content compared to boiling/steaming. Lentils are excellent legume source meeting doctor target (boiled chickpeas 80g 3x/week equivalent). Likely contains onion/garlic (typical bhaji ingredient) \u2014 assess FODMAP tolerance individually. Strong prebiotic fibre despite frying.",
+        "name": "Lentil Bhaji (Fritter)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "inulin"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Whole wheat resistant starch (if whole wheat chapati) and fermentation-resistant carbohydrates feed this butyrate producer",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Modest contribution from wheat fibre and resistant starch formed during cooling",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "grilled",
+        "estimated_grams": 60,
+        "fodmap": "medium",
+        "gut_notes": "FLAGGED: Wheat-containing item. If patient sensitive to wheat or has high FODMAP concerns, verify whole wheat vs refined flour. Grilling method preserves resistant starch better than boiling. Portion of 60g (~1 medium chapati) is moderate. Does not meet specific doctor targets but acceptable as staple carbohydrate with modest prebiotic value.",
+        "name": "Chapati (Unleavened Flatbread)",
+        "prebiotic_fibres": [
+          "resistant starch"
+        ],
+        "prebiotic_score": 5.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Boiled lentils create optimal resistant starch and fibre substrate; highest butyrate-producing potential in this meal",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Lentil oligosaccharides, inulin, and FOS are selectively fermented by this BOOST species",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Lentil polyphenols and fermentation products support mucus-layer health",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 150,
+        "fodmap": "medium",
+        "gut_notes": "FLAGGED: Likely contains onion/garlic (typical varan base). Assess portion-based FODMAP: if <2 tbsp cooked onion equivalent, rates LOW-MEDIUM. Boiling method optimal for prebiotic preservation. Exceeds doctor target for legume intake (80g 3x/week equivalent). Outstanding gut health contribution \u2014 pulses provide soluble fibre, resistant starch, and polyphenols. Turmeric (if present) adds anti-inflammatory benefit. Best food on this plate for BOOST bacteria feeding.",
+        "name": "Varan (Lentil Curry/Dal Soup)",
+        "prebiotic_fibres": [
+          "inulin",
+          "FOS",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Cooked rice develops resistant starch after cooling; primary short-chain fatty acid (butyrate) substrate",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Rice resistant starch efficiently fermented by this butyrate-producing species",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "MEETS DOCTOR TARGET: 150g cooked rice approaches recommended 200g daily target. Low FODMAP, well-tolerated. Boiling and cooling maximises resistant starch formation (key for BOOST bacteria). White rice has less fibre than brown rice but superior tolerability; resistant starch content similar if properly cooled. Excellent foundation for butyrate production when combined with varan and lentil bhaji. No anti-inflammatory compounds but neutral impact with strong prebiotic benefit via resistant starch.",
+        "name": "Bhat (Cooked Rice)",
+        "prebiotic_fibres": [
+          "resistant starch"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-14 19:30",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-14"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Indian vegetarian meal: moong dal bhaji, 2 chapati, rice and dal with tadka, one carrot",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Legume-derived butyrate precursors from fermentation of polyphenols in mung bean",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Mung bean oligosaccharides provide modest prebiotic effect",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "mechanism": "Cooking and frying reduces raw starch availability; however frying oil may promote lipid-loving pathogens if excessive",
+            "name": "Clostridium perfringens"
+          }
+        ],
+        "category": "protein",
+        "confidence": "medium",
+        "cooking_method": "fried",
+        "estimated_grams": 120,
+        "fodmap": "medium",
+        "gut_notes": "Legume fritter provides plant protein and oligosaccharides. Frying method reduces some prebiotic value but adds polyphenols. FODMAP medium due to mung bean oligosaccharides (galactans)\u2014typical serving usually tolerated. If bhaji contains garlic/onion in batter, flag as flagged food.",
+        "name": "Moong dal bhaji (mung bean fritters)",
+        "prebiotic_fibres": [
+          "resistant starch (post-cooking if cooled)"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Wheat carbohydrates fermented to butyrate, but modest prebiotic effect from refined preparation",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "cooked on griddle",
+        "estimated_grams": 80,
+        "fodmap": "medium",
+        "gut_notes": "FLAGGED FOOD: Wheat bread present. Two chapatis (~80g total) exceeds doctor target threshold. Wheat contains gluten\u2014monitor for any gut sensitivity. Low fibre content compared to whole grain alternatives. Cooked starch has minimal resistant starch unless cooled. Provides fermentable carbohydrates but not optimised for prebiotic benefit.",
+        "name": "Chapati (wheat flatbread)",
+        "prebiotic_fibres": [
+          "resistant starch (minimal if eaten warm)"
+        ],
+        "prebiotic_score": 5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Cooked rice + legume combination generates high butyrate production via fermentation; resistant starch in cooled rice strongly feeds this species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Dal polysaccharides and resistant starch from rice provide selective prebiotic substrate",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Butyrate producer\u2014fed by fermentation of combined starch and legume fibre",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Polyphenols from turmeric in tadka and dal fibre support mucus layer health",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain + protein",
+        "confidence": "high",
+        "cooking_method": "boiled with spice tempering",
+        "estimated_grams": 200,
+        "fodmap": "low",
+        "gut_notes": "MEETS DOCTOR TARGET: 200g cooked rice as prescribed. Excellent synergy between rice and dal creates optimal prebiotic environment. If tadka contains garlic >1 clove or onion >2 tbsp, FODMAP may rise to medium\u2014assess actual spice content. Turmeric provides curcumin (anti-inflammatory). Best if rice is cooled slightly to maximise resistant starch. No probiotics (not fermented).",
+        "name": "Rice with dal and tadka",
+        "prebiotic_fibres": [
+          "resistant starch (if cooled after cooking)",
+          "soluble fibre from dal"
+        ],
+        "prebiotic_score": 7.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Pectin from cooked carrot provides modest prebiotic effect",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Beta-carotene and polyphenols support mucus layer and anti-inflammatory pathways",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "medium",
+        "cooking_method": "assumed boiled or steamed in dal",
+        "estimated_grams": 80,
+        "fodmap": "low",
+        "gut_notes": "Cooked carrot is low-FODMAP and adds colour/micronutrients. Modest prebiotic value. Beta-carotene is anti-inflammatory. If raw, prebiotic score would be slightly lower. Cooking increases pectin bioavailability. Does not meet doctor target of steamed broccoli (not present).",
+        "name": "Carrot (assumed cooked, as unspecified)",
+        "prebiotic_fibres": [
+          "pectin (increased when cooked)",
+          "inulin (small amount)"
+        ],
+        "prebiotic_score": 4.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-15 22:31",
+    "overall_gut_score": 7.4,
+    "gut_notes": "",
+    "date": "2026-06-15"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "100g papaya and half banana (approximately 50-60g)",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Pectin fermentation produces butyrate, primary fuel for this keystone species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Pectin and fructose support bifidobacterial growth",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 100,
+        "fodmap": "low",
+        "gut_notes": "Rich in papain enzyme and pectin. Strong anti-inflammatory profile from carotenoids (beta-carotene) and vitamin C. Supports mucus-layer health. Low FODMAP at this portion. Excellent for BOOST bacteria targeting.",
+        "name": "Papaya",
+        "prebiotic_fibres": [
+          "pectin"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch fermentation produces butyrate, primary energy substrate for this species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch fermentation supports butyrate production",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Inulin and resistant starch indirectly support mucus-degrading bacteria",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Inulin selectively feeds bifidobacteria",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 55,
+        "fodmap": "low",
+        "gut_notes": "MEETS DOCTOR TARGET: Raw banana 55g (daily target 100g). Excellent resistant starch content when raw (unripe bananas highest). Strong prebiotic profile. Anti-inflammatory polyphenols. Low FODMAP at this portion. Perfect alignment with patient's BOOST bacteria deficiencies, particularly Faecalibacterium prausnitzii.",
+        "name": "Banana (raw)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "inulin"
+        ],
+        "prebiotic_score": 7.8,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-15 23:10",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-15"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Glass of kefir probiotic with spoonful of sugar",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Kefir is naturally rich in Lactobacillus rhamnosus and related Lactobacillus species; direct inoculation",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Many kefir strains contain Bifidobacterium species; fermentation produces beneficial metabolites",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Kefir metabolites and short-chain fatty acids support growth of butyrate-producing species",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "mechanism": "Lactic acid from fermentation inhibits pathogenic Clostridium species",
+            "name": "Clostridium perfringens"
+          }
+        ],
+        "category": "fermented",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 240,
+        "fodmap": "low",
+        "gut_notes": "Excellent probiotic source directly addressing patient deficiencies in Lactobacillus rhamnosus and Bifidobacterium longum. Low FODMAP. Strong anti-inflammatory polyphenols and butyrate precursors. Supports mucus layer integrity.",
+        "name": "Kefir (probiotic fermented milk)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 3,
+        "probiotic": true
+      },
+      {
+        "anti_inflammatory_score": 1,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Refined sugar ferments rapidly, feeding pathogenic proteobacteria and Clostridium species",
+            "name": "Clostridium perfringens"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Sugar promotes mucus-degrading pathobiont expansion",
+            "name": "Ruminococcus gnavus"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "mechanism": "Sugar shifts microbiota composition away from beneficial butyrate producers",
+            "name": "Faecalibacterium prausnitzii"
+          }
+        ],
+        "category": "condiment",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 5,
+        "fodmap": "low",
+        "gut_notes": "\u26a0\ufe0f FLAGGED: Refined sugar undermines kefir benefits. Feeds excess pathogenic bacteria, increases inflammatory metabolites, reduces short-chain fatty acid production. Negates some probiotic advantage. Recommend removing or replacing with honey (\u22641 tsp) if sweetening needed.",
+        "name": "Sugar (white/refined)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-15 23:25",
+    "overall_gut_score": 7.1,
+    "gut_notes": "",
+    "date": "2026-06-15"
   }
 ]

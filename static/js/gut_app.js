@@ -2356,6 +2356,7 @@ async function gutAnalyzePhoto() {
 }
 
 async function gutAnalyzeVoice(text) {
+    updateVoiceUI(false);
     if (!text) { showError('Please speak or type your meal first.'); return; }
     const hv = document.getElementById('analyze-voice-btn');
     const gv = document.getElementById('gut-analyze-voice-btn');
