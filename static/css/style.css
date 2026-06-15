@@ -2187,3 +2187,18 @@ main {
     font-size: 1.6rem;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
 }
+
+/* ── SVG action icons ────────────────────────────── */
+.input-action-icon svg {
+    width: 24px;
+    height: 24px;
+    transition: stroke .15s;
+}
+
+.input-action-btn:active .input-action-icon svg {
+    stroke: #0d5c38;
+}
+
+.input-action-btn.recording .input-action-icon svg {
+    stroke: #ef4444;
+}
