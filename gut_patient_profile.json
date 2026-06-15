@@ -1,162 +1,612 @@
-{
-  "patient_id": "guest",
-  "name": "Guest",
-  "test_date": "",
-  "test_provider": "MicrobioTx",
-  "doctor": "",
-  "metrics": {
-    "evenness": 45,
-    "diversity": 40,
-    "fb_ratio": 2.1
+[
+  {
+    "patient_id": "guest",
+    "test_date": "06/06/2026",
+    "test_provider": "MicrobioTx",
+    "doctor": "Dr Smith",
+    "metrics": {
+      "evenness": 0.42,
+      "fb_ratio": 2.4,
+      "diversity": 1.6
+    },
+    "functions": {
+      "immunity": {
+        "harmful": 42,
+        "helpful": 58
+      },
+      "gi_health": {
+        "harmful": 51,
+        "helpful": 49
+      },
+      "overall_health": {
+        "harmful": 48,
+        "helpful": 52
+      },
+      "mental_wellness": {
+        "harmful": 45,
+        "helpful": 55
+      },
+      "sugar_metabolism": {
+        "harmful": 36,
+        "helpful": 64
+      },
+      "weight_management": {
+        "harmful": 39,
+        "helpful": 61
+      }
+    },
+    "bacteria_boost": [
+      {
+        "name": "Faecalibacterium prausnitzii",
+        "level": "low",
+        "functions": []
+      },
+      {
+        "name": "Bifidobacterium longum",
+        "level": "low",
+        "functions": []
+      },
+      {
+        "name": "Lactobacillus rhamnosus",
+        "level": "low",
+        "functions": []
+      },
+      {
+        "name": "Akkermansia muciniphila",
+        "level": "low",
+        "functions": []
+      },
+      {
+        "name": "Roseburia intestinalis",
+        "level": "low",
+        "functions": []
+      }
+    ],
+    "bacteria_reduce": [
+      {
+        "name": "Proteobacteria",
+        "level": "high",
+        "functions": []
+      },
+      {
+        "name": "Clostridium perfringens",
+        "level": "high",
+        "functions": []
+      },
+      {
+        "name": "Ruminococcus gnavus",
+        "level": "high",
+        "functions": []
+      },
+      {
+        "name": "Bilophila wadsworthia",
+        "level": "high",
+        "functions": []
+      },
+      {
+        "name": "Methanobrevibacter smithii",
+        "level": "high",
+        "functions": []
+      }
+    ],
+    "food_targets": [
+      {
+        "food": "raw banana",
+        "feeds": "",
+        "frequency": "daily",
+        "alternatives": [],
+        "amount_grams": 100
+      },
+      {
+        "food": "cooked rice",
+        "feeds": "",
+        "frequency": "daily",
+        "alternatives": [],
+        "amount_grams": 200
+      },
+      {
+        "food": "Plain yoghurt",
+        "feeds": "",
+        "frequency": "daily",
+        "alternatives": [],
+        "amount_grams": 150
+      },
+      {
+        "food": "Cooked oats",
+        "feeds": "",
+        "frequency": "daily",
+        "alternatives": [],
+        "amount_grams": 80
+      },
+      {
+        "food": "Garlic",
+        "feeds": "",
+        "frequency": "daily",
+        "alternatives": [],
+        "amount_grams": 10
+      },
+      {
+        "food": "Steamed broccoli",
+        "feeds": "",
+        "frequency": "3x/week",
+        "alternatives": [],
+        "amount_grams": 100
+      },
+      {
+        "food": "Boiled chickpeas",
+        "feeds": "",
+        "frequency": "3x/week",
+        "alternatives": [],
+        "amount_grams": 80
+      },
+      {
+        "food": "Flaxseed",
+        "feeds": "",
+        "frequency": "daily",
+        "alternatives": [],
+        "amount_grams": 15
+      }
+    ],
+    "foods_add": [
+      "Ginger tea",
+      "Chia seed",
+      "steamed vegetables",
+      "rice",
+      "banana",
+      "yogurt"
+    ],
+    "foods_reduce": [
+      "Onion & garlic. Wheat bread",
+      "Apples & pears",
+      "Full-fat dairy",
+      "Processed meat",
+      "Alcohol",
+      "Carbonated drinks",
+      "Beans",
+      "Culiflower & cabbage",
+      "Coffee"
+    ],
+    "name": "Sanyam"
   },
-  "functions": {
-    "overall_health": {
-      "helpful": 0,
-      "harmful": 100
+  {
+    "patient_id": "jeet",
+    "name": "Jeet",
+    "test_date": "",
+    "test_provider": "",
+    "doctor": "",
+    "metrics": {
+      "evenness": 40,
+      "diversity": 35,
+      "fb_ratio": 1.8
     },
-    "immunity": {
-      "helpful": 0,
-      "harmful": 100
+    "functions": {
+      "overall_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "immunity": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "gi_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "mental_wellness": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "weight_management": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "sugar_metabolism": {
+        "helpful": 0,
+        "harmful": 100
+      }
     },
-    "gi_health": {
-      "helpful": 0,
-      "harmful": 100
-    },
-    "mental_wellness": {
-      "helpful": 0,
-      "harmful": 100
-    },
-    "weight_management": {
-      "helpful": 0,
-      "harmful": 100
-    },
-    "sugar_metabolism": {
-      "helpful": 0,
-      "harmful": 100
-    }
+    "bacteria_boost": [
+      {
+        "name": "Bifidobacterium longum",
+        "reason": "Reduces bloating and improves transit time"
+      },
+      {
+        "name": "Lactobacillus acidophilus",
+        "reason": "Improves lactose digestion, reduces gas"
+      },
+      {
+        "name": "Akkermansia muciniphila",
+        "reason": "Strengthens gut lining, reduces permeability"
+      },
+      {
+        "name": "Christensenellaceae",
+        "reason": "Linked to healthy BMI and gut motility"
+      },
+      {
+        "name": "Prevotella copri",
+        "reason": "Improves fibre fermentation efficiency"
+      }
+    ],
+    "bacteria_reduce": [
+      {
+        "name": "Methanobrevibacter smithii",
+        "reason": "Produces methane gas causing bloating"
+      },
+      {
+        "name": "Desulfovibrio",
+        "reason": "Produces hydrogen sulphide, slows motility"
+      }
+    ],
+    "foods_add": [
+      "High-water vegetables",
+      "Probiotic foods",
+      "Soluble fibre",
+      "Warm liquids",
+      "Ginger tea"
+    ],
+    "foods_reduce": [
+      "Processed foods",
+      "Red meat",
+      "Fried foods",
+      "Carbonated drinks",
+      "Beans in large amounts",
+      "Cruciferous vegetables raw"
+    ],
+    "food_targets": [
+      {
+        "food": "Kiwi fruit",
+        "amount_grams": 120,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium longum",
+        "alternatives": [
+          "Papaya",
+          "Pineapple"
+        ]
+      },
+      {
+        "food": "Prunes",
+        "amount_grams": 50,
+        "frequency": "daily",
+        "feeds": "Lactobacillus acidophilus",
+        "alternatives": [
+          "Dried figs",
+          "Dates"
+        ]
+      },
+      {
+        "food": "Flaxseed",
+        "amount_grams": 20,
+        "frequency": "daily",
+        "feeds": "Christensenellaceae",
+        "alternatives": [
+          "Psyllium husk"
+        ]
+      },
+      {
+        "food": "Fennel (cooked)",
+        "amount_grams": 80,
+        "frequency": "3x week",
+        "feeds": "Prevotella copri",
+        "alternatives": [
+          "Ginger",
+          "Peppermint tea"
+        ]
+      },
+      {
+        "food": "Plain yoghurt",
+        "amount_grams": 150,
+        "frequency": "daily",
+        "feeds": "Lactobacillus acidophilus",
+        "alternatives": [
+          "Kefir",
+          "Lassi"
+        ]
+      },
+      {
+        "food": "Steamed vegetables",
+        "amount_grams": 150,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium longum",
+        "alternatives": [
+          "Any cooked vegetables"
+        ]
+      }
+    ]
   },
-  "bacteria_boost": [
-    {
-      "name": "Faecalibacterium prausnitzii",
-      "reason": "Key anti-inflammatory, reduced in IBS"
+  {
+    "patient_id": "mrunal",
+    "name": "Mrunal",
+    "test_date": "",
+    "test_provider": "",
+    "doctor": "",
+    "metrics": {
+      "evenness": 50,
+      "diversity": 55,
+      "fb_ratio": 1.5
     },
-    {
-      "name": "Bifidobacterium longum",
-      "reason": "Reduces gut permeability and bloating"
+    "functions": {
+      "overall_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "immunity": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "gi_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "mental_wellness": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "weight_management": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "sugar_metabolism": {
+        "helpful": 0,
+        "harmful": 100
+      }
     },
-    {
-      "name": "Lactobacillus rhamnosus",
-      "reason": "Reduces IBS severity and pain"
+    "bacteria_boost": [
+      {
+        "name": "Lactobacillus reuteri",
+        "reason": "Produces skin-protective compounds, reduces inflammation"
+      },
+      {
+        "name": "Bifidobacterium breve",
+        "reason": "Improves skin hydration and elasticity"
+      },
+      {
+        "name": "Lactobacillus plantarum",
+        "reason": "Reduces skin inflammation and acne-causing bacteria"
+      },
+      {
+        "name": "Akkermansia muciniphila",
+        "reason": "Reduces systemic inflammation linked to skin issues"
+      },
+      {
+        "name": "Lactobacillus acidophilus",
+        "reason": "Reduces cortisol-related skin flare-ups"
+      }
+    ],
+    "bacteria_reduce": [
+      {
+        "name": "Clostridium perfringens",
+        "reason": "Produces toxins linked to skin inflammation"
+      },
+      {
+        "name": "Fusobacterium nucleatum",
+        "reason": "Linked to systemic inflammation affecting skin"
+      }
+    ],
+    "foods_add": [
+      "Antioxidant-rich foods",
+      "Omega-3 foods",
+      "Collagen-supporting foods",
+      "Fermented foods",
+      "Zinc-rich foods"
+    ],
+    "foods_reduce": [
+      "Sugar",
+      "Dairy in excess",
+      "Processed foods",
+      "Alcohol",
+      "Trans fats",
+      "High-glycemic foods"
+    ],
+    "food_targets": [
+      {
+        "food": "Kefir or dahi",
+        "amount_grams": 150,
+        "frequency": "daily",
+        "feeds": "Lactobacillus reuteri",
+        "alternatives": [
+          "Plain yoghurt",
+          "Fermented buttermilk"
+        ]
+      },
+      {
+        "food": "Pumpkin seeds",
+        "amount_grams": 30,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium breve",
+        "alternatives": [
+          "Sunflower seeds",
+          "Hemp seeds"
+        ]
+      },
+      {
+        "food": "Turmeric (with pepper)",
+        "amount_grams": 5,
+        "frequency": "daily",
+        "feeds": "Lactobacillus plantarum",
+        "alternatives": [
+          "Turmeric milk",
+          "Golden paste"
+        ]
+      },
+      {
+        "food": "Walnuts",
+        "amount_grams": 30,
+        "frequency": "daily",
+        "feeds": "Akkermansia muciniphila",
+        "alternatives": [
+          "Flaxseed",
+          "Chia seeds"
+        ]
+      },
+      {
+        "food": "Berries",
+        "amount_grams": 80,
+        "frequency": "daily",
+        "feeds": "Lactobacillus acidophilus",
+        "alternatives": [
+          "Pomegranate",
+          "Amla"
+        ]
+      },
+      {
+        "food": "Green vegetables",
+        "amount_grams": 100,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium breve",
+        "alternatives": [
+          "Spinach",
+          "Methi",
+          "Coriander"
+        ]
+      }
+    ]
+  },
+  {
+    "patient_id": "sanyam",
+    "name": "Sanyam",
+    "test_date": "",
+    "test_provider": "",
+    "doctor": "",
+    "metrics": {
+      "evenness": 50,
+      "diversity": 55,
+      "fb_ratio": 1.5
     },
-    {
-      "name": "Akkermansia muciniphila",
-      "reason": "Strengthens gut lining and mucus layer"
+    "functions": {
+      "overall_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "immunity": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "gi_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "mental_wellness": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "weight_management": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "sugar_metabolism": {
+        "helpful": 0,
+        "harmful": 100
+      }
     },
-    {
-      "name": "Roseburia intestinalis",
-      "reason": "Produces butyrate, reduces inflammation"
-    }
-  ],
-  "bacteria_reduce": [
-    {
-      "name": "Proteobacteria",
-      "reason": "Elevated in IBS, promotes inflammation"
-    },
-    {
-      "name": "Bilophila wadsworthia",
-      "reason": "Produces hydrogen sulphide, worsens IBS"
-    }
-  ],
-  "foods_add": [
-    "Fermented foods",
-    "Soluble fibre",
-    "Cooked vegetables",
-    "Resistant starch"
-  ],
-  "foods_reduce": [
-    "Raw onion",
-    "Apples",
-    "Wheat in large amounts",
-    "Fried foods",
-    "Alcohol",
-    "Artificial sweeteners"
-  ],
-  "food_targets": [
-    {
-      "food": "Green banana",
-      "amount_grams": 100,
-      "frequency": "daily",
-      "feeds": "Akkermansia muciniphila",
-      "alternatives": [
-        "Slightly unripe banana"
-      ]
-    },
-    {
-      "food": "Cooked oats",
-      "amount_grams": 80,
-      "frequency": "daily",
-      "feeds": "Faecalibacterium prausnitzii",
-      "alternatives": [
-        "Overnight oats",
-        "Oat porridge"
-      ]
-    },
-    {
-      "food": "Plain yoghurt",
-      "amount_grams": 150,
-      "frequency": "daily",
-      "feeds": "Lactobacillus rhamnosus",
-      "alternatives": [
-        "Dahi",
-        "Kefir"
-      ]
-    },
-    {
-      "food": "Cooked rice (cooled)",
-      "amount_grams": 200,
-      "frequency": "daily",
-      "feeds": "Bifidobacterium longum",
-      "alternatives": [
-        "Cooled pasta"
-      ]
-    },
-    {
-      "food": "Garlic (cooked)",
-      "amount_grams": 10,
-      "frequency": "daily",
-      "feeds": "Roseburia intestinalis",
-      "alternatives": [
-        "Garlic powder"
-      ]
-    },
-    {
-      "food": "Steamed broccoli",
-      "amount_grams": 100,
-      "frequency": "3x week",
-      "feeds": "Faecalibacterium prausnitzii",
-      "alternatives": [
-        "Cauliflower",
-        "Brussels sprouts"
-      ]
-    },
-    {
-      "food": "Flaxseed",
-      "amount_grams": 15,
-      "frequency": "daily",
-      "feeds": "Bifidobacterium longum",
-      "alternatives": [
-        "Chia seeds"
-      ]
-    },
-    {
-      "food": "Boiled chickpeas",
-      "amount_grams": 80,
-      "frequency": "3x week",
-      "feeds": "Roseburia intestinalis",
-      "alternatives": [
-        "Lentils",
-        "Split peas"
-      ]
-    }
-  ]
-}
+    "bacteria_boost": [
+      {
+        "name": "Lactobacillus reuteri",
+        "reason": "Produces skin-protective compounds, reduces inflammation"
+      },
+      {
+        "name": "Bifidobacterium breve",
+        "reason": "Improves skin hydration and elasticity"
+      },
+      {
+        "name": "Lactobacillus plantarum",
+        "reason": "Reduces skin inflammation and acne-causing bacteria"
+      },
+      {
+        "name": "Akkermansia muciniphila",
+        "reason": "Reduces systemic inflammation linked to skin issues"
+      },
+      {
+        "name": "Lactobacillus acidophilus",
+        "reason": "Reduces cortisol-related skin flare-ups"
+      }
+    ],
+    "bacteria_reduce": [
+      {
+        "name": "Clostridium perfringens",
+        "reason": "Produces toxins linked to skin inflammation"
+      },
+      {
+        "name": "Fusobacterium nucleatum",
+        "reason": "Linked to systemic inflammation affecting skin"
+      }
+    ],
+    "foods_add": [
+      "Antioxidant-rich foods",
+      "Omega-3 foods",
+      "Collagen-supporting foods",
+      "Fermented foods",
+      "Zinc-rich foods"
+    ],
+    "foods_reduce": [
+      "Sugar",
+      "Dairy in excess",
+      "Processed foods",
+      "Alcohol",
+      "Trans fats",
+      "High-glycemic foods"
+    ],
+    "food_targets": [
+      {
+        "food": "Kefir or dahi",
+        "amount_grams": 150,
+        "frequency": "daily",
+        "feeds": "Lactobacillus reuteri",
+        "alternatives": [
+          "Plain yoghurt",
+          "Fermented buttermilk"
+        ]
+      },
+      {
+        "food": "Pumpkin seeds",
+        "amount_grams": 30,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium breve",
+        "alternatives": [
+          "Sunflower seeds",
+          "Hemp seeds"
+        ]
+      },
+      {
+        "food": "Turmeric (with pepper)",
+        "amount_grams": 5,
+        "frequency": "daily",
+        "feeds": "Lactobacillus plantarum",
+        "alternatives": [
+          "Turmeric milk",
+          "Golden paste"
+        ]
+      },
+      {
+        "food": "Walnuts",
+        "amount_grams": 30,
+        "frequency": "daily",
+        "feeds": "Akkermansia muciniphila",
+        "alternatives": [
+          "Flaxseed",
+          "Chia seeds"
+        ]
+      },
+      {
+        "food": "Berries",
+        "amount_grams": 80,
+        "frequency": "daily",
+        "feeds": "Lactobacillus acidophilus",
+        "alternatives": [
+          "Pomegranate",
+          "Amla"
+        ]
+      },
+      {
+        "food": "Green vegetables",
+        "amount_grams": 100,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium breve",
+        "alternatives": [
+          "Spinach",
+          "Methi",
+          "Coriander"
+        ]
+      }
+    ]
+  }
+]

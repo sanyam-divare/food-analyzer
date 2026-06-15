@@ -459,3 +459,68 @@ def gut_daily_analysis():
         import traceback
         print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# BACKEND — Add route to gut_routes.py
+# ══════════════════════════════════════════════════════════════════════════════
+
+@gut_bp.route('/instant-log', methods=['POST'])
+def gut_instant_log():
+    """
+    Instantly log a food based on previous analysis.
+    No AI call needed — reuses stored analysis.
+    """
+    try:
+        data         = request.get_json() or {}
+        patient_id   = data.get('patient_id', 'guest')
+        food_name    = data.get('food_name', '')
+        timezone_str = data.get('timezone', '')
+
+        if not food_name:
+            return jsonify({"error": "No food name provided"}), 400
+
+        # Load patient meals
+        all_meals = load_gut_meals(patient_id)
+
+        # Find previous analysis
+        from gut_engine import (
+            find_previous_food_analysis,
+            build_instant_meal
+        )
+        food, prev_meal = find_previous_food_analysis(
+            all_meals, food_name
+        )
+
+        if not food:
+            return jsonify({
+                "error": "no_previous",
+                "message": f"No previous analysis found for {food_name}"
+            }), 404
+
+        # Build new meal with current timestamp
+        new_meal = build_instant_meal(
+            patient_id, food, prev_meal, timezone_str
+        )
+
+        # Save to log
+        log_file = 'gut_meals_log.json'
+        import json, os
+        meals = []
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                meals = json.load(f)
+        meals.append(new_meal)
+        with open(log_file, 'w') as f:
+            json.dump(meals, f, indent=2)
+
+        return jsonify({
+            "status":    "logged",
+            "food":      food.get('name'),
+            "score":     new_meal['overall_gut_score'],
+            "timestamp": new_meal['timestamp']
+        })
+
+    except Exception as e:
+        import traceback; print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500

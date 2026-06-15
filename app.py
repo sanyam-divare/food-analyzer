@@ -2799,78 +2799,42 @@ def fitness_debug():
 # ── 2. Add a PIN validation route ────────────────────────────────────────────
 
 # In app.py — update only validate_pin route
+# Keep this as safety net
 @app.route('/auth/validate', methods=['POST'])
 def validate_pin():
     data = request.get_json() or {}
     pin  = data.get('pin', '').strip()
 
-    # Try Supabase first
+    # Try Supabase first (dynamic patients)
     try:
         from supabase_db import validate_pin as db_validate_pin
         patient = db_validate_pin(pin)
         if patient:
-            name = patient['name']
-            name_to_id = {
-                'guest':       'guest',
-                'sanyam':      'guest',
-                'jeet':        'jeet',
-                'testpatient': 'testpatient',
-            }
-            patient_id = name_to_id.get(name.lower(), name.lower())
+            patient_id = patient['name'].lower().replace(' ', '_')
             return jsonify({
                 "valid":      True,
                 "patient_id": patient_id,
-                "name":       name,
+                "name":       patient['name'],
                 "message":    "Access granted"
             })
     except Exception as e:
-        print(f'Supabase auth error: {e}')
+        print(f'Supabase error, using fallback: {e}')
 
-    # Fallback to local VALID_PINS
-    # (runs if Supabase returns None OR throws exception)
+    # Fallback to hardcoded PINs (demo safety net)
     patient_id = VALID_PINS.get(pin)
     if patient_id:
         return jsonify({
             "valid":      True,
             "patient_id": patient_id,
             "name":       patient_id.title(),
-            "message":    "Access granted (local)"
+            "message":    "Access granted (offline mode)"
         })
 
     return jsonify({"valid": False, "error": "Invalid PIN"}), 401
 
-# @app.route('/auth/validate', methods=['POST'])
-# def validate_pin():
-#     data = request.get_json() or {}
-#     pin  = data.get('pin', '').strip()
-
-#     # Try Supabase first
-#     try:
-#         from supabase_db import validate_pin as db_validate_pin
-#         patient = db_validate_pin(pin)
-#         if patient:
-#             return jsonify({
-#                 "valid":      True,
-#                 "patient_id": "guest",  # keep as guest for JSON compat
-#                 "name":       patient['name'],
-#                 "message":    "Access granted"
-#             })
-#     except Exception as e:
-#         print(f'Supabase auth failed, trying local: {e}')
-#         # Fallback to local VALID_PINS
-#         patient_id = VALID_PINS.get(pin.lower())
-#         if patient_id:
-#             return jsonify({
-#                 "valid":      True,
-#                 "patient_id": patient_id,
-#                 "message":    "Access granted (local)"
-#             })
-
-#     return jsonify({"valid": False, "error": "Invalid PIN"}), 401
-
 @app.before_request
 def global_pin_check():
-    open_paths     = ['/static/', '/auth/']
+    open_paths     = ['/static/', '/auth/', '/reset']
     open_endpoints = ['index', 'static']
 
     if request.endpoint in open_endpoints:
@@ -2885,30 +2849,22 @@ def global_pin_check():
         ''
     ).strip()
 
-    # Try Supabase first, fallback to local
+    # Try Supabase first
     try:
         from supabase_db import validate_pin as db_validate_pin
         if db_validate_pin(pin):
             return None
-    except Exception:
-        pass
+    except Exception as e:
+        print(f'Supabase auth error: {e}')
 
-    # Local fallback
-    if pin.lower() in VALID_PINS:
+    # Fallback to hardcoded PINs
+    if pin in VALID_PINS:
         return None
 
     return jsonify({
         "error": "Invalid PIN",
         "code":  "AUTH_FAILED"
     }), 401
-#
-# Option B — protect individual routes:
-# @app.route('/analyze', methods=['POST'])
-# @require_pin
-# def analyze():
-#     ...
-#
-# For the demo, Option A is easiest — uncomment it and add it to app.py
 
 @app.before_request
 def global_pin_check():

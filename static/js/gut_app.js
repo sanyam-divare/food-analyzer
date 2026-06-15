@@ -182,7 +182,7 @@ async function loadGutScorecard() {
         let url = '';
 
         if (gutScorecardView === 'daily') {
-            const now  = new Date();
+            const now = new Date();
             now.setDate(now.getDate() + gutDailyOffset);
             url = `/gut/scorecard/daily?patient_id=${gutPatientId}&date=${now.toLocaleDateString('en-CA')}`;
 
@@ -235,18 +235,13 @@ async function loadGutScorecard() {
                                </p>`
                             : ''}
                     </div>`;
-            // } else {
-            //     renderDailyScorecard(container, data);
-            // }
             } else {
-                // Clear summary cache before rendering new day
                 const oldPanel = document.getElementById('day-summary-panel');
                 if (oldPanel) oldPanel.innerHTML = '';
-            
                 renderDailyScorecard(container, data);
             }
 
-            // Nav always added last — never gets wiped
+            // Nav always added last
             const nav = document.createElement('div');
             nav.className = 'scorecard-week-nav';
             nav.innerHTML = `
@@ -258,6 +253,11 @@ async function loadGutScorecard() {
                     Next →
                 </button>`;
             container.insertBefore(nav, container.firstChild);
+
+            // Nudge ribbon — only for today, not past days
+            if (gutDailyOffset === 0) {
+                injectNudgeRibbon();
+            }
 
         } else if (gutScorecardView === 'weekly') {
 
@@ -3746,4 +3746,421 @@ async function saveMealTime(oldTimestamp, newTimestamp) {
 function closeEditModal() {
     const modal = document.getElementById('edit-time-modal');
     if (modal) modal.remove();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SMART MEAL NUDGE RIBBON
+// Add these functions to gut_app.js
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Get current meal slot ─────────────────────────────────────────────────────
+function getCurrentMealSlot() {
+    const h = new Date().getHours();
+    if (h >= 6  && h < 10) return { key: 'breakfast',  label: 'Breakfast',   emoji: '🌅', greeting: 'Good morning!' };
+    if (h >= 10 && h < 12) return { key: 'midmorning', label: 'Mid-morning', emoji: '🌤️', greeting: 'Morning snack time?' };
+    if (h >= 12 && h < 15) return { key: 'lunch',      label: 'Lunch',       emoji: '☀️', greeting: 'Lunchtime!' };
+    if (h >= 15 && h < 18) return { key: 'snack',      label: 'Snack',       emoji: '🍵', greeting: 'Snack time!' };
+    if (h >= 18 && h < 21) return { key: 'dinner',     label: 'Dinner',      emoji: '🌆', greeting: 'Dinner time!' };
+    if (h >= 21)            return { key: 'latenight',  label: 'Late night',  emoji: '🌙', greeting: 'Late night snack?' };
+    return null;
+}
+
+// ── Check if current slot already logged today ────────────────────────────────
+function isSlotLoggedToday(allMeals, slotKey) {
+    const today = new Date().toLocaleDateString('en-CA');
+    return allMeals.some(meal => {
+        const date = (meal.timestamp || meal.date || '').slice(0, 10);
+        if (date !== today) return false;
+        const h = parseInt((meal.timestamp || '').slice(11, 13) || '0');
+        const mealSlot = h >= 6  && h < 10 ? 'breakfast'
+                       : h >= 10 && h < 12 ? 'midmorning'
+                       : h >= 12 && h < 15 ? 'lunch'
+                       : h >= 15 && h < 18 ? 'snack'
+                       : h >= 18 && h < 21 ? 'dinner'
+                       : 'latenight';
+        return mealSlot === slotKey;
+    });
+}
+
+// ── Get smart suggestions from meal history ───────────────────────────────────
+function getSmartSuggestions(allMeals, slotKey, profile) {
+    // Count food frequency for this slot
+    const foodCount = {};
+    allMeals.forEach(meal => {
+        const h = parseInt((meal.timestamp || '').slice(11, 13) || '0');
+        const mealSlot = h >= 6  && h < 10 ? 'breakfast'
+                       : h >= 10 && h < 12 ? 'midmorning'
+                       : h >= 12 && h < 15 ? 'lunch'
+                       : h >= 15 && h < 18 ? 'snack'
+                       : h >= 18 && h < 21 ? 'dinner'
+                       : 'latenight';
+        if (mealSlot !== slotKey) return;
+
+        meal.foods?.forEach(f => {
+            const name = f.name?.toLowerCase().trim();
+            if (name) foodCount[name] = (foodCount[name] || 0) + 1;
+        });
+    });
+
+    // Sort by frequency
+    const fromHistory = Object.entries(foodCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([name, count]) => ({
+            name:   name.charAt(0).toUpperCase() + name.slice(1),
+            count:  count,
+            source: 'history'
+        }));
+
+    // If no history, use profile food_targets as fallback
+    if (fromHistory.length === 0 && profile?.food_targets?.length) {
+        return profile.food_targets.slice(0, 4).map(t => ({
+            name:   t.food,
+            count:  0,
+            source: 'profile'
+        }));
+    }
+
+    return fromHistory;
+}
+
+// ── Render nudge ribbon ───────────────────────────────────────────────────────
+async function renderNudgeRibbon(allMeals) {
+    const slot = getCurrentMealSlot();
+    if (!slot) return ''; // outside meal hours
+
+    // Don't show if slot already logged
+    if (isSlotLoggedToday(allMeals, slot.key)) return '';
+
+    const suggestions = getSmartSuggestions(allMeals, slot.key, gutProfile);
+
+    const suggestionRibbons = suggestions.map(s => `
+        <div class="nudge-suggestion"
+             onclick="quickLogMeal('${s.name.replace(/'/g, "\\'")}')">
+            <span class="nudge-food-name">${s.name}</span>
+            ${s.count > 0
+                ? `<span class="nudge-food-freq">${s.count}x before</span>`
+                : `<span class="nudge-food-freq">from your plan</span>`}
+            <span class="nudge-food-arrow">›</span>
+        </div>`
+    ).join('');
+
+    return `
+        <div class="nudge-ribbon" id="nudge-ribbon">
+            <div class="nudge-header">
+                <div class="nudge-header-left">
+                    <span class="nudge-emoji">${slot.emoji}</span>
+                    <div>
+                        <div class="nudge-greeting">${slot.greeting}</div>
+                        <div class="nudge-sub">
+                            Log your ${slot.label.toLowerCase()} to
+                            track your gut score
+                        </div>
+                    </div>
+                </div>
+                <button class="nudge-dismiss"
+                        onclick="dismissNudge()">✕</button>
+            </div>
+
+            ${suggestionRibbons.length ? `
+                <div class="nudge-suggestions">
+                    ${suggestionRibbons}
+                </div>` : ''}
+
+            <div class="nudge-actions">
+                <button class="nudge-btn-camera"
+                        onclick="dismissNudge();startCamera()">
+                    📷 Photo
+                </button>
+                <button class="nudge-btn-voice"
+                        onclick="dismissNudge();toggleVoice()">
+                    🎤 Voice
+                </button>
+                <button class="nudge-btn-type"
+                        onclick="dismissNudge();
+                                 document.getElementById('manual-text-input')
+                                         ?.focus()">
+                    ✏️ Type
+                </button>
+            </div>
+        </div>`;
+}
+// ── Dismiss nudge ─────────────────────────────────────────────────────────────
+function dismissNudge() {
+    const ribbon = document.getElementById('nudge-ribbon');
+    if (ribbon) {
+        ribbon.style.opacity = '0';
+        ribbon.style.transform = 'translateY(-10px)';
+        setTimeout(() => ribbon.remove(), 300);
+    }
+}
+
+// ── Inject nudge into scorecard ───────────────────────────────────────────────
+async function injectNudgeRibbon() {
+    try {
+        const slot = getCurrentMealSlot();
+        if (!slot) return;
+
+        const res     = await fetch(
+            `/gut/history?patient_id=${gutPatientId}`
+        );
+        const meals   = await res.json();
+
+        // Don't show if already logged this slot today
+        if (isSlotLoggedToday(meals, slot.key)) return;
+
+        const html = await renderNudgeRibbon(meals);
+        if (!html) return;
+
+        // Insert before the scorecard card
+        const scorecard = document.getElementById('gut-scorecard');
+        if (!scorecard) return;
+
+        const card = scorecard.closest('.card');
+        if (!card) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+
+        card.parentNode?.insertBefore(
+            wrapper.firstElementChild, card
+        );
+
+    } catch (e) {
+        console.log('Nudge ribbon error:', e);
+    }
+}
+
+// ── Quick log modal ───────────────────────────────────────────────────────────
+async function quickLogMeal(foodName) {
+    dismissNudge();
+
+    // Show loading modal while fetching previous analysis
+    showQuickLogModal(foodName, null, true);
+
+    try {
+        // Find previous analysis from history
+        const res   = await fetch(
+            `/gut/history?patient_id=${gutPatientId}`
+        );
+        const meals = await res.json();
+
+        // Find most recent analysis of this food
+        const search = foodName.toLowerCase();
+        let prevFood = null;
+        let prevScore = null;
+
+        for (let i = meals.length - 1; i >= 0; i--) {
+            const meal = meals[i];
+            const found = (meal.foods || []).find(f =>
+                f.name?.toLowerCase().includes(search) ||
+                search.includes(f.name?.toLowerCase())
+            );
+            if (found) {
+                prevFood  = found;
+                prevScore = meal.overall_gut_score;
+                break;
+            }
+        }
+
+        showQuickLogModal(foodName, prevFood, false, prevScore);
+
+    } catch (e) {
+        // If error, fall back to manual log
+        showQuickLogModal(foodName, null, false, null);
+    }
+}
+
+
+function showQuickLogModal(foodName, prevFood, loading, prevScore) {
+    // Remove existing modal
+    document.getElementById('quick-log-modal')?.remove();
+
+    const scoreColor = prevScore
+        ? gutScoreColor(prevScore)
+        : '#94a3b8';
+
+    // Build bacteria preview
+    const bacteriaPreview = prevFood
+        ? (prevFood.bacteria_fed || [])
+            .slice(0, 2)
+            .map(b => {
+                const n = typeof b === 'object' ? b.name : b;
+                return `<span class="ql-bacteria">✅ ${n.split(' ')[0]}</span>`;
+            }).join('')
+        : '';
+
+    const modal = document.createElement('div');
+    modal.id    = 'quick-log-modal';
+    modal.className = 'ql-overlay';
+    modal.innerHTML = `
+        <div class="ql-modal">
+            <div class="ql-header">
+                <div class="ql-title">⚡ Quick Log</div>
+                <button class="ql-close"
+                        onclick="closeQuickLogModal()">✕</button>
+            </div>
+
+            <div class="ql-food-name">${foodName}</div>
+
+            ${loading ? `
+                <div class="ql-loading">
+                    <div class="spinner"></div>
+                    <p>Finding previous analysis...</p>
+                </div>` : prevFood ? `
+                <!-- Previous analysis found -->
+                <div class="ql-prev-card">
+                    <div class="ql-prev-header">
+                        <span class="ql-prev-label">
+                            Last logged analysis:
+                        </span>
+                        <span class="ql-prev-score"
+                              style="color:${scoreColor}">
+                            ${prevScore}/10
+                        </span>
+                    </div>
+                    <div class="ql-prev-details">
+                        <span>
+                            🌱 ${prevFood.prebiotic_score || 0}/10
+                        </span>
+                        <span>
+                            🔥 ${prevFood.anti_inflammatory_score || 0}/10
+                        </span>
+                        <span style="color:${
+                            prevFood.fodmap === 'high'   ? '#ef4444' :
+                            prevFood.fodmap === 'medium' ? '#f59e0b' :
+                            '#22c55e'}">
+                            FODMAP: ${(prevFood.fodmap||'low').toUpperCase()}
+                        </span>
+                    </div>
+                    ${bacteriaPreview
+                        ? `<div class="ql-bacteria-row">
+                               ${bacteriaPreview}
+                           </div>`
+                        : ''}
+                    <div class="ql-prev-note">
+                        ${prevFood.estimated_grams || 100}g ·
+                        Same portion as before?
+                    </div>
+                </div>
+
+                <div class="ql-actions">
+                    <button class="ql-btn-instant"
+                            onclick="confirmInstantLog('${
+                                foodName.replace(/'/g, "\\'")}')">
+                        ✅ Log Same
+                    </button>
+                    <button class="ql-btn-analyze"
+                            onclick="closeQuickLogModal();
+                                     prefillAndAnalyze('${
+                                         foodName.replace(/'/g, "\\'")}')">
+                        🤖 Different
+                    </button>
+                </div>` : `
+                <!-- No previous analysis — go to AI -->
+                <div class="ql-no-prev">
+                    <p>No previous analysis found.</p>
+                    <p>Let AI analyse it for you.</p>
+                </div>
+                <div class="ql-actions">
+                    <button class="ql-btn-analyze"
+                            onclick="closeQuickLogModal();
+                                     prefillAndAnalyze('${
+                                         foodName.replace(/'/g, "\\'")}')">
+                        🤖 Analyse with AI
+                    </button>
+                </div>`}
+        </div>`;
+
+    document.body.appendChild(modal);
+}
+
+
+async function confirmInstantLog(foodName) {
+    const btn = document.querySelector('.ql-btn-instant');
+    if (btn) {
+        btn.textContent = '⏳ Logging...';
+        btn.disabled    = true;
+    }
+
+    try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res      = await fetch('/gut/instant-log', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                patient_id:   gutPatientId,
+                food_name:    foodName,
+                timezone:     timezone
+            })
+        });
+        const result = await res.json();
+
+        if (result.error === 'no_previous') {
+            // Fall back to AI analysis
+            closeQuickLogModal();
+            prefillAndAnalyze(foodName);
+            return;
+        }
+
+        if (result.error) {
+            alert('Could not log: ' + result.error);
+            return;
+        }
+
+        // Success!
+        closeQuickLogModal();
+        showQuickLogSuccess(foodName, result.score);
+
+        // Refresh scorecard and history
+        loadGutScorecard();
+        if (gutActiveTab === 'history') loadGutHistory();
+
+    } catch (e) {
+        alert('Log failed: ' + e.message);
+    }
+}
+
+
+function showQuickLogSuccess(foodName, score) {
+    const sc      = gutScoreColor(score);
+    const success = document.createElement('div');
+    success.className = 'ql-success-toast';
+    success.innerHTML = `
+        ✅ <strong>${foodName}</strong> logged!
+        <span style="color:${sc};margin-left:8px">
+            ${score}/10
+        </span>`;
+    document.body.appendChild(success);
+    setTimeout(() => {
+        success.style.opacity = '0';
+        setTimeout(() => success.remove(), 300);
+    }, 2500);
+}
+
+
+function closeQuickLogModal() {
+    document.getElementById('quick-log-modal')?.remove();
+}
+
+
+function prefillAndAnalyze(foodName) {
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Set voiceText and show analyze button
+    voiceText = foodName;
+    const voiceTextEl = document.getElementById('voice-text');
+    if (voiceTextEl) voiceTextEl.textContent = foodName;
+
+    const gutBtn    = document.getElementById('gut-analyze-voice-btn');
+    const healthBtn = document.getElementById('analyze-voice-btn');
+    if (gutBtn)    gutBtn.style.display    = 'block';
+    if (healthBtn) healthBtn.style.display = 'none';
+
+    // Highlight the button
+    if (gutBtn) {
+        gutBtn.style.border = '2px solid #22c55e';
+        setTimeout(() => gutBtn.style.border = '', 2000);
+    }
 }

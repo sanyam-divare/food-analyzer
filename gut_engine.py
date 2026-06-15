@@ -784,25 +784,58 @@ def load_gut_profile(patient_id='guest'):
     try:
         with open(profile_file, 'r') as f:
             data = json.load(f)
-        # Support both single-profile dict and list of profiles
+
+        # Handle list of profiles
         if isinstance(data, list):
             for p in data:
                 if p.get('patient_id') == patient_id:
                     return p
             return get_empty_profile(patient_id)
+
+        # Handle single dict (legacy) — migrate to list
         elif isinstance(data, dict):
             if data.get('patient_id') == patient_id:
                 return data
-        return get_empty_profile(patient_id)
+            # Not this patient's profile
+            return get_empty_profile(patient_id)
+
     except Exception:
         return get_empty_profile(patient_id)
 
 
 def save_gut_profile(profile_data):
-    """Save patient gut profile to file"""
+    """Save patient gut profile — preserves other patients."""
     profile_file = 'gut_patient_profile.json'
+    patient_id   = profile_data.get('patient_id', 'guest')
+
+    # Load existing data
+    existing = []
+    if os.path.exists(profile_file):
+        try:
+            with open(profile_file, 'r') as f:
+                data = json.load(f)
+            # Convert single dict to list
+            if isinstance(data, dict):
+                existing = [data]
+            elif isinstance(data, list):
+                existing = data
+        except Exception:
+            existing = []
+
+    # Update or insert this patient's profile
+    found = False
+    for i, p in enumerate(existing):
+        if p.get('patient_id') == patient_id:
+            existing[i] = profile_data
+            found = True
+            break
+
+    if not found:
+        existing.append(profile_data)
+
+    # Save all profiles
     with open(profile_file, 'w') as f:
-        json.dump(profile_data, f, indent=2)
+        json.dump(existing, f, indent=2)
 
 
 def check_food_targets_today(patient_profile, meals_today):
@@ -1010,3 +1043,62 @@ def analyse_full_day_with_claude(day_meals, patient_profile):
         return {"error": f"JSON parse error: {e}"}
     except Exception as e:
         return {"error": f"Analysis failed: {e}"}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# BACKEND — Add to gut_engine.py
+# ══════════════════════════════════════════════════════════════════════════════
+def find_previous_food_analysis(all_meals, food_name):
+    """
+    Find the most recent analysis of a specific food.
+    Returns (food_dict, meal_dict) or (None, None).
+    """
+    search = food_name.lower().strip()
+    
+    for meal in reversed(all_meals):  # newest first
+        for food in meal.get('foods', []):
+            fname = food.get('name', '').lower().strip()
+            # Match if food name contains search term or vice versa
+            if search in fname or fname in search:
+                return food, meal
+    return None, None
+
+
+def build_instant_meal(patient_id, food, previous_meal, timezone_str=''):
+    """
+    Build a new meal entry reusing previous food analysis.
+    """
+    from datetime import datetime, timezone, timedelta
+
+    # Get current timestamp
+    try:
+        if timezone_str:
+            # Simple offset approach — no pytz needed
+            now = datetime.now()
+        else:
+            now = datetime.now()
+        timestamp = now.strftime('%Y-%m-%d %H:%M')
+    except Exception:
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+
+    date = timestamp[:10]
+
+    # Calculate score from this single food
+    pre   = food.get('prebiotic_score', 0)
+    anti  = food.get('anti_inflammatory_score', 0)
+    score = round((pre + anti) / 2, 1) if (pre or anti) else 5.0
+
+    return {
+        "patient_id":        patient_id,
+        "timestamp":         timestamp,
+        "date":              date,
+        "meal_description":  food.get('name', 'Quick logged meal'),
+        "foods":             [food],
+        "gut_scores":        {
+            "prebiotic_score":         pre,
+            "anti_inflammatory_score": anti,
+        },
+        "overall_gut_score": score,
+        "gut_notes":         f"Quick logged — same as previous {food.get('name','')}",
+        "quick_logged":      True,
+    }

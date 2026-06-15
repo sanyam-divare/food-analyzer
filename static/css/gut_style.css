@@ -2338,3 +2338,336 @@
 .btn-outline-green:active {
     background: #f0fdf4;
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   Smart Meal Nudge Ribbon — append to gut_style.css
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Nudge ribbon container ──────────────────────── */
+.nudge-ribbon {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    animation: nudgeSlideIn .3s ease;
+    transition: opacity .3s, transform .3s;
+}
+
+@keyframes nudgeSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ──────────────────────────────────────── */
+.nudge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.nudge-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nudge-emoji    { font-size: 1.6rem; }
+
+.nudge-greeting {
+    font-size: .88rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.nudge-sub {
+    font-size: .72rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.nudge-dismiss {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: .7rem;
+    color: #94a3b8;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Suggestion ribbons ──────────────────────────── */
+.nudge-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.nudge-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.nudge-suggestion:active {
+    background: #f0fdf4;
+    border-color: #0d5c38;
+    transform: scale(.98);
+}
+
+.nudge-food-name {
+    flex: 1;
+    font-size: .84rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.nudge-food-freq {
+    font-size: .7rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.nudge-food-arrow {
+    font-size: 1rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+/* ── Bottom action buttons ───────────────────────── */
+.nudge-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.nudge-btn-camera,
+.nudge-btn-voice,
+.nudge-btn-type {
+    flex: 1;
+    padding: 8px 6px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+}
+
+.nudge-btn-camera:active,
+.nudge-btn-voice:active,
+.nudge-btn-type:active {
+    background: #f0fdf4;
+    border-color: #0d5c38;
+    color: #0d5c38;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Quick Log Modal — append to gut_style.css
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ──────────────────────────────────────── */
+.ql-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 9998;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn .2s ease;
+}
+
+/* ── Modal panel ─────────────────────────────────── */
+.ql-modal {
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 36px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp .25s ease;
+}
+
+/* ── Header ──────────────────────────────────────── */
+.ql-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.ql-title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.ql-close {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: .85rem;
+    color: #64748b;
+}
+
+/* ── Food name ───────────────────────────────────── */
+.ql-food-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0d5c38;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* ── Loading ─────────────────────────────────────── */
+.ql-loading {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+    font-size: .85rem;
+}
+
+/* ── Previous analysis card ──────────────────────── */
+.ql-prev-card {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+}
+
+.ql-prev-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.ql-prev-label {
+    font-size: .75rem;
+    color: #64748b;
+}
+
+.ql-prev-score {
+    font-size: .9rem;
+    font-weight: 800;
+}
+
+.ql-prev-details {
+    display: flex;
+    gap: 12px;
+    font-size: .78rem;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.ql-bacteria-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.ql-bacteria {
+    font-size: .7rem;
+    background: #dcfce7;
+    color: #15803d;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.ql-prev-note {
+    font-size: .72rem;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* ── No previous ─────────────────────────────────── */
+.ql-no-prev {
+    text-align: center;
+    padding: 16px;
+    color: #64748b;
+    font-size: .85rem;
+    line-height: 1.6;
+}
+
+/* ── Action buttons ──────────────────────────────── */
+.ql-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.ql-btn-instant {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: #0d5c38;
+    color: white;
+    font-size: .88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.ql-btn-instant:active  { opacity: 0.8; }
+.ql-btn-instant:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ql-btn-analyze {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ql-btn-analyze:active { background: #f0fdf4; border-color: #0d5c38; }
+
+/* ── Success toast ───────────────────────────────── */
+.ql-success-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0d5c38;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 20px;
+    font-size: .85rem;
+    font-weight: 600;
+    z-index: 9999;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(13,92,56,.3);
+    transition: opacity .3s;
+    animation: toastIn .3s ease;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

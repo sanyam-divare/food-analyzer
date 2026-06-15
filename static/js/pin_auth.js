@@ -44,17 +44,17 @@ function hidePinOverlay() {
     if (overlay) overlay.style.display = 'none';
 }
 
-// Temporary visual debug
-const debugDiv = document.createElement('div');
-debugDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:10px;z-index:9999;font-size:12px';
-debugDiv.innerHTML = `
-    PIN: ${localStorage.getItem('food_analyzer_pin')}<br>
-    patient_id: ${localStorage.getItem('gut_patient_id')}<br>
-    patient_name: ${localStorage.getItem('gut_patient_name')}<br>
-    gutPatientId: ${typeof gutPatientId !== 'undefined' ? gutPatientId : 'UNDEFINED'}
-`;
-document.body.appendChild(debugDiv);
-setTimeout(() => debugDiv.remove(), 5000);
+// // Temporary visual debug
+// const debugDiv = document.createElement('div');
+// debugDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:10px;z-index:9999;font-size:12px';
+// debugDiv.innerHTML = `
+//     PIN: ${localStorage.getItem('food_analyzer_pin')}<br>
+//     patient_id: ${localStorage.getItem('gut_patient_id')}<br>
+//     patient_name: ${localStorage.getItem('gut_patient_name')}<br>
+//     gutPatientId: ${typeof gutPatientId !== 'undefined' ? gutPatientId : 'UNDEFINED'}
+// `;
+// document.body.appendChild(debugDiv);
+// setTimeout(() => debugDiv.remove(), 5000);
 
 
 // Keypad button press
