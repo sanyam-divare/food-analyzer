@@ -407,7 +407,13 @@ function showTab(tab) {
 async function startCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
+            video: {
+                facingMode: 'environment',
+                width:      { ideal: 1920 },
+                height:     { ideal: 1080 },
+                focusMode:  { ideal: 'continuous' },
+                advanced:   [{ focusMode: 'continuous' }]
+            }
         });
         const video = document.getElementById('camera-preview');
         video.srcObject = stream;

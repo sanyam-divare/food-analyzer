@@ -2497,6 +2497,48 @@ function gutRejectResults() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+async function tapToFocus(event, video) {
+    try {
+        const stream = video.srcObject;
+        if (!stream) return;
+
+        const track = stream.getVideoTracks()[0];
+        if (!track) return;
+
+        const capabilities = track.getCapabilities();
+        if (!capabilities.focusMode) return;
+
+        const rect = video.getBoundingClientRect();
+        const x    = (event.clientX - rect.left) / rect.width;
+        const y    = (event.clientY - rect.top)  / rect.height;
+
+        await track.applyConstraints({
+            advanced: [{
+                focusMode:  'manual',
+                pointsOfInterest: [{ x, y }]
+            }]
+        });
+
+        // Show focus indicator
+        const indicator = document.createElement('div');
+        indicator.style.cssText = `
+            position: absolute;
+            width: 60px; height: 60px;
+            border: 2px solid #22c55e;
+            border-radius: 50%;
+            left: ${event.clientX - rect.left - 30}px;
+            top:  ${event.clientY - rect.top  - 30}px;
+            pointer-events: none;
+            animation: focusPulse .5s ease forwards;
+        `;
+        video.parentElement.appendChild(indicator);
+        setTimeout(() => indicator.remove(), 600);
+
+    } catch (e) {
+        console.log('Focus not supported:', e);
+    }
+}
+
 // ── SCORECARD RENDERERS ───────────────────────────────────────────────────────
 function gutScoreColor(s) { return s>=7?'#22c55e':s>=5?'#f59e0b':'#ef4444'; }
 function gutScoreEmoji(s) { return s>=7?'✅':s>=5?'⚠️':'❌'; }
