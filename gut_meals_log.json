@@ -4835,5 +4835,238 @@
     "overall_gut_score": 7.1,
     "gut_notes": "",
     "date": "2026-06-15"
+  },
+  {
+    "patient_id": "guest",
+    "timestamp": "2026-06-16 08:58",
+    "date": "2026-06-16",
+    "meal_description": "Chai (spiced tea)",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6.5,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "beverage",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 250,
+        "fodmap": "low",
+        "gut_notes": "Black tea and spices (ginger, cardamom, cloves) contain polyphenols with anti-inflammatory properties. No prebiotic or probiotic content. Low FODMAP if milk is not excessive.",
+        "name": "Chai (spiced tea)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {
+      "prebiotic_score": 0,
+      "anti_inflammatory_score": 6.5
+    },
+    "overall_gut_score": 3.2,
+    "gut_notes": "Quick logged \u2014 same as previous Chai (spiced tea)",
+    "quick_logged": true
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Oatmeal porridge with sliced ripe banana and milk.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Rich in beta-glucans and resistant starch which are fermented into butyrate, a primary fuel for this species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 9,
+            "mechanism": "Feeds on resistant starch and beta-glucans, leading to increased butyrate production.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Can ferment complex carbohydrates like beta-glucans present in oats.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Indirectly supported by the butyrate production resulting from oat fermentation, contributing to a healthy gut environment.",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "Contains cooked oats, which is a doctor-targeted food (80g daily). This portion well exceeds the target.",
+        "name": "Cooked Oats (Porridge)",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Contains fructooligosaccharides (FOS) which are prebiotics known to selectively feed Bifidobacteria.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "FOS from banana can also contribute to the fermentation processes that support butyrate-producing bacteria.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "The fermentable carbohydrates in bananas can generally support the growth of lactic acid bacteria.",
+            "name": "Lactobacillus rhamnosus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 60,
+        "fodmap": "medium",
+        "gut_notes": "Contains banana, which is a doctor-targeted food (100g raw daily). This portion is 60g. Ripe banana can be medium FODMAP due to fructans, especially in larger servings.",
+        "name": "Ripe Banana Slices",
+        "prebiotic_fibres": [
+          "FOS"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "If lactose is malabsorbed (e.g., due to lactose intolerance), it can provide substrate for opportunistic bacteria like Proteobacteria in the colon.",
+            "name": "Proteobacteria"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Undigested lactose can lead to dysbiosis, potentially favoring the growth of pathogenic bacteria like C. perfringens.",
+            "name": "Clostridium perfringens"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "medium",
+        "cooking_method": "not applicable",
+        "estimated_grams": 100,
+        "fodmap": "high",
+        "gut_notes": "Potentially high FODMAP due to cow's milk quantity (>100ml) which contains lactose. Full-fat dairy is flagged by the doctor. Consider lactose-free or plant-based milk alternative if dairy intolerance or sensitivity to FODMAPs is an issue for the patient.",
+        "name": "Cow's Milk",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 09:16",
+    "overall_gut_score": 7.2,
+    "gut_notes": "",
+    "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Oatmeal with sliced ripe banana served in a white bowl, partially consumed.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in beta-glucan and resistant starch, key fermentable fibers for this butyrate producer, promoting gut barrier integrity.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Utilizes beta-glucan and resistant starch for growth and metabolic activity, supporting a balanced microbiota.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Ferments various carbohydrates present in oats, supporting its growth and potential immunomodulatory effects.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Thrives on resistant starch and fermentable fibers from oats to produce butyrate, essential for colonocyte health.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "Oats are a powerful prebiotic, providing beta-glucan and resistant starch which are highly beneficial for several 'BOOST' bacteria. This portion (150g) meets and exceeds the doctor's target for cooked oats (80g daily).",
+        "name": "Cooked Oats",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 9,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch and FOS provide excellent fuel for this beneficial species, supporting SCFA production.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "FOS and resistant starch in bananas are selectively utilized by Bifidobacterium species, enhancing gut health.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "The natural sugars and fibers in banana support the growth of this Lactobacillus, contributing to gut balance.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Indirectly supported by a fiber-rich diet that promotes overall gut health and a favorable environment for mucin production.",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Fermentable fibers like resistant starch and FOS are key substrates for this butyrate producer, vital for gut lining health.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 50,
+        "fodmap": "medium",
+        "gut_notes": "Ripe banana offers beneficial FOS and resistant starch, feeding multiple 'BOOST' bacteria. This portion (50g) contributes towards the doctor's daily target of 100g raw banana.",
+        "name": "Ripe Banana (sliced)",
+        "prebiotic_fibres": [
+          "FOS",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 09:22",
+    "overall_gut_score": 9,
+    "gut_notes": "",
+    "date": "2026-06-16"
   }
 ]

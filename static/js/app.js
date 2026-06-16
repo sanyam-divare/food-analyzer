@@ -405,7 +405,6 @@ function showTab(tab) {
 
 // ── Camera ────────────────────────────────────────
 async function startCamera() {
-    openCameraOverlay();  // ← add this first line
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment' }
@@ -442,7 +441,6 @@ function capturePhoto() {
     currentImageWidth  = canvas.width;
     currentImageHeight = canvas.height;
 
-    // Disable OpenAI for image uploads
     const opt = document.querySelector('#provider-select option[value="openai"]');
     if (opt) {
         opt.disabled = true;
@@ -454,8 +452,61 @@ function capturePhoto() {
     }
 
     document.getElementById('capture-btn').style.display = 'none';
-    showCorrectAnalyzeButton(); // ← show right button for current mode
+    showCorrectAnalyzeButton();
+
+    // ── Update overlay footer to show Use Photo button ──
+    const footer = document.querySelector('.camera-overlay-footer');
+    if (footer) {
+        footer.innerHTML = `
+            <button class="camera-btn-secondary"
+                    onclick="retakePhoto()">
+                ↩ Retake
+            </button>
+            <button class="camera-btn-primary"
+                    onclick="usePhoto()">
+                ✅ Use Photo
+            </button>`;
+    }
 }
+
+function retakePhoto() {
+    // Reset and reopen camera
+    const footer = document.querySelector('.camera-overlay-footer');
+    if (footer) {
+        footer.innerHTML = `
+            <button class="camera-btn-secondary"
+                    onclick="closeCameraOverlay()">Cancel</button>
+            <button class="camera-btn-capture"
+                    id="capture-btn"
+                    style="display:none"
+                    onclick="capturePhoto()">⬤</button>
+            <button class="camera-btn-primary"
+                    onclick="startCamera()">📷 Open Camera</button>`;
+    }
+    startCamera();
+}
+
+function usePhoto() {
+    closeCameraOverlay();
+
+    const mainPreview = document.getElementById('main-photo-preview');
+    const mainImg     = document.getElementById('main-photo-img');
+
+    if (mainPreview && mainImg && currentImageBase64) {
+        mainImg.src               = `data:image/jpeg;base64,${currentImageBase64}`;
+        mainPreview.style.display = 'block';
+    }
+
+    showCorrectAnalyzeButton();
+}
+
+function clearPhoto() {
+    currentImageBase64 = null;
+    const mainPreview  = document.getElementById('main-photo-preview');
+    if (mainPreview) mainPreview.style.display = 'none';
+    hideAllAnalyzeButtons();
+}
+
 
 function uploadPhoto() {
     document.getElementById('file-input').click();
@@ -507,7 +558,11 @@ function handleFileUpload(event) {
                 }
             }
 
-            showCorrectAnalyzeButton(); // ← show right button for current mode
+            showCorrectAnalyzeButton();
+            // Show in main preview
+            const mp = document.getElementById('main-photo-preview');
+            const mi = document.getElementById('main-photo-img');
+            if (mp && mi) { mi.src = dataUrl; mp.style.display = 'block'; }
         } catch (err) {
             showError('Failed to process image: ' + err.message);
         }
@@ -1301,6 +1356,7 @@ function resetApp() {
     safe('camera-preview',      'style.display', 'none');
     safe('camera-placeholder',  'style.display', 'block');
     safe('capture-btn',         'style.display', 'none');
+    clearPhoto();
     safe('results',             'style.display', 'none');
     safe('voice-text',          'textContent',   '');
 
@@ -1364,8 +1420,12 @@ document.addEventListener('DOMContentLoaded', initModeSelector);
 
 function openCameraOverlay() {
     const overlay = document.getElementById('camera-overlay');
-    if (overlay) overlay.style.display = 'flex';
-    overlay.style.flexDirection = 'column';
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+    }
+    // Auto-start camera immediately
+    startCamera();
 }
 
 function closeCameraOverlay() {

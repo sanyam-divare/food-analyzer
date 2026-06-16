@@ -2467,8 +2467,11 @@ async function gutConfirmResults() {
         const pp = document.getElementById('photo-preview');
         const ph = document.getElementById('camera-placeholder');
         if (pp) pp.style.display = 'none';
+        const mp = document.getElementById('main-photo-preview');
+        if (mp) mp.style.display = 'none';
         if (ph) ph.style.display = 'block';
         hideAllAnalyzeButtons();
+        if (typeof clearPhoto === 'function') clearPhoto();
         voiceText = '';
         const vt = document.getElementById('voice-text');
         if (vt) vt.textContent = '';
@@ -2487,6 +2490,8 @@ function gutRejectResults() {
     const pp = document.getElementById('photo-preview');
     const ph = document.getElementById('camera-placeholder');
     if (pp) pp.style.display = 'none';
+    const mp = document.getElementById('main-photo-preview');
+    if (mp) mp.style.display = 'none';
     if (ph) ph.style.display = 'block';
     hideAllAnalyzeButtons();
     window.scrollTo({ top: 0, behavior: 'smooth' });

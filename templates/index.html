@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#1a6b3c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -119,6 +119,21 @@
                            onchange="handleFileUpload(event)">
                 </div>
 
+                <div id="main-photo-preview" style="display:none;margin-top:10px">
+                    <div style="position:relative">
+                        <img id="main-photo-img"
+                             style="width:100%;max-height:280px;
+                                    object-fit:cover;border-radius:12px;
+                                    display:block">
+                        <button onclick="clearPhoto()"
+                                style="position:absolute;top:8px;right:8px;
+                                       background:rgba(0,0,0,.5);color:white;
+                                       border:none;border-radius:50%;
+                                       width:28px;height:28px;
+                                       font-size:.8rem;cursor:pointer">✕</button>
+                    </div>
+                </div>
+
                 <!-- Voice recording bar -->
                 <div id="voice-recording-bar" style="display:none"
                      class="voice-recording-bar">
@@ -182,10 +197,12 @@
                             onclick="closeCameraOverlay()">Cancel</button>
                     <button class="camera-btn-capture"
                             id="capture-btn"
-                            style="display:none"
-                            onclick="capturePhoto()">⬤</button>
-                    <button class="camera-btn-primary"
-                            onclick="startCamera()">📷 Open Camera</button>
+                            onclick="capturePhoto()">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0d5c38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
