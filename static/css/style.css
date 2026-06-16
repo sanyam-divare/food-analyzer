@@ -2213,3 +2213,41 @@ body {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
 }
+
+/* ── Mobile browser scaling fix ──────────────────── */
+@media (max-width: 480px) {
+
+    /* Reduce base font size */
+    body { font-size: 14px; }
+
+    /* Header smaller */
+    header { padding: 20px 16px 36px; }
+    header h1 { font-size: 1.3rem; }
+    header p  { font-size: .72rem; }
+
+    /* Mode cards smaller */
+    .mode-card { padding: 12px 8px; }
+    .mode-icon  { font-size: 1.2rem !important; }
+    .mode-title { font-size: .78rem !important; }
+    .mode-desc  { font-size: .65rem !important; }
+
+    /* Input bar tighter */
+    .input-bar-card { padding: 10px; }
+    .input-bar-text { padding: 8px 12px; font-size: .82rem; }
+    .input-action-btn { padding: 8px 4px; }
+    .input-action-icon svg { width: 20px; height: 20px; }
+    .input-action-label { font-size: .6rem; }
+
+    /* Tab bar smaller */
+    .gut-tab { padding: 6px 4px; }
+    .gut-tab-icon  { font-size: .95rem; }
+    .gut-tab-label { font-size: .58rem; }
+
+    /* Gut disclaimer smaller */
+    .gut-disclaimer { font-size: .72rem; padding: 6px 10px; }
+    .gut-header-card { padding: 10px 14px; }
+    .gut-header-card h2 { font-size: .88rem; }
+
+    /* Cards tighter */
+    .card { padding: 14px; }
+}
