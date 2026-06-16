@@ -2251,3 +2251,31 @@ body {
     /* Cards tighter */
     .card { padding: 14px; }
 }
+
+/* ── Aggressive mobile scaling ───────────────────── */
+@media screen and (max-width: 768px) {
+    html { font-size: 13px !important; }
+
+    body { font-size: 13px !important; }
+
+    header {
+        padding: 16px 14px 32px !important;
+    }
+
+    header h1 { font-size: 1.2rem !important; }
+
+    .mode-card {
+        padding: 10px 8px !important;
+    }
+
+    .gut-tab {
+        padding: 5px 3px !important;
+    }
+
+    .gut-tab-icon { font-size: .9rem !important; }
+    .gut-tab-label { font-size: .55rem !important; }
+
+    .input-bar-card { padding: 10px !important; }
+
+    .card { padding: 12px !important; }
+}
