@@ -1,28 +1,35 @@
 package com.gutbooster.app;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
-import com.getcapacitor.Bridge;
 
 public class MainActivity extends BridgeActivity {
+
+    private static final int PERMISSION_REQUEST_CODE  = 1001;
+    private static final int FILE_CHOOSER_REQUEST_CODE = 5173;
+    private ValueCallback<Uri[]> filePathCallback;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         enforceFontScale();
         super.onCreate(savedInstanceState);
 
-        // Must be set AFTER super.onCreate
-        Bridge bridge = getBridge();
-        if (bridge == null) return;
+        // Trigger the native "Allow camera/microphone?" dialog
+        requestAppPermissions();
 
-        WebView webView = bridge.getWebView();
-        if (webView == null) return;
-
+        WebView webView = getBridge().getWebView();
         WebSettings settings = webView.getSettings();
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
@@ -30,17 +37,64 @@ public class MainActivity extends BridgeActivity {
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
+        settings.setMediaPlaybackRequiresUserGesture(false);
 
-        // Override WebChromeClient AFTER Capacitor sets its own
-        webView.post(() -> {
-            webView.setWebChromeClient(new WebChromeClient() {
-                @Override
-                public void onPermissionRequest(PermissionRequest request) {
-                    // Grant ALL permissions requested by web content
-                    request.grant(request.getResources());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(() -> request.grant(request.getResources()));
+            }
+
+            // Restores file Upload functionality
+            @Override
+            public boolean onShowFileChooser(WebView webView,
+                                              ValueCallback<Uri[]> callback,
+                                              FileChooserParams params) {
+                filePathCallback = callback;
+                Intent intent = params.createIntent();
+                try {
+                    startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
+                } catch (Exception e) {
+                    filePathCallback = null;
+                    return false;
                 }
-            });
+                return true;
+            }
         });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+            if (filePathCallback != null) {
+                Uri[] results = null;
+                if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                    results = new Uri[]{ data.getData() };
+                }
+                filePathCallback.onReceiveValue(results);
+                filePathCallback = null;
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void requestAppPermissions() {
+        String[] permissions = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        };
+        boolean needsRequest = false;
+        for (String perm : permissions) {
+            if (ContextCompat.checkSelfPermission(this, perm)
+                    != PackageManager.PERMISSION_GRANTED) {
+                needsRequest = true;
+            }
+        }
+        if (needsRequest) {
+            ActivityCompat.requestPermissions(this, permissions,
+                PERMISSION_REQUEST_CODE);
+        }
     }
 
     private void enforceFontScale() {
