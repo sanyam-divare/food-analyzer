@@ -7,18 +7,23 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Bridge;
 
 public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // Force normal font scale before super.onCreate
         enforceFontScale();
         super.onCreate(savedInstanceState);
 
-        WebView webView = getBridge().getWebView();
-        WebSettings settings = webView.getSettings();
+        // Must be set AFTER super.onCreate
+        Bridge bridge = getBridge();
+        if (bridge == null) return;
 
+        WebView webView = bridge.getWebView();
+        if (webView == null) return;
+
+        WebSettings settings = webView.getSettings();
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
         settings.setTextZoom(100);
@@ -26,11 +31,15 @@ public class MainActivity extends BridgeActivity {
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
 
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onPermissionRequest(PermissionRequest request) {
-                request.grant(request.getResources());
-            }
+        // Override WebChromeClient AFTER Capacitor sets its own
+        webView.post(() -> {
+            webView.setWebChromeClient(new WebChromeClient() {
+                @Override
+                public void onPermissionRequest(PermissionRequest request) {
+                    // Grant ALL permissions requested by web content
+                    request.grant(request.getResources());
+                }
+            });
         });
     }
 
@@ -49,4 +58,3 @@ public class MainActivity extends BridgeActivity {
         super.onConfigurationChanged(newConfig);
     }
 }
-// Build trigger Tue Jun 16 13:07:52 AEST 2026
