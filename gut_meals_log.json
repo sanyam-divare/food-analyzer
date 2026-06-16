@@ -5068,5 +5068,105 @@
     "overall_gut_score": 9,
     "gut_notes": "",
     "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Two whole wheat chapatis served on a plate.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in resistant starch and FOS, which are fermented by this butyrate-producing species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Contains fructooligosaccharides (FOS), a key prebiotic for Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Feeds on resistant starch and complex carbohydrates, supporting its butyrate production.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Indirectly benefits from a high-fibre diet that promotes overall gut microbiota diversity.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Indirectly supported by a healthy, fibre-rich diet that encourages a thriving gut ecosystem.",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 100,
+        "fodmap": "high",
+        "gut_notes": "This meal contains whole wheat chapati, a food identified for flagging ('Wheat bread'). The whole wheat provides beneficial prebiotic fibres (FOS, resistant starch) which are excellent fuel for boosting target bacteria. However, at this portion size (100g), it is considered high in FODMAPs (fructans).",
+        "name": "Whole Wheat Chapati",
+        "prebiotic_fibres": [
+          "FOS",
+          "resistant starch"
+        ],
+        "prebiotic_score": 7.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 12:14",
+    "overall_gut_score": 7.5,
+    "gut_notes": "",
+    "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Two griddled whole wheat flatbreads (rotis or chapatis) served on a plate.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 6,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Contains resistant starch which is fermented into butyrate, feeding this key beneficial species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in FOS (fructans) from whole wheat, a prebiotic selectively utilized by Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Provides resistant starch, a substrate for butyrate production by this beneficial bacteria.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "cooked",
+        "estimated_grams": 100,
+        "fodmap": "high",
+        "gut_notes": "This food contains wheat, which is a flagged food. The estimated portion size (two rotis) is high in FODMAPs (fructans), potentially leading to digestive symptoms in sensitive individuals. However, whole wheat offers valuable prebiotic fibers (FOS and resistant starch) that are crucial for boosting the patient's deficient gut bacteria like Faecalibacterium prausnitzii, Bifidobacterium longum, and Roseburia intestinalis.",
+        "name": "Whole Wheat Roti/Chapati",
+        "prebiotic_fibres": [
+          "FOS",
+          "resistant starch"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 12:29",
+    "overall_gut_score": 6.5,
+    "gut_notes": "",
+    "date": "2026-06-16"
   }
 ]

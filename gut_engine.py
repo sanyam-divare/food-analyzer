@@ -187,6 +187,7 @@ def analyze_gut_with_claude(image_base64, mime_type="image/jpeg", patient_profil
             json={
                 "model": "claude-haiku-4-5-20251001",
                 "max_tokens": 4000,
+                "temperature": 0.1,
                 "messages": [{
                     "role": "user",
                     "content": [
@@ -266,6 +267,7 @@ def analyze_gut_with_claude_text(voice_text, patient_profile=None):
             json={
                 "model": "claude-haiku-4-5-20251001",
                 "max_tokens": 4000,
+                "temperature": 0.1,
                 "messages": [{
                     "role": "user",
                     "content": f"Extract food items from this description: '{voice_text}'. "

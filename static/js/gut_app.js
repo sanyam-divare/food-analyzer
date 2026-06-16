@@ -2332,8 +2332,9 @@ async function saveGutProfile() {
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 async function gutAnalyzePhoto() {
     if (!currentImageBase64) { showError('Please take or upload a photo first!'); return; }
-    document.getElementById('gut-loading').style.display    = 'block';
+    // document.getElementById('gut-loading').style.display    = 'block';
     document.getElementById('gut-results').style.display    = 'none';
+    showProgressiveLoading();
     document.getElementById('gut-analyze-btn').style.display = 'none';
     try {
         const res  = await fetch('/gut/analyze', {
@@ -2352,7 +2353,7 @@ async function gutAnalyzePhoto() {
     } catch (err) {
         showError('Analysis failed: ' + err.message);
         document.getElementById('gut-analyze-btn').style.display = 'block';
-    } finally { document.getElementById('gut-loading').style.display = 'none'; }
+    } finally { hideProgressiveLoading();}
 }
 
 async function gutAnalyzeVoice(text) {
@@ -2362,7 +2363,8 @@ async function gutAnalyzeVoice(text) {
     const gv = document.getElementById('gut-analyze-voice-btn');
     if (hv) hv.style.display = 'none';
     if (gv) gv.style.display = 'none';
-    document.getElementById('gut-loading').style.display = 'block';
+    // document.getElementById('gut-loading').style.display = 'block';
+    showProgressiveLoading();
     document.getElementById('gut-results').style.display = 'none';
     try {
         const res  = await fetch('/gut/analyze-voice', {
@@ -2378,7 +2380,7 @@ async function gutAnalyzeVoice(text) {
         gutCurrentResults = data; gutMealTimestamp = data.timestamp;
         renderGutResults(data);
     } catch (err) { showError('Analysis failed: ' + err.message); if (gv) gv.style.display = 'block'; }
-    finally { document.getElementById('gut-loading').style.display = 'none'; }
+    finally { hideProgressiveLoading(); }
 }
 
 // ── RENDER RESULTS ─────────────────────────────────────────────────────────────
@@ -2538,6 +2540,45 @@ async function tapToFocus(event, video) {
         console.log('Focus not supported:', e);
     }
 }
+
+// Add to gut_app.js
+function showProgressiveLoading() {
+    const loading = document.getElementById('gut-loading');
+    if (!loading) return;
+
+    const steps = [
+        '🔍 Identifying your food...',
+        '🦠 Checking bacteria impact...',
+        '🌱 Calculating prebiotic score...',
+        '📊 Building your gut score...',
+    ];
+
+    let i = 0;
+    loading.innerHTML = `
+        <div class="spinner"></div>
+        <p id="loading-step">${steps[0]}</p>
+    `;
+    loading.style.display = 'block';
+
+    const interval = setInterval(() => {
+        i = (i + 1) % steps.length;
+        const el = document.getElementById('loading-step');
+        if (el) el.textContent = steps[i];
+    }, 2000);
+
+    // Store interval to clear later
+    window._loadingInterval = interval;
+}
+
+function hideProgressiveLoading() {
+    if (window._loadingInterval) {
+        clearInterval(window._loadingInterval);
+        window._loadingInterval = null;
+    }
+    const loading = document.getElementById('gut-loading');
+    if (loading) loading.style.display = 'none';
+}
+
 
 // ── SCORECARD RENDERERS ───────────────────────────────────────────────────────
 function gutScoreColor(s) { return s>=7?'#22c55e':s>=5?'#f59e0b':'#ef4444'; }

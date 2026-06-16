@@ -437,7 +437,7 @@ function capturePhoto() {
     video.srcObject.getTracks().forEach(t => t.stop());
     video.style.display = 'none';
 
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    const imageData = canvas.toDataURL('image/jpeg', 0.75);
     const preview   = document.getElementById('photo-preview');
     preview.src     = imageData;
     preview.style.display = 'block';
@@ -533,7 +533,7 @@ function handleFileUpload(event) {
 
     const processBitmap = async (bitmap) => {
         try {
-            const maxW = 1200, maxH = 900;
+            const maxW = 800, maxH = 600;
             const ratio = Math.min(maxW / bitmap.width, maxH / bitmap.height, 1);
             const tw    = Math.max(1, Math.round(bitmap.width  * ratio));
             const th    = Math.max(1, Math.round(bitmap.height * ratio));
@@ -543,7 +543,7 @@ function handleFileUpload(event) {
             canvas.getContext('2d').drawImage(bitmap, 0, 0, tw, th);
             if (bitmap.close) try { bitmap.close(); } catch (e) {}
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
             currentImageBase64 = dataUrl.split(',')[1];
             currentImageWidth  = tw;
             currentImageHeight = th;
@@ -583,7 +583,7 @@ function handleFileUpload(event) {
                     try {
                         const b64 = await resizeImageBase64(
                             e.target.result.split(',')[1],
-                            currentMimeType, 1200, 900, 0.8
+                            currentMimeType, 800, 600, 0.75
                         );
                         document.getElementById('photo-preview').src =
                             `data:${currentMimeType};base64,${b64}`;
@@ -605,7 +605,7 @@ function handleFileUpload(event) {
         const reader = new FileReader();
         reader.onload = e => {
             resizeImageBase64(e.target.result.split(',')[1],
-                              currentMimeType, 1200, 900, 0.8).then(b64 => {
+                              currentMimeType, 800, 600, 0.75).then(b64 => {
                 document.getElementById('photo-preview').src =
                     `data:${currentMimeType};base64,${b64}`;
                 document.getElementById('photo-preview').style.display = 'block';
@@ -630,7 +630,7 @@ function getSelectedProvider() {
 
 // ── Image utilities ───────────────────────────────
 function resizeImageBase64(base64Data, mimeType='image/jpeg',
-                            maxW=1200, maxH=900, quality=0.8) {
+                            maxW=800, maxH=600, quality=0.75) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -687,7 +687,7 @@ async function analyzePhoto() {
     document.getElementById('analyze-btn').style.display = 'none';
     document.getElementById('results').style.display     = 'none';
     try {
-        const resized     = await resizeImageBase64(currentImageBase64, currentMimeType, 1200, 900, 0.8);
+        const resized     = await resizeImageBase64(currentImageBase64, currentMimeType, 800, 600, 0.75);
         const compressed  = await compressBase64ToLimit(resized, currentMimeType, 140 * 1024);
         const sendBase64  = compressed.base64;
         if (compressed.width)  currentImageWidth  = compressed.width;
