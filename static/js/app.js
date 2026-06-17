@@ -406,6 +406,12 @@ function showTab(tab) {
 // ── Camera ────────────────────────────────────────
 async function startCamera() {
     try {
+        const existingVideo = document.getElementById('camera-preview');
+        if (existingVideo && existingVideo.srcObject) {
+            existingVideo.srcObject.getTracks().forEach(t => t.stop());
+            existingVideo.srcObject = null;
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: 'environment',
@@ -424,7 +430,17 @@ async function startCamera() {
         hideAllAnalyzeButtons();
         currentImageBase64 = null;
     } catch (err) {
-        alert('Camera access denied. Please use Upload Photo instead.');
+        let msg = 'Camera error: ' + err.message;
+        if (err.name === 'NotAllowedError') {
+            msg = 'Camera permission denied. Check app permissions in Settings.';
+        } else if (err.name === 'NotReadableError') {
+            msg = 'Camera is busy (in use by another app or a stuck session). Closing and reopening the app should free it.';
+        } else if (err.name === 'OverconstrainedError') {
+            msg = 'Camera does not support the requested settings.';
+        } else if (err.name === 'NotFoundError') {
+            msg = 'No camera found on this device.';
+        }
+        showError(msg + ' You can also use Upload Photo instead.');
     }
 }
 
@@ -1431,14 +1447,18 @@ document.addEventListener('DOMContentLoaded', initModeSelector);
 
 
 
+let cameraOpening = false;
+
 function openCameraOverlay() {
+    if (cameraOpening) return;
+    cameraOpening = true;
+
     const overlay = document.getElementById('camera-overlay');
     if (overlay) {
         overlay.style.display = 'flex';
         overlay.style.flexDirection = 'column';
     }
-    // Auto-start camera immediately
-    startCamera();
+    startCamera().finally(() => { cameraOpening = false; });
 }
 
 function closeCameraOverlay() {
