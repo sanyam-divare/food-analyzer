@@ -13,6 +13,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -25,6 +26,11 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         enforceFontScale();
         super.onCreate(savedInstanceState);
+
+        // SDK 36 enforces edge-to-edge by default, which draws content
+        // behind the status bar. Opt out so the header renders below it,
+        // matching normal browser behaviour instead of being cut off.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
 
         // Trigger the native "Allow camera/microphone?" dialog
         requestAppPermissions();
