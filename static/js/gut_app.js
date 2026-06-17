@@ -65,11 +65,13 @@ function shiftDay(dir) {
 
 function shiftWeek(dir) {
     gutWeekOffset += dir;
+    if (gutWeekOffset > 0) gutWeekOffset = 0;
     loadGutScorecard();
 }
 
 function shiftMonth(dir) {
     gutMonthOffset += dir;
+    if (gutMonthOffset > 0) gutMonthOffset = 0;
     loadGutScorecard();
 }
 
@@ -1568,12 +1570,24 @@ function logoutUser() {
     location.reload();
 }
 
-function confirmClearData() {
+async function confirmClearData() {
     if (!confirm(
-        'This clears your local session only — ' +
-        'your meals and profile are safely stored. ' +
+        'This will permanently delete your gut profile and plan ' +
+        'setup, then log you out. You will set up your profile ' +
+        'again next time you log in. Your meal history is kept. ' +
         'Continue?'
     )) return;
+
+    try {
+        await fetch('/gut/profile/reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ patient_id: gutPatientId })
+        });
+    } catch (e) {
+        console.log('Profile reset request failed:', e);
+    }
+
     localStorage.clear();
     location.reload();
 }

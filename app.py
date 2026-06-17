@@ -264,12 +264,16 @@ def search_afcd_by_embedding(food_name, threshold=0.82):
     return None, best_score
 
 def get_nutrition_by_key(food_key):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(NUTRITION_SELECT + " WHERE food_key = ? LIMIT 1", (food_key,))
-    result = cursor.fetchone()
-    conn.close()
-    return dict(result) if result else None
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(NUTRITION_SELECT + " WHERE food_key = ? LIMIT 1", (food_key,))
+        result = cursor.fetchone()
+        conn.close()
+        return dict(result) if result else None
+    except Exception as e:
+        request_log(f"DB lookup failed for key {food_key}: {e}")
+        return None  # falls back to AI-estimated nutrition
 
 # ─── Prompts & Structural Verification ─────────────────
 # SHARED_JSON_SCHEMA = """Respond ONLY in this exact JSON format, no other text:
@@ -2858,40 +2862,6 @@ def global_pin_check():
         print(f'Supabase auth error: {e}')
 
     # Fallback to hardcoded PINs
-    if pin in VALID_PINS:
-        return None
-
-    return jsonify({
-        "error": "Invalid PIN",
-        "code":  "AUTH_FAILED"
-    }), 401
-
-@app.before_request
-def global_pin_check():
-    open_paths     = ['/static/', '/auth/']
-    open_endpoints = ['index', 'static']
-
-    if request.endpoint in open_endpoints:
-        return None
-    if any(request.path.startswith(p) for p in open_paths):
-        return None
-
-    pin = (
-        request.headers.get('X-App-Pin') or
-        request.args.get('pin') or
-        (request.get_json(silent=True) or {}).get('pin') or
-        ''
-    ).strip()
-
-    # ← ADD THIS DEBUG LINE
-
-    try:
-        from supabase_db import validate_pin as db_validate_pin
-        if db_validate_pin(pin):
-            return None
-    except Exception as e:
-        print(f'[AUTH] Supabase error: {e}')
-
     if pin in VALID_PINS:
         return None
 

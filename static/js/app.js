@@ -476,7 +476,6 @@ function capturePhoto() {
 }
 
 function retakePhoto() {
-    // Reset and reopen camera
     const footer = document.querySelector('.camera-overlay-footer');
     if (footer) {
         footer.innerHTML = `
@@ -484,10 +483,12 @@ function retakePhoto() {
                     onclick="closeCameraOverlay()">Cancel</button>
             <button class="camera-btn-capture"
                     id="capture-btn"
-                    style="display:none"
-                    onclick="capturePhoto()">⬤</button>
-            <button class="camera-btn-primary"
-                    onclick="startCamera()">📷 Open Camera</button>`;
+                    onclick="capturePhoto()">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0d5c38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+            </button>`;
     }
     startCamera();
 }
@@ -1353,18 +1354,24 @@ function resetApp() {
     voiceText          = '';
     clearError();
 
-    const safe = (id, prop, val) => {
+    const hide = (id) => {
         const el = document.getElementById(id);
-        if (el) el[prop] = val;
+        if (el) el.style.display = 'none';
+    };
+    const show = (id, display = 'block') => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = display;
     };
 
-    safe('photo-preview',       'style.display', 'none');
-    safe('camera-preview',      'style.display', 'none');
-    safe('camera-placeholder',  'style.display', 'block');
-    safe('capture-btn',         'style.display', 'none');
+    hide('photo-preview');
+    hide('camera-preview');
+    show('camera-placeholder', 'block');
+    hide('capture-btn');
     clearPhoto();
-    safe('results',             'style.display', 'none');
-    safe('voice-text',          'textContent',   '');
+    hide('results');
+
+    const voiceTextEl = document.getElementById('voice-text');
+    if (voiceTextEl) voiceTextEl.textContent = '';
 
     hideAllAnalyzeButtons();
     enableOpenAIOption();
