@@ -290,23 +290,6 @@ def gut_reset_profile():
         return jsonify({"error": str(e)}), 500
 
 
-@gut_bp.route('/profile/reset', methods=['POST'])
-def gut_reset_profile():
-    """
-    Actually delete the patient's profile so they see the
-    empty/template-selection screen again on next load.
-    Used by 'Clear My Data' — does not touch meal history.
-    """
-    try:
-        data       = request.get_json() or {}
-        patient_id = data.get('patient_id', 'guest')
-        delete_gut_profile(patient_id)
-        return jsonify({"status": "reset", "patient_id": patient_id})
-    except Exception as e:
-        import traceback; print(traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
-
-
 # ── Food Plan route ───────────────────────────────────────────────────────────
 
 @gut_bp.route('/food-plan', methods=['GET'])

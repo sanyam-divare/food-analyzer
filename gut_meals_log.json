@@ -5168,5 +5168,895 @@
     "overall_gut_score": 6.5,
     "gut_notes": "",
     "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A plate of semolina-based Upma mixed with green peas, carrots, green chili, and curry leaves, served on a white plate. Banana peels are visible in the background.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in resistant starch and pectin, which are primary energy sources for this butyrate-producing species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Contains pectin and likely FOS/GOS (from peas and assumed onion/garlic) which selectively feed Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch from semolina and peas supports the growth and butyrate production of this species.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "General fermentable fibers (pectin, FOS/GOS) and resistant starch can indirectly support a diverse Lactobacillus population.",
+            "name": "Lactobacillus rhamnosus"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "The wheat (semolina) and high FODMAP content (peas, assumed onion/garlic) may promote Proteobacteria in individuals with gut dysbiosis or sensitivity.",
+            "name": "Proteobacteria"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 220,
+        "fodmap": "high",
+        "gut_notes": "Contains semolina (a wheat product) and likely onion and garlic, all of which are flagged foods for the patient. The high FODMAP content, particularly from semolina, peas, and these aromatic vegetables, may lead to digestive discomfort. However, it also provides beneficial resistant starch, pectin, and potentially FOS/GOS, which are excellent for boosting Faecalibacterium prausnitzii, Bifidobacterium longum, and Roseburia intestinalis. If garlic is present, it contributes to the daily target of 10g garlic.",
+        "name": "Vegetable Upma (semolina-based)",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "pectin",
+          "FOS",
+          "GOS"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 12:49",
+    "overall_gut_score": 6.8,
+    "gut_notes": "",
+    "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A toasted cheese sandwich made with whole wheat bread.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Resistant starch from whole wheat can be fermented by this butyrate-producing bacterium.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Fibers and resistant starch contribute to the growth of this butyrate-producer.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Fructans and other fibers in wheat provide fermentable substrates for this beneficial species.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "High gluten intake has been associated with increased levels of R. gnavus in some individuals.",
+            "name": "Ruminococcus gnavus"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "High intake of fermentable carbohydrates can potentially fuel methane production by this archaea in susceptible individuals.",
+            "name": "Methanobrevibacter smithii"
+          }
+        ],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "grilled",
+        "estimated_grams": 55,
+        "fodmap": "high",
+        "gut_notes": "This food contains wheat bread, which is a flagged food. It is high in FODMAPs (fructans) due to the portion size, which can potentially cause digestive discomfort for sensitive individuals. It provides some resistant starch and fiber for beneficial gut bacteria.",
+        "name": "Toasted Whole Wheat Bread",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "beta-glucan"
+        ],
+        "prebiotic_score": 5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "grilled",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "This food is dairy. If it is full-fat dairy (common for sandwich cheese), it is a flagged food. It offers minimal gut health benefits, lacking prebiotics and probiotics.",
+        "name": "Melted Cheese",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 14:36",
+    "overall_gut_score": 6,
+    "gut_notes": "",
+    "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A small snack bowl containing a mix of raw almonds, cashews, hazelnuts, and golden raisins.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Contain dietary fiber and polyphenols that promote growth of Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Provide fermentable substrates (resistant starch, fiber) that support butyrate producers like F. prausnitzii.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Dietary fiber and compounds in almonds support general Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Resistant starch and fiber contribute to butyrate production, benefiting Roseburia intestinalis.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "nut",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 6,
+        "fodmap": "low",
+        "gut_notes": "Excellent source of dietary fiber and polyphenols, known to enhance beneficial gut microbiota, especially Bifidobacterium and butyrate producers, while being low FODMAP in this small quantity.",
+        "name": "Almonds",
+        "prebiotic_fibres": [
+          "resistant starch",
+          "other dietary fibres"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Dietary fiber in cashews contributes to a healthy gut environment that can support Bifidobacterium.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "General dietary fiber helps maintain a diverse microbiota including Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "nut",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 4,
+        "fodmap": "low",
+        "gut_notes": "Provide dietary fiber and healthy fats, supporting general gut health and beneficial bacteria, without triggering high FODMAP symptoms in this small serving.",
+        "name": "Cashews",
+        "prebiotic_fibres": [
+          "other dietary fibres"
+        ],
+        "prebiotic_score": 6,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in fermentable fiber that serves as fuel for butyrate-producing bacteria like F. prausnitzii.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "The fiber content contributes to the production of short-chain fatty acids beneficial for Roseburia intestinalis.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Dietary fiber supports the growth and activity of Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "nut",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 2,
+        "fodmap": "low",
+        "gut_notes": "Excellent source of fiber and antioxidants, highly beneficial for promoting a healthy and diverse gut microbiome, particularly butyrate producers.",
+        "name": "Hazelnuts",
+        "prebiotic_fibres": [
+          "other dietary fibres"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Contain fiber (including pectin) that can be fermented by Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Dietary fiber in raisins can support the growth of various Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 3,
+        "fodmap": "low",
+        "gut_notes": "Provides some dietary fiber and antioxidants which support beneficial gut bacteria. The small portion keeps the sugar content and FODMAPs low, preventing potential negative impacts from excessive intake.",
+        "name": "Golden Raisins",
+        "prebiotic_fibres": [
+          "pectin",
+          "other dietary fibres"
+        ],
+        "prebiotic_score": 5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 15:55",
+    "overall_gut_score": 8,
+    "gut_notes": "",
+    "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "timestamp": "2026-06-16 23:06",
+    "date": "2026-06-16",
+    "meal_description": "Chapati (wheat flatbread)",
+    "foods": [
+      {
+        "anti_inflammatory_score": 4.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Wheat carbohydrates fermented to butyrate, but modest prebiotic effect from refined preparation",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "cooked on griddle",
+        "estimated_grams": 80,
+        "fodmap": "medium",
+        "gut_notes": "FLAGGED FOOD: Wheat bread present. Two chapatis (~80g total) exceeds doctor target threshold. Wheat contains gluten\u2014monitor for any gut sensitivity. Low fibre content compared to whole grain alternatives. Cooked starch has minimal resistant starch unless cooled. Provides fermentable carbohydrates but not optimised for prebiotic benefit.",
+        "name": "Chapati (wheat flatbread)",
+        "prebiotic_fibres": [
+          "resistant starch (minimal if eaten warm)"
+        ],
+        "prebiotic_score": 5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {
+      "prebiotic_score": 5,
+      "anti_inflammatory_score": 4.5
+    },
+    "overall_gut_score": 4.8,
+    "gut_notes": "Quick logged \u2014 same as previous Chapati (wheat flatbread)",
+    "quick_logged": true
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Paneer butter masala with steamed rice and small carrot",
+    "foods": [
+      {
+        "anti_inflammatory_score": 3,
+        "bacteria_fed": [],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "High saturated fat from butter and cream promotes bile-tolerant pathobionts",
+            "name": "Bilophila wadsworthia"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "High-fat, protein-rich dish with minimal fibre favours proteolytic fermentation",
+            "name": "Clostridium perfringens"
+          }
+        ],
+        "category": "protein|sauce",
+        "confidence": "medium",
+        "cooking_method": "fried",
+        "estimated_grams": 250,
+        "fodmap": "medium",
+        "gut_notes": "FLAG: Full-fat dairy (butter, cream, paneer). High saturated fat content is pro-inflammatory and may increase harmful bacteria. Tomato provides lycopene (anti-inflammatory) but offset by cooking method and fat content. Lacks fibre to support BOOST bacteria. Does not meet any doctor food targets.",
+        "name": "Paneer butter masala (paneer in tomato-cream sauce)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 1,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Resistant starch from cooled/steamed rice is fermented to butyrate, primary fuel for this species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Butyrate-producing bacteria benefit from resistant starch fermentation",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "steamed",
+        "estimated_grams": 200,
+        "fodmap": "low",
+        "gut_notes": "POSITIVE: Meets doctor target (200g cooked rice daily). Steamed preparation preserves resistant starch. Low FODMAP. Supports key BOOST bacteria through butyrate production. Good foundation for gut health.",
+        "name": "Steamed rice",
+        "prebiotic_fibres": [
+          "resistant starch"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 7,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Inulin and pectin in carrot provide modest prebiotic substrate",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 4,
+            "mechanism": "Polysaccharides support mucus-layer colonisation",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "vegetable",
+        "confidence": "high",
+        "cooking_method": "steamed",
+        "estimated_grams": 50,
+        "fodmap": "low",
+        "gut_notes": "Small portion limits prebiotic impact. Steaming preserves pectin. Beta-carotene provides antioxidant support. Insufficient quantity to significantly feed BOOST bacteria. Would benefit from larger portion (100g+) or additional vegetables.",
+        "name": "Carrot (small, steamed)",
+        "prebiotic_fibres": [
+          "pectin",
+          "inulin"
+        ],
+        "prebiotic_score": 5.5,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-16 23:07",
+    "overall_gut_score": 5.8,
+    "gut_notes": "",
+    "date": "2026-06-16"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A bowl of oatmeal with mixed berries (raspberries, blueberries, blackberries) and milk, likely containing ground flaxseed.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in beta-glucan and resistant starch, which are fermented into butyrate, a primary fuel for this species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan acts as a bifidogenic fiber, promoting the growth of Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan provides fermentable substrates that support the growth of Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan and resistant starch are fermented into short-chain fatty acids, including butyrate, benefiting this species.",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "cooked",
+        "estimated_grams": 180,
+        "fodmap": "low",
+        "gut_notes": "Excellent source of prebiotic fiber, highly beneficial for boosting key butyrate-producing and bifidogenic bacteria. This portion (180g) exceeds the doctor's daily target of 80g cooked oats.",
+        "name": "Cooked Oats",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 9,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and polyphenols contribute to fermentation products that support butyrate producers.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Contain FOS and polyphenols, which are bifidogenic and support Bifidobacterium growth.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "FOS and other fibers support the growth of Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Polyphenols like ellagic acid found in raspberries may support Akkermansia muciniphila.",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 25,
+        "fodmap": "low",
+        "gut_notes": "Good source of fiber and anti-inflammatory polyphenols, contributing to a diverse and healthy gut microbiome. Low FODMAP in this portion.",
+        "name": "Raspberries",
+        "prebiotic_fibres": [
+          "pectin",
+          "FOS"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and anthocyanins support gut fermentation and butyrate production.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "FOS and polyphenols support the growth of Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "FOS and other plant compounds support the growth of Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Rich in anthocyanins and other polyphenols, known to directly enhance the abundance of Akkermansia muciniphila.",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 20,
+        "fodmap": "low",
+        "gut_notes": "An excellent anti-inflammatory food, particularly potent for boosting Akkermansia muciniphila due to its high polyphenol content. Low FODMAP in this portion.",
+        "name": "Blueberries",
+        "prebiotic_fibres": [
+          "pectin",
+          "FOS"
+        ],
+        "prebiotic_score": 7.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 7,
+            "mechanism": "Pectin and anthocyanins contribute to fermentation products that support butyrate producers.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "FOS and polyphenols support the growth of Bifidobacterium species.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "FOS and other plant compounds support the growth of Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Anthocyanins and other polyphenols may support Akkermansia muciniphila.",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "medium",
+        "cooking_method": "raw",
+        "estimated_grams": 10,
+        "fodmap": "low",
+        "gut_notes": "Provides additional fiber and potent anti-inflammatory compounds. This small portion is considered low FODMAP.",
+        "name": "Blackberries",
+        "prebiotic_fibres": [
+          "pectin",
+          "FOS"
+        ],
+        "prebiotic_score": 6.5,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 5,
+        "bacteria_fed": [],
+        "bacteria_harmed": [],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 180,
+        "fodmap": "high",
+        "gut_notes": "This portion of cow's milk (180g) is high in lactose and therefore classified as high FODMAP, which could lead to digestive discomfort for individuals with lactose intolerance. It's also flagged if it is full-fat dairy, as per patient context.",
+        "name": "Cow's Milk (assumed)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 0,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Soluble fibers (mucilage) and lignans are fermented into short-chain fatty acids that support this species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Soluble fibers and lignans act as prebiotics, selectively stimulating the growth of Bifidobacterium.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Soluble fibers provide fermentable substrates that support the growth of Lactobacillus species.",
+            "name": "Lactobacillus rhamnosus"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Lignans and other phenolic compounds in flaxseed may contribute to boosting Akkermansia.",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "condiment",
+        "confidence": "medium",
+        "cooking_method": "raw",
+        "estimated_grams": 10,
+        "fodmap": "low",
+        "gut_notes": "An excellent source of soluble fiber and anti-inflammatory omega-3 fatty acids and lignans. This portion contributes significantly to the doctor's daily target of 15g flaxseed.",
+        "name": "Ground Flaxseed",
+        "prebiotic_fibres": [
+          "lignans",
+          "mucilage"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-17 08:29",
+    "overall_gut_score": 8.5,
+    "gut_notes": "",
+    "date": "2026-06-17"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "A bowl of cooked oatmeal (porridge) mixed with cow's milk and various fresh berries, including raspberries, blueberries, and blackberries. A spoon is visible in the bowl.",
+    "foods": [
+      {
+        "anti_inflammatory_score": 8,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Beta-glucan and resistant starch are fermented into SCFAs, which this species thrives on.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Benefits from fermentable fibers like beta-glucan and resistant starch.",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Butyrate producer, thrives on fermentation of oat fibers.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Indirectly supported by a healthy gut environment and SCFA production from oat fibers.",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 5,
+            "mechanism": "Benefits from a fiber-rich diet that promotes a diverse microbial community.",
+            "name": "Lactobacillus rhamnosus"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "grain",
+        "confidence": "high",
+        "cooking_method": "boiled",
+        "estimated_grams": 150,
+        "fodmap": "low",
+        "gut_notes": "An excellent source of soluble fiber, particularly beta-glucan, which is highly beneficial for gut bacteria. This portion meets and exceeds the doctor's daily target for cooked oats.",
+        "name": "Cooked Oats (Porridge)",
+        "prebiotic_fibres": [
+          "beta-glucan",
+          "resistant starch"
+        ],
+        "prebiotic_score": 8,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 4,
+        "bacteria_fed": [
+          {
+            "impact_strength": 5,
+            "mechanism": "Some Bifidobacterium species can metabolize lactose, particularly in lactose-tolerant individuals.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [
+          {
+            "impact_strength": 4,
+            "mechanism": "Can thrive on lactose in some individuals, particularly those with dysbiosis.",
+            "name": "Ruminococcus gnavus"
+          },
+          {
+            "impact_strength": 3,
+            "mechanism": "High lactose intake, especially with malabsorption, can potentially feed certain less desirable bacteria.",
+            "name": "Proteobacteria"
+          }
+        ],
+        "category": "dairy",
+        "confidence": "high",
+        "cooking_method": "not applicable",
+        "estimated_grams": 120,
+        "fodmap": "high",
+        "gut_notes": "Contains high levels of lactose, making it a high FODMAP food in this portion, which may cause digestive distress in sensitive individuals. Lactose can also feed certain less desirable bacteria. If this is full-fat milk, it is a flagged food for the patient.",
+        "name": "Cow's Milk (mixed with berries)",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 2,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Fibers contribute to SCFA production, beneficial for this species.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Benefits from the fermentation of dietary fibers and production of SCFAs.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Polyphenols in berries can positively influence mucin production and feed this species.",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Benefits from a diverse intake of fiber and polyphenols, supporting overall gut health.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 30,
+        "fodmap": "low",
+        "gut_notes": "An excellent source of fiber and potent anti-inflammatory compounds like anthocyanins and ellagic acid, highly beneficial for gut health and diversity.",
+        "name": "Raspberries",
+        "prebiotic_fibres": [
+          "pectin",
+          "resistant starch"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 10,
+        "bacteria_fed": [
+          {
+            "impact_strength": 9,
+            "mechanism": "Rich in anthocyanins and other polyphenols known to directly promote Akkermansia muciniphila growth.",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Fibers and polyphenols contribute to a healthy gut environment and SCFA production.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Benefits from the fermentation of dietary fibers.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Benefits from diverse fiber and polyphenol intake.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 20,
+        "fodmap": "low",
+        "gut_notes": "A superfood for gut health, particularly for boosting Akkermansia muciniphila due to its high polyphenol content, and generally beneficial for overall gut diversity.",
+        "name": "Blueberries",
+        "prebiotic_fibres": [
+          "pectin"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 9,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Fibers support SCFA production, contributing to a healthy gut.",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Polyphenols in blackberries promote this mucin-degrading species.",
+            "name": "Akkermansia muciniphila"
+          },
+          {
+            "impact_strength": 8,
+            "mechanism": "Benefits from fiber fermentation and SCFA production.",
+            "name": "Roseburia intestinalis"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Benefits from a diverse intake of fiber and polyphenols.",
+            "name": "Bifidobacterium longum"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "fruit",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 10,
+        "fodmap": "low",
+        "gut_notes": "Rich in fiber and potent anti-inflammatory antioxidants, contributing to a diverse and healthy gut microbiota.",
+        "name": "Blackberries",
+        "prebiotic_fibres": [
+          "pectin"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-17 15:27",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-17"
+  },
+  {
+    "patient_id": "guest",
+    "meal_description": "Moong dal chila (mung bean pancake) with coconut chutney",
+    "foods": [
+      {
+        "anti_inflammatory_score": 7.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 8,
+            "mechanism": "Moong dal fermentation produces butyrate precursors; resistant starch (especially if chila cooled before eating) directly feeds this keystone species",
+            "name": "Faecalibacterium prausnitzii"
+          },
+          {
+            "impact_strength": 7,
+            "mechanism": "Legume polysaccharides and pectin selectively fermented by bifidobacteria",
+            "name": "Bifidobacterium longum"
+          },
+          {
+            "impact_strength": 6,
+            "mechanism": "Butyrate-producing capacity from legume fermentation",
+            "name": "Roseburia intestinalis"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "protein",
+        "confidence": "high",
+        "cooking_method": "baked",
+        "estimated_grams": 80,
+        "fodmap": "low",
+        "gut_notes": "Moong dal is highly digestible compared to other legumes, reducing gas/bloating. Contains polyphenols with anti-inflammatory action. Cooling the chila post-cooking increases resistant starch content\u2014recommend eating at room temperature or chilled for maximum prebiotic benefit.",
+        "name": "Moong dal (mung bean)",
+        "prebiotic_fibres": [
+          "resistant starch (when cooled)",
+          "pectin"
+        ],
+        "prebiotic_score": 7,
+        "probiotic": false
+      },
+      {
+        "anti_inflammatory_score": 8.5,
+        "bacteria_fed": [
+          {
+            "impact_strength": 6,
+            "mechanism": "Coconut polyphenols and medium-chain triglycerides support mucus-layer integrity and this mucin-degrading species",
+            "name": "Akkermansia muciniphila"
+          }
+        ],
+        "bacteria_harmed": [],
+        "category": "condiment",
+        "confidence": "high",
+        "cooking_method": "raw",
+        "estimated_grams": 40,
+        "fodmap": "low",
+        "gut_notes": "Coconut contains lauric acid and polyphenols with strong anti-inflammatory and antimicrobial properties. Supports intestinal barrier function. No FODMAP concerns at typical chutney portion (2-3 tbsp). If chutney contains added garlic/onion, reassess FODMAP classification\u2014assume plain coconut here.",
+        "name": "Coconut chutney",
+        "prebiotic_fibres": [],
+        "prebiotic_score": 3,
+        "probiotic": false
+      }
+    ],
+    "gut_scores": {},
+    "timestamp": "2026-06-17 22:12",
+    "overall_gut_score": 7.8,
+    "gut_notes": "",
+    "date": "2026-06-17"
   }
 ]
