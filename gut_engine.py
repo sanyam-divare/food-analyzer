@@ -29,13 +29,7 @@ For each food item identify:
    - Which gut bacteria this food may harm
    - Overall gut health impact score 1-10
 
-FODMAP RATING — based on ACTUAL PORTION, not food category:
-Small amounts of high-FODMAP foods are often LOW/MEDIUM in practice.
-Quick reference (rate LOW below these, HIGH above):
-  raisins/dried fruit >15g, garlic >1 cooked clove, onion >2 tbsp cooked,
-  apple >half, wheat >1 slice, milk >100ml, honey >1 tsp.
-Cooking reduces FODMAP — raw garlic/onion rates higher than cooked.
-When portion is small/typical for the dish, prefer LOW or MEDIUM over HIGH.
+FODMAP: rate based on actual portion size. Small amounts of high-FODMAP foods are often LOW/MEDIUM. Cooking reduces FODMAP levels. Prefer LOW/MEDIUM unless clearly a large portion.
 
 IMPORTANT RULES:
 - Only list bacteria you are confident this food impacts
