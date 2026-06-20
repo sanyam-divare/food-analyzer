@@ -460,5 +460,150 @@
         ]
       }
     ]
+  },
+  {
+    "patient_id": "sanyam",
+    "name": "Sanyam",
+    "test_date": "",
+    "test_provider": "",
+    "doctor": "",
+    "metrics": {
+      "evenness": 40,
+      "diversity": 35,
+      "fb_ratio": 1.8
+    },
+    "functions": {
+      "overall_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "immunity": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "gi_health": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "mental_wellness": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "weight_management": {
+        "helpful": 0,
+        "harmful": 100
+      },
+      "sugar_metabolism": {
+        "helpful": 0,
+        "harmful": 100
+      }
+    },
+    "bacteria_boost": [
+      {
+        "name": "Bifidobacterium longum",
+        "reason": "Reduces bloating and improves transit time"
+      },
+      {
+        "name": "Lactobacillus acidophilus",
+        "reason": "Improves lactose digestion, reduces gas"
+      },
+      {
+        "name": "Akkermansia muciniphila",
+        "reason": "Strengthens gut lining, reduces permeability"
+      },
+      {
+        "name": "Christensenellaceae",
+        "reason": "Linked to healthy BMI and gut motility"
+      },
+      {
+        "name": "Prevotella copri",
+        "reason": "Improves fibre fermentation efficiency"
+      }
+    ],
+    "bacteria_reduce": [
+      {
+        "name": "Methanobrevibacter smithii",
+        "reason": "Produces methane gas causing bloating"
+      },
+      {
+        "name": "Desulfovibrio",
+        "reason": "Produces hydrogen sulphide, slows motility"
+      }
+    ],
+    "foods_add": [
+      "High-water vegetables",
+      "Probiotic foods",
+      "Soluble fibre",
+      "Warm liquids",
+      "Ginger tea"
+    ],
+    "foods_reduce": [
+      "Processed foods",
+      "Red meat",
+      "Fried foods",
+      "Carbonated drinks",
+      "Beans in large amounts",
+      "Cruciferous vegetables raw"
+    ],
+    "food_targets": [
+      {
+        "food": "Kiwi fruit",
+        "amount_grams": 120,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium longum",
+        "alternatives": [
+          "Papaya",
+          "Pineapple"
+        ]
+      },
+      {
+        "food": "Prunes",
+        "amount_grams": 50,
+        "frequency": "daily",
+        "feeds": "Lactobacillus acidophilus",
+        "alternatives": [
+          "Dried figs",
+          "Dates"
+        ]
+      },
+      {
+        "food": "Flaxseed",
+        "amount_grams": 20,
+        "frequency": "daily",
+        "feeds": "Christensenellaceae",
+        "alternatives": [
+          "Psyllium husk"
+        ]
+      },
+      {
+        "food": "Fennel (cooked)",
+        "amount_grams": 80,
+        "frequency": "3x week",
+        "feeds": "Prevotella copri",
+        "alternatives": [
+          "Ginger",
+          "Peppermint tea"
+        ]
+      },
+      {
+        "food": "Plain yoghurt",
+        "amount_grams": 150,
+        "frequency": "daily",
+        "feeds": "Lactobacillus acidophilus",
+        "alternatives": [
+          "Kefir",
+          "Lassi"
+        ]
+      },
+      {
+        "food": "Steamed vegetables",
+        "amount_grams": 150,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium longum",
+        "alternatives": [
+          "Any cooked vegetables"
+        ]
+      }
+    ]
   }
 ]

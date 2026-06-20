@@ -870,37 +870,6 @@ def delete_gut_profile(patient_id):
     return True
 
 
-def delete_gut_profile(patient_id):
-    """
-    Remove this patient's profile entirely so they see the
-    empty/template-selection screen again on next load.
-    Other patients' profiles are untouched.
-    """
-    profile_file = 'gut_patient_profile.json'
-    if not os.path.exists(profile_file):
-        return True
-
-    try:
-        with open(profile_file, 'r') as f:
-            data = json.load(f)
-    except Exception:
-        return False
-
-    if isinstance(data, dict):
-        existing = [data]
-    elif isinstance(data, list):
-        existing = data
-    else:
-        existing = []
-
-    remaining = [p for p in existing if p.get('patient_id') != patient_id]
-
-    with open(profile_file, 'w') as f:
-        json.dump(remaining, f, indent=2)
-
-    return True
-
-
 def check_food_targets_today(patient_profile, meals_today):
     """
     Compare doctor-prescribed food targets against what patient ate today.
