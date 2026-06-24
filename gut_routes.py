@@ -32,6 +32,17 @@ from gut_engine import (
     analyse_full_day_with_claude
 )
 
+# Supabase cloud sync functions
+try:
+    from supabase_db import (
+        save_gut_profile  as sb_save_profile,
+        save_gut_meal     as sb_save_meal,
+        resolve_patient_uuid
+    )
+    SUPABASE_AVAILABLE = True
+except Exception:
+    SUPABASE_AVAILABLE = False
+
 gut_bp = Blueprint('gut', __name__, url_prefix='/gut')
 
 
@@ -285,6 +296,105 @@ def gut_reset_profile():
         patient_id = data.get('patient_id', 'guest')
         delete_gut_profile(patient_id)
         return jsonify({"status": "reset", "patient_id": patient_id})
+    except Exception as e:
+        import traceback; print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+
+@gut_bp.route('/meals', methods=['GET'])
+def gut_get_meals():
+    """Return all meals for a patient since a given date (for cloud sync)."""
+    try:
+        from gut_engine import load_gut_meals_since
+        patient_id = request.args.get('patient_id', 'guest')
+        since      = request.args.get('since', '')
+        meals      = load_gut_meals_since(patient_id, since)
+        return jsonify({"meals": meals, "count": len(meals)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@gut_bp.route('/sync-cloud', methods=['POST'])
+def gut_sync_cloud():
+    """
+    Save profile + last 90 days meals to Supabase.
+    Accepts batched meal uploads for large datasets.
+    """
+    if not SUPABASE_AVAILABLE:
+        return jsonify({"error": "Cloud sync unavailable"}), 503
+
+    try:
+        data       = request.get_json() or {}
+        patient_id = data.get('patient_id', 'guest')
+        action     = data.get('action', 'full')
+
+        # ── Profile sync ──────────────────────────────
+        if action == 'profile':
+            profile = load_gut_profile(patient_id)
+            profile['patient_id'] = patient_id
+            sb_save_profile(profile)
+            return jsonify({"status": "ok", "action": "profile"})
+
+        # ── Meal batch sync ───────────────────────────
+        elif action == 'meals':
+            meals = data.get('meals', [])
+            saved = 0
+            for meal in meals:
+                meal['patient_id'] = patient_id
+                if sb_save_meal(meal):
+                    saved += 1
+            return jsonify({
+                "status": "ok",
+                "saved":  saved,
+                "total":  len(meals)
+            })
+
+        # ── Full sync (profile + meals together) ──────
+        elif action == 'full':
+            profile = load_gut_profile(patient_id)
+            profile['patient_id'] = patient_id
+            sb_save_profile(profile)
+            meals = data.get('meals', [])
+            saved = 0
+            for meal in meals:
+                meal['patient_id'] = patient_id
+                if sb_save_meal(meal):
+                    saved += 1
+            return jsonify({
+                "status": "ok",
+                "action": "full",
+                "saved":  saved,
+                "total":  len(meals)
+            })
+
+        return jsonify({"status": "ok"})
+
+    except Exception as e:
+        import traceback; print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+
+@gut_bp.route('/delete-cloud', methods=['POST'])
+def gut_delete_cloud():
+    """Delete all patient data from Supabase (Clear My Data)."""
+    if not SUPABASE_AVAILABLE:
+        return jsonify({"status": "ok"})  # nothing to delete
+
+    try:
+        from supabase_db import get_client, resolve_patient_uuid
+        data       = request.get_json() or {}
+        patient_id = data.get('patient_id', 'guest')
+
+        patient_uuid = resolve_patient_uuid(patient_id)
+        if not patient_uuid:
+            return jsonify({"status": "ok", "note": "patient not found"})
+
+        sb = get_client()
+        sb.table('gut_meals').delete().eq('patient_id', patient_uuid).execute()
+        sb.table('gut_profiles').delete().eq('patient_id', patient_uuid).execute()
+
+        return jsonify({"status": "deleted"})
+
     except Exception as e:
         import traceback; print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500

@@ -166,6 +166,7 @@ def save_gut_profile(profile_data):
             "test_date":     profile_data.get('test_date', ''),
             "test_provider": profile_data.get('test_provider', ''),
             "doctor":        profile_data.get('doctor', ''),
+            "condition":     profile_data.get('condition', ''),
             "metrics":       profile_data.get('metrics', {}),
             "functions":     profile_data.get('functions', {}),
             "bacteria_boost":  profile_data.get('bacteria_boost', []),
@@ -346,8 +347,10 @@ _patient_cache = {}
 
 def resolve_patient_uuid(patient_id):
     """
-    Convert patient_id (name or UUID) to UUID.
-    Handles legacy 'guest' string and new UUID format.
+    Convert patient_id (PIN string) to Supabase UUID.
+    App sends PIN as patient_id (e.g. '20262026').
+    Searches patients table by pin column first,
+    then falls back to name for legacy compatibility.
     """
     if not patient_id:
         return None
@@ -359,15 +362,15 @@ def resolve_patient_uuid(patient_id):
     try:
         sb = get_client()
 
-        # Already a UUID format?
-        if len(patient_id) == 36 and '-' in patient_id:
+        # Already a UUID format? Use directly.
+        if len(str(patient_id)) == 36 and '-' in str(patient_id):
             _patient_cache[patient_id] = patient_id
             return patient_id
 
-        # Look up by name (legacy support)
+        # Search by PIN first (primary method)
         res = sb.table('patients') \
                 .select('id') \
-                .ilike('name', patient_id) \
+                .eq('pin', str(patient_id)) \
                 .execute()
 
         if res.data:
@@ -375,16 +378,16 @@ def resolve_patient_uuid(patient_id):
             _patient_cache[patient_id] = uuid
             return uuid
 
-        # Fallback — look for 'guest' patient
-        if patient_id.lower() == 'guest':
-            res2 = sb.table('patients') \
-                     .select('id') \
-                     .ilike('name', 'guest') \
-                     .execute()
-            if res2.data:
-                uuid = res2.data[0]['id']
-                _patient_cache[patient_id] = uuid
-                return uuid
+        # Fallback — search by name (legacy)
+        res2 = sb.table('patients') \
+                 .select('id') \
+                 .ilike('name', str(patient_id)) \
+                 .execute()
+
+        if res2.data:
+            uuid = res2.data[0]['id']
+            _patient_cache[patient_id] = uuid
+            return uuid
 
         return None
 

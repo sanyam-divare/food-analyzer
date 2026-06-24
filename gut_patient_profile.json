@@ -462,15 +462,15 @@
     ]
   },
   {
-    "patient_id": "sanyam",
-    "name": "Sanyam",
+    "patient_id": "devansh",
+    "name": "Devansh",
     "test_date": "",
-    "test_provider": "",
+    "test_provider": "MicrobioTx",
     "doctor": "",
     "metrics": {
-      "evenness": 40,
-      "diversity": 35,
-      "fb_ratio": 1.8
+      "evenness": 45,
+      "diversity": 40,
+      "fb_ratio": 2.1
     },
     "functions": {
       "overall_health": {
@@ -500,110 +500,128 @@
     },
     "bacteria_boost": [
       {
-        "name": "Bifidobacterium longum",
-        "reason": "Reduces bloating and improves transit time"
+        "name": "Faecalibacterium prausnitzii",
+        "reason": "Key anti-inflammatory, reduced in IBS"
       },
       {
-        "name": "Lactobacillus acidophilus",
-        "reason": "Improves lactose digestion, reduces gas"
+        "name": "Bifidobacterium longum",
+        "reason": "Reduces gut permeability and bloating"
+      },
+      {
+        "name": "Lactobacillus rhamnosus",
+        "reason": "Reduces IBS severity and pain"
       },
       {
         "name": "Akkermansia muciniphila",
-        "reason": "Strengthens gut lining, reduces permeability"
+        "reason": "Strengthens gut lining and mucus layer"
       },
       {
-        "name": "Christensenellaceae",
-        "reason": "Linked to healthy BMI and gut motility"
-      },
-      {
-        "name": "Prevotella copri",
-        "reason": "Improves fibre fermentation efficiency"
+        "name": "Roseburia intestinalis",
+        "reason": "Produces butyrate, reduces inflammation"
       }
     ],
     "bacteria_reduce": [
       {
-        "name": "Methanobrevibacter smithii",
-        "reason": "Produces methane gas causing bloating"
+        "name": "Proteobacteria",
+        "reason": "Elevated in IBS, promotes inflammation"
       },
       {
-        "name": "Desulfovibrio",
-        "reason": "Produces hydrogen sulphide, slows motility"
+        "name": "Bilophila wadsworthia",
+        "reason": "Produces hydrogen sulphide, worsens IBS"
       }
     ],
     "foods_add": [
-      "High-water vegetables",
-      "Probiotic foods",
+      "Fermented foods",
       "Soluble fibre",
-      "Warm liquids",
-      "Ginger tea"
+      "Cooked vegetables",
+      "Resistant starch"
     ],
     "foods_reduce": [
-      "Processed foods",
-      "Red meat",
+      "Raw onion",
+      "Apples",
+      "Wheat in large amounts",
       "Fried foods",
-      "Carbonated drinks",
-      "Beans in large amounts",
-      "Cruciferous vegetables raw"
+      "Alcohol",
+      "Artificial sweeteners"
     ],
     "food_targets": [
       {
-        "food": "Kiwi fruit",
-        "amount_grams": 120,
+        "food": "Green banana",
+        "amount_grams": 100,
         "frequency": "daily",
-        "feeds": "Bifidobacterium longum",
+        "feeds": "Akkermansia muciniphila",
         "alternatives": [
-          "Papaya",
-          "Pineapple"
+          "Slightly unripe banana"
         ]
       },
       {
-        "food": "Prunes",
-        "amount_grams": 50,
-        "frequency": "daily",
-        "feeds": "Lactobacillus acidophilus",
-        "alternatives": [
-          "Dried figs",
-          "Dates"
-        ]
-      },
-      {
-        "food": "Flaxseed",
-        "amount_grams": 20,
-        "frequency": "daily",
-        "feeds": "Christensenellaceae",
-        "alternatives": [
-          "Psyllium husk"
-        ]
-      },
-      {
-        "food": "Fennel (cooked)",
+        "food": "Cooked oats",
         "amount_grams": 80,
-        "frequency": "3x week",
-        "feeds": "Prevotella copri",
+        "frequency": "daily",
+        "feeds": "Faecalibacterium prausnitzii",
         "alternatives": [
-          "Ginger",
-          "Peppermint tea"
+          "Overnight oats",
+          "Oat porridge"
         ]
       },
       {
         "food": "Plain yoghurt",
         "amount_grams": 150,
         "frequency": "daily",
-        "feeds": "Lactobacillus acidophilus",
+        "feeds": "Lactobacillus rhamnosus",
         "alternatives": [
-          "Kefir",
-          "Lassi"
+          "Dahi",
+          "Kefir"
         ]
       },
       {
-        "food": "Steamed vegetables",
-        "amount_grams": 150,
+        "food": "Cooked rice (cooled)",
+        "amount_grams": 200,
         "frequency": "daily",
         "feeds": "Bifidobacterium longum",
         "alternatives": [
-          "Any cooked vegetables"
+          "Cooled pasta"
+        ]
+      },
+      {
+        "food": "Garlic (cooked)",
+        "amount_grams": 10,
+        "frequency": "daily",
+        "feeds": "Roseburia intestinalis",
+        "alternatives": [
+          "Garlic powder"
+        ]
+      },
+      {
+        "food": "Steamed broccoli",
+        "amount_grams": 100,
+        "frequency": "3x week",
+        "feeds": "Faecalibacterium prausnitzii",
+        "alternatives": [
+          "Cauliflower",
+          "Brussels sprouts"
+        ]
+      },
+      {
+        "food": "Flaxseed",
+        "amount_grams": 15,
+        "frequency": "daily",
+        "feeds": "Bifidobacterium longum",
+        "alternatives": [
+          "Chia seeds"
+        ]
+      },
+      {
+        "food": "Boiled chickpeas",
+        "amount_grams": 80,
+        "frequency": "3x week",
+        "feeds": "Roseburia intestinalis",
+        "alternatives": [
+          "Lentils",
+          "Split peas"
         ]
       }
-    ]
+    ],
+    "condition": "IBS"
   }
 ]

@@ -833,6 +833,39 @@ def save_gut_profile(profile_data):
         json.dump(existing, f, indent=2)
 
 
+def load_gut_meals_since(patient_id, since_date=''):
+    """
+    Load meals from local JSON for a patient since a given date.
+    Used for cloud sync — returns last 90 days if no date given.
+    """
+    import json, os
+    from datetime import datetime, timedelta
+
+    if not since_date:
+        cutoff = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+    else:
+        cutoff = since_date
+
+    meal_file = 'gut_meals_log.json'
+    if not os.path.exists(meal_file):
+        return []
+
+    try:
+        with open(meal_file, 'r') as f:
+            all_meals = json.load(f)
+    except Exception:
+        return []
+
+    if isinstance(all_meals, dict):
+        all_meals = all_meals.get(patient_id, [])
+    elif isinstance(all_meals, list):
+        all_meals = [m for m in all_meals
+                     if m.get('patient_id') == patient_id]
+
+    return [m for m in all_meals
+            if m.get('date', m.get('timestamp', '')[:10]) >= cutoff]
+
+
 def delete_gut_profile(patient_id):
     """
     Remove this patient's profile entirely so they see the

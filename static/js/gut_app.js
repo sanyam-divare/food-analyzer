@@ -1292,6 +1292,7 @@ function applyTemplate(templateKey) {
     // Merge template into current profile
     gutProfile = {
         ...gutProfile,
+        condition:       t.label,
         test_provider:   t.test_provider || '',
         bacteria_boost:  t.bacteria_boost,
         bacteria_reduce: t.bacteria_reduce,
@@ -1438,7 +1439,14 @@ function renderProfileForm(container, profile) {
 
     container.innerHTML = `
         <div class="card">
-            <h2>⚙️ My Gut Profile</h2>
+            <h2>⚙️ My Gut Profile${profile.condition ? ` <span style="
+                background:#0d5c38;color:#fff;
+                font-size:.65rem;font-weight:600;
+                padding:2px 10px;border-radius:20px;
+                vertical-align:middle;
+                text-transform:uppercase;letter-spacing:.5px;">
+                ${profile.condition}
+            </span>` : ''}</h2>
             <div class="profile-section">
                 <div class="profile-field">
                     <label>Patient Name</label>
@@ -1550,6 +1558,15 @@ function renderProfileForm(container, profile) {
                 💾 Save Profile
             </button>
         </div>
+        <div style="padding:0 16px 16px">
+            <button class="btn-cloud-sync" onclick="saveToCloud()" style="width:100%;
+                background:#1a6b45;color:#fff;border:none;padding:12px;
+                border-radius:10px;font-size:.9rem;cursor:pointer;">
+                ☁️ Save to Cloud
+            </button>
+            <div id="cloud-sync-status" style="font-size:.75rem;color:#666;
+                 text-align:center;margin-top:6px;min-height:18px;"></div>
+        </div>
         <div class="profile-danger-zone">
             <button class="btn-logout" onclick="logoutUser()">
                 🚪 Logout
@@ -1572,20 +1589,32 @@ function logoutUser() {
 
 async function confirmClearData() {
     if (!confirm(
-        'This will permanently delete your gut profile and plan ' +
-        'setup, then log you out. You will set up your profile ' +
-        'again next time you log in. Your meal history is kept. ' +
-        'Continue?'
+        'This will permanently delete your gut profile, plan setup, ' +
+        'and all cloud data. This cannot be undone. Continue?'
     )) return;
 
+    setSyncStatus('Deleting cloud data...');
+
     try {
+        // Delete from Supabase
+        await fetch('/gut/delete-cloud', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ patient_id: gutPatientId })
+        });
+    } catch (e) {
+        console.log('Cloud delete failed:', e);
+    }
+
+    try {
+        // Delete local profile
         await fetch('/gut/profile/reset', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ patient_id: gutPatientId })
         });
     } catch (e) {
-        console.log('Profile reset request failed:', e);
+        console.log('Profile reset failed:', e);
     }
 
     localStorage.clear();
@@ -4265,5 +4294,157 @@ function prefillAndAnalyze(foodName) {
     if (gutBtn) {
         gutBtn.style.border = '2px solid #22c55e';
         setTimeout(() => gutBtn.style.border = '', 2000);
+    }
+}
+
+// ── Cloud Sync ────────────────────────────────────────────────────────────────
+
+function setSyncStatus(msg, colour) {
+    const el = document.getElementById('cloud-sync-status');
+    if (el) {
+        el.textContent = msg;
+        el.style.color = colour || '#666';
+    }
+}
+
+async function saveToCloud() {
+    const consented = localStorage.getItem('gut_cloud_consented');
+
+    if (!consented) {
+        showConsentPopup();
+        return;
+    }
+
+    await runCloudSync();
+}
+
+function showConsentPopup() {
+    const existing = document.getElementById('consent-popup-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'consent-popup-overlay';
+    overlay.style.cssText = `
+        position:fixed;top:0;left:0;right:0;bottom:0;
+        background:rgba(0,0,0,0.6);z-index:9999;
+        display:flex;align-items:center;justify-content:center;
+        padding:20px;`;
+
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:24px;
+                    max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+            <h3 style="margin:0 0 12px;color:#0d5c38;font-size:1.05rem">
+                ☁️ Save Data to Cloud
+            </h3>
+            <p style="font-size:.85rem;color:#444;line-height:1.5;margin:0 0 12px">
+                Your gut profile and last 90 days of meal history will be
+                securely stored in the cloud so your practitioner can
+                review your progress.
+            </p>
+            <ul style="font-size:.82rem;color:#555;line-height:1.8;
+                       margin:0 0 16px;padding-left:18px">
+                <li>Your data is encrypted in transit and at rest</li>
+                <li>Only shared with your nominated practitioner</li>
+                <li>Never used for advertising</li>
+                <li>You can delete it anytime via Clear My Data</li>
+            </ul>
+            <div style="display:flex;gap:10px">
+                <button onclick="document.getElementById('consent-popup-overlay').remove()"
+                        style="flex:1;padding:10px;border:1px solid #ccc;
+                               border-radius:8px;background:#fff;cursor:pointer;
+                               font-size:.85rem">
+                    Cancel
+                </button>
+                <button onclick="acceptConsentAndSync()"
+                        style="flex:2;padding:10px;border:none;
+                               border-radius:8px;background:#0d5c38;
+                               color:#fff;cursor:pointer;font-size:.85rem;
+                               font-weight:600">
+                    I Agree &amp; Save to Cloud
+                </button>
+            </div>
+        </div>`;
+
+    document.body.appendChild(overlay);
+}
+
+async function acceptConsentAndSync() {
+    document.getElementById('consent-popup-overlay')?.remove();
+    localStorage.setItem('gut_cloud_consented', 'true');
+    localStorage.setItem('gut_consent_date', new Date().toISOString());
+    await runCloudSync();
+}
+
+async function runCloudSync() {
+    setSyncStatus('☁️ Syncing profile...', '#0d5c38');
+
+    try {
+        // 1. Sync profile
+        const profileRes = await fetch('/gut/sync-cloud', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                patient_id: gutPatientId,
+                action: 'profile'
+            })
+        });
+        if (!profileRes.ok) throw new Error('Profile sync failed');
+
+        // 2. Get meals since last sync (or 90 days for first sync)
+        const lastSync  = localStorage.getItem('gut_last_synced_at');
+        let cutoffStr;
+        if (lastSync) {
+            // Only upload meals since last successful sync
+            cutoffStr = lastSync.slice(0, 10);
+        } else {
+            // First time — upload last 90 days
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 90);
+            cutoffStr = cutoff.toISOString().slice(0, 10);
+        }
+
+        const mealsRes = await fetch(`/gut/meals?patient_id=${gutPatientId}&since=${cutoffStr}`);
+        const mealsData = await mealsRes.json();
+        const allMeals = mealsData.meals || [];
+
+        if (allMeals.length === 0) {
+            setSyncStatus('✅ Synced! No meals to upload.', '#0d5c38');
+            localStorage.setItem('gut_last_synced_at', new Date().toISOString());
+            return;
+        }
+
+        // 3. Upload in batches of 20
+        const BATCH = 20;
+        let uploaded = 0;
+
+        for (let i = 0; i < allMeals.length; i += BATCH) {
+            const batch = allMeals.slice(i, i + BATCH);
+            setSyncStatus(
+                `☁️ Uploading meals ${uploaded + 1}–${Math.min(uploaded + BATCH, allMeals.length)} of ${allMeals.length}...`,
+                '#0d5c38'
+            );
+
+            const res = await fetch('/gut/sync-cloud', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patient_id: gutPatientId,
+                    action: 'meals',
+                    meals: batch
+                })
+            });
+            const result = await res.json();
+            uploaded += result.saved || batch.length;
+        }
+
+        localStorage.setItem('gut_last_synced_at', new Date().toISOString());
+        setSyncStatus(
+            `✅ Synced! ${uploaded} meals uploaded.`,
+            '#0d5c38'
+        );
+
+    } catch (e) {
+        console.error('Cloud sync error:', e);
+        setSyncStatus('❌ Sync failed. Check connection.', '#c0392b');
     }
 }
