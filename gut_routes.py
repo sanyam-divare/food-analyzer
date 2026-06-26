@@ -18,8 +18,6 @@ from gut_engine import (
     analyze_gut_with_claude,
     analyze_gut_with_gemini,
     analyze_gut_with_claude_text,
-    stream_gut_with_gemini,
-    stream_gut_with_claude,
     save_gut_meal_log,
     get_local_timestamp,
     build_daily_gut_scorecard,
@@ -104,65 +102,6 @@ def gut_analyze():
     except Exception as e:
         import traceback; print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
-
-
-@gut_bp.route('/analyze-stream', methods=['POST'])
-def gut_analyze_stream():
-    """Streaming image analysis via SSE. /gut/analyze unchanged."""
-    try:
-        data         = request.get_json() or {}
-        image_base64 = data.get('image')
-        mime_type    = data.get('mime_type', 'image/jpeg')
-        provider     = data.get('provider', 'gemini').lower()
-        timezone_str = data.get('timezone', '')
-        patient_id   = data.get('patient_id', 'guest')
-
-        if not image_base64:
-            def err():
-                yield f'data: {json.dumps({"error": "No image provided"})}\n\n'
-            return Response(stream_with_context(err()),
-                            mimetype='text/event-stream',
-                            headers={'Cache-Control': 'no-cache'})
-
-        profile   = load_gut_profile(patient_id)
-        timestamp = get_local_timestamp(timezone_str)
-
-        def generate():
-            streamer = (stream_gut_with_gemini
-                        if provider == 'gemini'
-                        else stream_gut_with_claude)
-            for event in streamer(image_base64, mime_type,
-                                  patient_profile=profile):
-                # Add metadata to done event
-                if '"done"' in event:
-                    try:
-                        payload = json.loads(event[5:])
-                        if 'done' in payload and isinstance(payload['done'], dict):
-                            payload['done']['timestamp']  = timestamp
-                            payload['done']['patient_id'] = patient_id
-                            payload['done']['mode']       = 'gut'
-                            yield f'data: {json.dumps(payload)}\n\n'
-                            continue
-                    except Exception:
-                        pass
-                yield event
-
-        return Response(
-            stream_with_context(generate()),
-            mimetype='text/event-stream',
-            headers={
-                'Cache-Control':     'no-cache',
-                'X-Accel-Buffering': 'no',
-                'Connection':        'keep-alive'
-            }
-        )
-    except Exception as e:
-        import traceback; print(traceback.format_exc())
-        def err():
-            yield f'data: {json.dumps({"error": str(e)})}\n\n'
-        return Response(stream_with_context(err()),
-                        mimetype='text/event-stream',
-                        headers={'Cache-Control': 'no-cache'})
 
 
 @gut_bp.route('/analyze-voice', methods=['POST'])
