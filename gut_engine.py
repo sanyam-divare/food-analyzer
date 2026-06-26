@@ -246,6 +246,54 @@ def analyze_gut_with_gemini(image_base64, mime_type="image/jpeg", patient_profil
     except Exception as e:
         return {"error": f"Gemini gut analysis failed: {e}"}
 
+
+def _extract_food_objects(text, already_found):
+    """
+    Extract complete food objects from partial JSON stream.
+    Handles nested objects (bacteria_fed etc) correctly using
+    proper brace depth tracking within the foods array.
+    Returns list of NEW food objects not already in already_found.
+    """
+    import json as _j
+    foods_start = text.find('"foods"')
+    if foods_start == -1:
+        return []
+
+    bracket_start = text.find('[', foods_start)
+    if bracket_start == -1:
+        return []
+
+    found_names = {f.get("name","") for f in already_found}
+    new_foods   = []
+    i           = bracket_start + 1
+    depth       = 0
+    obj_start   = -1
+
+    while i < len(text):
+        ch = text[i]
+        if ch == '{':
+            if depth == 0:
+                obj_start = i
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0 and obj_start >= 0:
+                obj_text = text[obj_start:i+1]
+                try:
+                    obj = _j.loads(obj_text)
+                    name = obj.get("name", "")
+                    if name and "estimated_grams" in obj and name not in found_names:
+                        new_foods.append(obj)
+                        found_names.add(name)
+                except Exception:
+                    pass
+                obj_start = -1
+        elif ch == ']' and depth == 0:
+            break
+        i += 1
+
+    return new_foods
+
 def stream_gut_with_gemini(image_base64, mime_type="image/jpeg", patient_profile=None):
     """Stream Gemini gut analysis - yields SSE events with chunks, food objects, and done result."""
     import json as _json
@@ -384,19 +432,9 @@ def stream_gut_with_claude(image_base64, mime_type="image/jpeg", patient_profile
                 full_text += token
                 yield f'data: {_json.dumps({"chunk": token})}\n\n'
 
-                if '"estimated_grams"' in full_text:
-                    for match in re.finditer(
-                        r'\{[^{}]*"name"\s*:[^{}]*"estimated_grams"\s*:[^{}]*\}',
-                        full_text
-                    ):
-                        try:
-                            food_obj = _json.loads(match.group())
-                            name = food_obj.get("name", "")
-                            if name and name not in [f.get("name") for f in foods_done]:
-                                foods_done.append(food_obj)
-                                yield f'data: {_json.dumps({"food": food_obj})}\n\n'
-                        except Exception:
-                            pass
+                for food_obj in _extract_food_objects(full_text, foods_done):
+                    foods_done.append(food_obj)
+                    yield f'data: {_json.dumps({"food": food_obj})}\n\n'
 
         clean = full_text.strip()
         if "```" in clean:
