@@ -39,6 +39,8 @@ try:
     from supabase_db import (
         save_gut_profile  as sb_save_profile,
         save_gut_meal     as sb_save_meal,
+        load_gut_meals    as sb_load_meals,
+        load_gut_profile  as sb_load_profile,
         resolve_patient_uuid
     )
     SUPABASE_AVAILABLE = True
@@ -364,6 +366,61 @@ def gut_get_meals():
         meals      = load_gut_meals_since(patient_id, since)
         return jsonify({"meals": meals, "count": len(meals)})
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@gut_bp.route('/sync-from-cloud', methods=['POST'])
+def gut_sync_from_cloud():
+    """Pull meals and profile FROM Supabase into local JSON on login."""
+    if not SUPABASE_AVAILABLE:
+        return jsonify({"status": "skipped"})
+    try:
+        data       = request.get_json() or {}
+        patient_id = data.get('patient_id', 'guest')
+
+        # Pull meals from Supabase
+        cloud_meals = sb_load_meals(patient_id, limit=150)
+        added = 0
+
+        if cloud_meals:
+            import os as _os
+            meal_file   = 'gut_meals_log.json'
+            local_meals = []
+            if _os.path.exists(meal_file):
+                try:
+                    with open(meal_file, 'r') as f:
+                        local_meals = json.load(f)
+                except Exception:
+                    local_meals = []
+
+            existing_keys = {
+                (m.get('patient_id',''), m.get('timestamp',''))
+                for m in local_meals
+            }
+            for meal in cloud_meals:
+                key = (meal.get('patient_id',''), meal.get('timestamp',''))
+                if key not in existing_keys:
+                    local_meals.append(meal)
+                    existing_keys.add(key)
+                    added += 1
+
+            with open(meal_file, 'w') as f:
+                json.dump(local_meals, f, indent=2)
+
+        # Restore profile from cloud if local is empty
+        local_profile = load_gut_profile(patient_id)
+        is_empty = (not local_profile or
+                    not local_profile.get('bacteria_boost') and
+                    not local_profile.get('food_targets'))
+        if is_empty:
+            cloud_profile = sb_load_profile(patient_id)
+            if cloud_profile and cloud_profile.get('bacteria_boost'):
+                save_gut_profile(cloud_profile)
+
+        return jsonify({"status": "ok", "meals_pulled": len(cloud_meals)})
+
+    except Exception as e:
+        import traceback; print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 

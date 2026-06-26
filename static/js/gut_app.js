@@ -36,14 +36,29 @@ const MEAL_SLOTS = [
 
 // Called by pin_auth.js after successful login
 function onPinSuccess() {
-    // Now gut_app.js is loaded, read from localStorage
     gutPatientId   = localStorage.getItem('gut_patient_id')  || 'guest';
     gutPatientName = localStorage.getItem('gut_patient_name') || 'Guest';
-    gutProfileLoaded = false;  // reset profile cache
+    gutProfileLoaded = false;
 
     console.log('Login success:', gutPatientId, gutPatientName);
+    syncFromCloud();
+}
 
-    // Re-render dashboard with correct patient
+async function syncFromCloud() {
+    try {
+        const res = await fetch('/gut/sync-from-cloud', {
+            method:  'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:    JSON.stringify({patient_id: gutPatientId})
+        });
+        const data = await res.json();
+        if (data.meals_pulled > 0) {
+            showMessage('☁️ Synced ' + data.meals_pulled + ' meals from cloud');
+            setTimeout(() => clearError(), 3000);
+        }
+    } catch (e) {
+        console.log('[sync] skipped:', e.message);
+    }
     renderGutDashboard();
 }
 
