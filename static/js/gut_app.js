@@ -2375,102 +2375,28 @@ async function saveGutProfile() {
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 async function gutAnalyzePhoto() {
     if (!currentImageBase64) { showError('Please take or upload a photo first!'); return; }
-    document.getElementById('gut-results').style.display     = 'none';
+    // document.getElementById('gut-loading').style.display    = 'block';
+    document.getElementById('gut-results').style.display    = 'none';
+    showProgressiveLoading();
     document.getElementById('gut-analyze-btn').style.display = 'none';
-    await gutAnalyzePhotoStream();
-}
-
-async function gutAnalyzePhotoStream() {
-    const loading = document.getElementById('gut-loading');
-    if (loading) {
-        loading.innerHTML = `
-            <div class="spinner"></div>
-            <p id="loading-step">🔍 Identifying your food...</p>
-            <div id="stream-foods" style="display:flex;flex-wrap:wrap;gap:6px;
-                justify-content:center;margin-top:10px;min-height:28px;"></div>`;
-        loading.style.display = 'block';
-    }
-
-    const provider = document.getElementById('provider-select')?.value || 'gemini';
-
     try {
-        const res = await fetch('/gut/analyze-stream', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+        const res  = await fetch('/gut/analyze', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 image: currentImageBase64, mime_type: currentMimeType,
-                provider, timezone: getUserTimezone(), patient_id: gutPatientId,
+                provider: document.getElementById('provider-select')?.value || 'claude',
+                timezone: getUserTimezone(), patient_id: gutPatientId,
                 image_width: currentImageWidth, image_height: currentImageHeight
             })
         });
-
-        if (!res.ok || !res.body) throw new Error(`Server error: ${res.status}`);
-
-        const reader  = res.body.getReader();
-        const decoder = new TextDecoder();
-        let   buf     = '';
-        let   foodCount = 0;
-
-        while (true) {
-            const {done, value} = await reader.read();
-            if (done) break;
-
-            buf += decoder.decode(value, {stream: true});
-            const lines = buf.split('\n');
-            buf = lines.pop();
-
-            for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
-                let payload;
-                try { payload = JSON.parse(line.slice(6)); } catch { continue; }
-
-                if (payload.error) {
-                    showError('Analysis failed: ' + payload.error);
-                    document.getElementById('gut-analyze-btn').style.display = 'block';
-                    hideProgressiveLoading();
-                    return;
-                }
-
-                if (payload.food) {
-                    foodCount++;
-                    const stepEl = document.getElementById('loading-step');
-                    if (stepEl && foodCount === 1) stepEl.textContent = '🦠 Analysing gut impact...';
-                    const foodsEl = document.getElementById('stream-foods');
-                    if (foodsEl) {
-                        const pill = document.createElement('span');
-                        pill.style.cssText = 'background:#0d5c38;color:#fff;padding:4px 10px;' +
-                            'border-radius:20px;font-size:.75rem;font-weight:600;' +
-                            'animation:fadeIn .3s ease;';
-                        pill.textContent = payload.food.name;
-                        foodsEl.appendChild(pill);
-                    }
-                }
-
-                if (payload.done) {
-                    const data = payload.done;
-                    if (data.error) {
-                        showError('Analysis error: ' + data.error);
-                        document.getElementById('gut-analyze-btn').style.display = 'block';
-                    } else {
-                        gutCurrentResults = data;
-                        gutMealTimestamp  = data.timestamp;
-                        renderGutResults(data);
-                    }
-                    hideProgressiveLoading();
-                    return;
-                }
-            }
-        }
-
-        hideProgressiveLoading();
-        showError('Stream ended unexpectedly. Please try again.');
-        document.getElementById('gut-analyze-btn').style.display = 'block';
-
+        const data = await res.json();
+        if (data.error) { showError('Error: ' + data.error); document.getElementById('gut-analyze-btn').style.display = 'block'; return; }
+        gutCurrentResults = data; gutMealTimestamp = data.timestamp;
+        renderGutResults(data);
     } catch (err) {
-        hideProgressiveLoading();
         showError('Analysis failed: ' + err.message);
         document.getElementById('gut-analyze-btn').style.display = 'block';
-    }
+    } finally { hideProgressiveLoading();}
 }
 
 async function gutAnalyzeVoice(text) {
