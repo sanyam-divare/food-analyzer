@@ -384,19 +384,24 @@ def stream_gut_with_claude(image_base64, mime_type="image/jpeg", patient_profile
                 full_text += token
                 yield f'data: {_json.dumps({"chunk": token})}\n\n'
 
-                if '"estimated_grams"' in full_text:
-                    for match in re.finditer(
-                        r'\{[^{}]*"name"\s*:[^{}]*"estimated_grams"\s*:[^{}]*\}',
-                        full_text
-                    ):
-                        try:
-                            food_obj = _json.loads(match.group())
-                            name = food_obj.get("name", "")
-                            if name and name not in [f.get("name") for f in foods_done]:
-                                foods_done.append(food_obj)
-                                yield f'data: {_json.dumps({"food": food_obj})}\n\n'
-                        except Exception:
-                            pass
+                for ch in token:
+                    if in_foods:
+                        food_buf += ch
+                        if ch == "{":
+                            food_depth += 1
+                        elif ch == "}":
+                            food_depth -= 1
+                            if food_depth == 0:
+                                try:
+                                    food_obj = _json.loads(food_buf.strip().rstrip(","))
+                                    if "name" in food_obj and "estimated_grams" in food_obj:
+                                        foods_done.append(food_obj)
+                                        yield f'data: {_json.dumps({"food": food_obj})}\n\n'
+                                except Exception:
+                                    pass
+                                food_buf = ""
+                    if not in_foods and '"foods"' in full_text:
+                        in_foods = True
 
         clean = full_text.strip()
         if "```" in clean:
