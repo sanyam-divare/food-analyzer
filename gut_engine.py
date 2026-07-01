@@ -64,6 +64,7 @@ Respond ONLY in this exact JSON format, no other text:
                 }
             ],
             "bacteria_harmed": [],
+            "estimated_calories": 320,
             "gut_notes": "brief note on gut impact"
         }
     ]
@@ -122,24 +123,44 @@ When rating impact_strength for bacteria_fed:
 
 
 DAILY_ANALYSIS_PROMPT = """
-You are a clinical gut health analyst reviewing a patient's complete food log.
+You are a clinical gut health and nutrition analyst reviewing a patient's complete daily food log.
 
 Patient profile:
 - Bacteria to BOOST (currently low): {bacteria_boost}
 - Bacteria to REDUCE (currently high): {bacteria_reduce}
 - Doctor's food targets: {food_targets}
-- Known condition: IBS / gut dysbiosis
+- Known condition: {condition}
 
-Today's complete food log in chronological sequence:
+Today's complete food log with timing and calories:
 {day_log}
 
-Analyse the ENTIRE day holistically — not each meal in isolation.
-Consider:
-1. Meal SEQUENCING — did the order of eating help or hurt?
-2. Cumulative FODMAP load across the day
-3. Bacteria NET EFFECT for each target bacteria
-4. Food INTERACTIONS — did any foods cancel each other's benefits?
-5. TRUE daily score — more accurate than average of meal scores.
+Total daily calories: {total_calories} kcal
+Meal timing gaps: {timing_gaps}
+
+Analyse the ENTIRE day holistically across these dimensions:
+
+1. MEAL SEQUENCING — did the order of eating help or hurt gut bacteria?
+2. CUMULATIVE FODMAP — total load across the day, not per meal
+3. BACTERIA NET EFFECT — for each target bacteria across all meals
+4. FOOD INTERACTIONS — did any foods cancel each other's benefits?
+5. QUANTITY & CALORIES — was total intake appropriate? Excess calories
+   spike insulin and IGF-1 which increases sebum → acne 3-7 days later.
+   Flag if >2500 kcal or any single meal >900 kcal.
+6. MEAL TIMING & SPACING — gaps between meals matter:
+   - Less than 2 hours between meals = digestive overload
+   - More than 6 hours = gut bacteria starved of fuel
+   - Late eating (after 8pm) = disrupts gut circadian rhythm
+7. DELAYED EFFECTS — predict likely symptoms in next 1-7 days:
+   - High glycemic + high calorie → acne risk in 3-7 days
+   - High FODMAP → bloating/gas in 1-24 hours
+   - Low fibre day → constipation in 1-2 days
+   - High saturated fat → Akkermansia harm, leaky gut risk
+   - Alcohol/processed food → inflammation in 24-48 hours
+8. GUT-SKIN AXIS — specifically flag foods that trigger acne via:
+   - Insulin spike (high GI foods, excess sugar)
+   - IGF-1 increase (dairy, high protein)
+   - Inflammatory pathways (processed oils, refined carbs)
+   - Gut dysbiosis (low fibre, alcohol)
 
 Return ONLY valid JSON, no markdown, no explanation outside JSON:
 {{
@@ -147,9 +168,33 @@ Return ONLY valid JSON, no markdown, no explanation outside JSON:
   "score_adjustment": -0.6,
   "score_reason": "one line why true score differs from average",
   "sequencing_grade": "good|fair|poor",
-  "sequencing_insight": "2-3 sentence insight about meal order today",
+  "sequencing_insight": "2-3 sentences about meal order and timing today",
   "fodmap_status": "within range|borderline|exceeded",
   "fodmap_insight": "1-2 sentences about cumulative FODMAP load",
+  "quantity_assessment": {{
+    "total_kcal": 1840,
+    "status": "appropriate|high|low|very high",
+    "flag": "null or specific concern e.g. dinner was 1100 kcal — too large"
+  }},
+  "timing_assessment": {{
+    "grade": "good|fair|poor",
+    "insight": "1-2 sentences about meal spacing and timing"
+  }},
+  "delayed_effects": [
+    {{
+      "symptom": "bloating",
+      "likelihood": "high|medium|low",
+      "timeframe": "within 2 hours",
+      "cause": "cumulative FODMAP from onion + wheat"
+    }},
+    {{
+      "symptom": "acne flare",
+      "likelihood": "medium",
+      "timeframe": "3-5 days",
+      "cause": "high GI meal at dinner spiked insulin"
+    }}
+  ],
+  "gut_skin_flags": [],
   "bacteria_net_effect": {{
     "BacteriaName": {{
       "status": "well supported|partially supported|undermined|not fed",
@@ -673,9 +718,15 @@ def build_daily_gut_scorecard(meals, date):
     def safe_avg(lst):
         return round(sum(lst) / len(lst), 1) if lst else 0
 
+    # Sum calories across all foods in all meals today
+    total_cal = 0
+    for m in meals:
+        for food in m.get('foods', []):
+            total_cal += food.get('estimated_calories', 0) or 0
+
     return {
         'date':            date,
-        'daily_gut_score': weighted_meal_score(meals), #safe_avg(gut_scores),
+        'daily_gut_score': weighted_meal_score(meals),
         'bacteria_fed':    bacteria_fed,
         'bacteria_harmed': bacteria_harmed,
         'plant_diversity': sorted(list(plants_today)),
@@ -685,7 +736,8 @@ def build_daily_gut_scorecard(meals, date):
         'avg_antiinflam':  safe_avg(antiinflam_scores),
         'fodmap_worst':    fodmap_worst,
         'probiotic_meals': probiotic_meals,
-        'meals':           meals   # keep original meals for display
+        'total_calories':  total_cal,
+        'meals':           meals
     }
 
 
@@ -1174,20 +1226,47 @@ def analyse_full_day_with_claude(day_meals, patient_profile):
         return {"error": "No meals to analyse"}
 
     # ── Build chronological food log for Claude ───────────────────────────
+    sorted_meals = sorted(day_meals, key=lambda x: x.get('timestamp', ''))
     day_log_lines = []
-    for meal in sorted(day_meals, key=lambda x: x.get('timestamp', '')):
-        time  = meal.get('timestamp', '')[-5:] or 'Unknown time'
+    total_calories = 0
+    meal_times = []
+
+    for meal in sorted_meals:
+        ts    = meal.get('timestamp', '')
+        time  = ts[-5:] if len(ts) >= 5 else 'Unknown'
+        meal_times.append(time)
         foods = meal.get('foods', [])
+
+        meal_cal = sum(f.get('estimated_calories', 0) or 0 for f in foods)
+        total_calories += meal_cal
+
         food_list = ', '.join(
-            f"{f.get('name','?')} ({f.get('estimated_grams',0)}g)"
+            f"{f.get('name','?')} ({f.get('estimated_grams',0)}g"
+            f"{f', ~{f.get("estimated_calories",0)}kcal' if f.get('estimated_calories') else ''})"
             for f in foods
         )
         score = meal.get('overall_gut_score', 0)
+        cal_str = f' | {meal_cal}kcal' if meal_cal else ''
         day_log_lines.append(
-            f"  {time}: {food_list} [meal score: {score}/10]"
+            f"  {time}: {food_list} [score: {score}/10{cal_str}]"
         )
 
     day_log = '\n'.join(day_log_lines)
+
+    # ── Calculate timing gaps between meals ───────────────────────────────
+    timing_gaps = 'Only one meal logged'
+    if len(meal_times) >= 2:
+        gaps = []
+        for i in range(1, len(meal_times)):
+            try:
+                from datetime import datetime as _dt
+                t1 = _dt.strptime(meal_times[i-1], '%H:%M')
+                t2 = _dt.strptime(meal_times[i],   '%H:%M')
+                diff_mins = int((t2 - t1).total_seconds() / 60)
+                gaps.append(f"{meal_times[i-1]}→{meal_times[i]}: {diff_mins//60}h {diff_mins%60}m")
+            except Exception:
+                gaps.append(f"{meal_times[i-1]}→{meal_times[i]}: unknown gap")
+        timing_gaps = ', '.join(gaps)
 
     # ── Extract profile data ───────────────────────────────────────────────
     bacteria_boost = ', '.join(
@@ -1205,12 +1284,17 @@ def analyse_full_day_with_claude(day_meals, patient_profile):
         for t in patient_profile.get('food_targets', [])
     ) or 'Not specified'
 
+    condition = patient_profile.get('condition', 'IBS / gut dysbiosis')
+
     # ── Build prompt ──────────────────────────────────────────────────────
     prompt = DAILY_ANALYSIS_PROMPT.format(
         bacteria_boost  = bacteria_boost,
         bacteria_reduce = bacteria_reduce,
         food_targets    = food_targets,
-        day_log         = day_log
+        condition       = condition,
+        day_log         = day_log,
+        total_calories  = total_calories if total_calories > 0 else 'Not available',
+        timing_gaps     = timing_gaps
     )
 
     try:

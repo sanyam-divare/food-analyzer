@@ -2516,6 +2516,71 @@ async function gutAnalyzeVoice(text) {
 }
 
 // ── RENDER RESULTS ─────────────────────────────────────────────────────────────
+// Track edits for recalculate
+let gutResultsEdited = false;
+
+function gutMarkEdited() {
+    gutResultsEdited = true;
+    const btn = document.getElementById('gut-recalculate-btn');
+    if (btn) btn.style.display = 'block';
+}
+
+function gutDeleteFood(idx) {
+    if (!gutCurrentResults || !gutCurrentResults.foods) return;
+    gutCurrentResults.foods.splice(idx, 1);
+    gutMarkEdited();
+    renderGutResults(gutCurrentResults);
+}
+
+function gutEditGrams(idx, newGrams) {
+    if (!gutCurrentResults || !gutCurrentResults.foods) return;
+    gutCurrentResults.foods[idx].estimated_grams = parseInt(newGrams) || gutCurrentResults.foods[idx].estimated_grams;
+    gutMarkEdited();
+}
+
+async function gutRecalculate() {
+    if (!gutCurrentResults || !gutCurrentResults.foods) return;
+    const btn = document.getElementById('gut-recalculate-btn');
+    if (btn) { btn.textContent = '⏳ Recalculating...'; btn.disabled = true; }
+
+    // Build food list text from current (possibly edited) foods
+    const foodText = gutCurrentResults.foods
+        .map(f => `${f.name} ${f.estimated_grams}g ${f.cooking_method || ''}`.trim())
+        .join(', ');
+
+    try {
+        const res = await fetch('/gut/analyze-voice', {
+            method:  'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                text:       foodText,
+                timezone:   getUserTimezone(),
+                patient_id: gutPatientId
+            })
+        });
+        const data = await res.json();
+        if (data.error) { showError('Recalculate failed: ' + data.error); return; }
+
+        // Merge new scores back — keep user-edited grams
+        const origFoods = gutCurrentResults.foods;
+        data.foods = (data.foods || []).map((newF, i) => ({
+            ...newF,
+            estimated_grams: origFoods[i]?.estimated_grams ?? newF.estimated_grams
+        }));
+        data.timestamp  = gutCurrentResults.timestamp;
+        data.patient_id = gutCurrentResults.patient_id;
+        data.meal_description = gutCurrentResults.meal_description;
+        data.cuisine_type     = gutCurrentResults.cuisine_type;
+
+        gutCurrentResults  = data;
+        gutResultsEdited   = false;
+        renderGutResults(data);
+    } catch (e) {
+        showError('Recalculate failed: ' + e.message);
+        if (btn) { btn.textContent = '🔄 Recalculate'; btn.disabled = false; }
+    }
+}
+
 function renderGutResults(data) {
     const foods = data.foods || [];
     const score = data.overall_gut_score || 0;
@@ -2523,7 +2588,11 @@ function renderGutResults(data) {
     const sc    = score >= 7 ? '#22c55e' : score >= 5 ? '#f59e0b' : '#ef4444';
     const se    = score >= 7 ? '✅' : score >= 5 ? '⚠️' : '❌';
 
-    const foodRows = foods.map(f => {
+    // Total calories
+    const totalCal = foods.reduce((s, f) => s + (f.estimated_calories || 0), 0);
+    const calStr   = totalCal > 0 ? ` · ~${totalCal} kcal` : '';
+
+    const foodRows = foods.map((f, idx) => {
         const fc = f.fodmap === 'high' ? '#ef4444' : f.fodmap === 'medium' ? '#f59e0b' : '#22c55e';
         const bf = (f.bacteria_fed || []).map(b => {
             const n = typeof b==='object'?b.name:b;
@@ -2536,11 +2605,37 @@ function renderGutResults(data) {
             return `<div class="bacteria-item bacteria-negative"><span class="bacteria-name">❌ ${n}</span></div>`;
         }).join('');
         const fi = (f.prebiotic_fibres||[]).length ? `<div class="fibre-tags">${f.prebiotic_fibres.map(x=>`<span class="fibre-tag">${x}</span>`).join('')}</div>` : '';
+        const cal = f.estimated_calories ? `<span style="font-size:.7rem;color:#999;margin-left:4px;">~${f.estimated_calories}kcal</span>` : '';
+
         return `
-            <div class="gut-food-card">
+            <div class="gut-food-card" id="gut-food-${idx}">
                 <div class="gut-food-header">
                     <div class="gut-food-name">${f.name}</div>
-                    <div class="gut-food-grams">${f.estimated_grams}g</div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span
+                            class="gut-food-grams-edit"
+                            contenteditable="true"
+                            inputmode="numeric"
+                            title="Tap to edit"
+                            onblur="gutEditGrams(${idx}, this.textContent.replace('g','').trim())"
+                            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                            style="font-size:.82rem;font-weight:600;color:#555;
+                                   border-bottom:1px dashed transparent;cursor:pointer;
+                                   outline:none;min-width:30px;
+                                   transition:border-color .2s,color .2s;"
+                            onfocus="this.style.color='#0d5c38';this.style.borderBottomColor='#0d5c38';"
+                            onblur2="this.style.color='#555';this.style.borderBottomColor='transparent';"
+                        >${f.estimated_grams}g</span>
+                        ${cal}
+                        <button onclick="gutDeleteFood(${idx})"
+                            title="Remove this food"
+                            style="background:none;border:none;cursor:pointer;
+                                   color:#bbb;font-size:.8rem;font-weight:300;
+                                   padding:2px 4px;line-height:1;
+                                   transition:color .2s,opacity .2s;opacity:.5;"
+                            onmouseover="this.style.color='#c0392b';this.style.opacity='1';"
+                            onmouseout="this.style.color='#bbb';this.style.opacity='.5';">✕</button>
+                    </div>
                 </div>
                 <div class="gut-scores-row">
                     <div class="gut-score-pill">🌱 Prebiotic: <strong>${f.prebiotic_score||0}/10</strong></div>
@@ -2566,12 +2661,24 @@ function renderGutResults(data) {
                 </div>
                 <div class="gut-score-info">
                     <div class="gut-score-title">${se} Overall Gut Score</div>
-                    <div class="gut-score-notes">${notes}</div>
+                    <div class="gut-score-notes">${notes}${calStr}</div>
                 </div>
             </div>
             <div class="gut-disclaimer">⚠️ AI-powered estimates — validate with your practitioner</div>
-            <div class="section-label">🥗 Food Breakdown</div>
+            <div class="section-label">🥗 Food Breakdown
+                <span style="font-size:.68rem;color:#999;font-weight:400;margin-left:6px;">
+                    Tap grams to edit · ✕ to remove
+                </span>
+            </div>
             ${foodRows}
+            <button id="gut-recalculate-btn"
+                onclick="gutRecalculate()"
+                style="display:none;width:100%;margin:10px 0;
+                       padding:10px;border:none;border-radius:10px;
+                       background:#f0f7f0;color:#0d5c38;
+                       font-size:.85rem;font-weight:600;cursor:pointer;">
+                🔄 Recalculate with updated quantities
+            </button>
             <div class="confirm-bar">
                 <button class="confirm-btn confirm-reject" onclick="gutRejectResults()">
                     <span class="confirm-icon">✕</span><span class="confirm-label">Retake</span>
@@ -2583,10 +2690,17 @@ function renderGutResults(data) {
         </div>`;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth' });
+
+    // Restore recalculate button if still in edited state
+    if (gutResultsEdited) {
+        const btn = document.getElementById('gut-recalculate-btn');
+        if (btn) btn.style.display = 'block';
+    }
 }
 
 // ── CONFIRM / RETAKE ──────────────────────────────────────────────────────────
 async function gutConfirmResults() {
+    gutResultsEdited = false;
     if (!gutCurrentResults) return;
     try {
         const res    = await fetch('/gut/confirm-meal', {
@@ -2618,6 +2732,7 @@ async function gutConfirmResults() {
     } catch (err) { alert('Save failed: ' + err.message); }
 }
 function gutRejectResults() {
+    gutResultsEdited = false;
     gutCurrentResults = null;
     document.getElementById('gut-results').style.display    = 'none';
     document.getElementById('gut-analyze-btn').style.display = 'none';
@@ -2885,7 +3000,7 @@ function renderDailyScorecard(container, data) {
                 <div class="gut-score-notes">
                     ${data.meal_count} meals ·
                     ${data.plant_count} plants ·
-                    FODMAP: <span style="color:${fodmapColor(data.fodmap_worst)}">
+                    ${data.total_calories > 0 ? `~${data.total_calories} kcal · ` : ''}FODMAP: <span style="color:${fodmapColor(data.fodmap_worst)}">
                         ${(data.fodmap_worst || 'low').toUpperCase()}
                     </span>
                 </div>
@@ -3620,6 +3735,76 @@ function renderDayAnalysis(panel, data) {
                     </div>
                     <div class="analysis-section-body">
                         ${data.key_interaction}
+                    </div>
+                </div>` : ''}
+
+            <!-- Quantity & Calories -->
+            ${data.quantity_assessment ? `
+                <div class="analysis-section">
+                    <div class="analysis-section-header">
+                        <span class="analysis-section-title">🔢 Quantity & Calories</span>
+                        <span class="analysis-grade" style="color:${
+                            data.quantity_assessment.status === 'appropriate' ? '#22c55e' :
+                            data.quantity_assessment.status === 'low'         ? '#3b82f6' :
+                            data.quantity_assessment.status === 'very high'   ? '#ef4444' : '#f59e0b'
+                        }">${(data.quantity_assessment.status || '').toUpperCase()}</span>
+                    </div>
+                    <div class="analysis-section-body">
+                        ${data.quantity_assessment.total_kcal
+                            ? '<strong>~' + data.quantity_assessment.total_kcal + ' kcal</strong> today. ' : ''}
+                        ${data.quantity_assessment.flag && data.quantity_assessment.flag !== 'null'
+                            ? '⚠️ ' + data.quantity_assessment.flag : ''}
+                    </div>
+                </div>` : ''}
+
+            <!-- Meal Timing -->
+            ${data.timing_assessment ? `
+                <div class="analysis-section">
+                    <div class="analysis-section-header">
+                        <span class="analysis-section-title">⏱️ Meal Timing</span>
+                        <span class="analysis-grade" style="color:${
+                            data.timing_assessment.grade === 'good' ? '#22c55e' :
+                            data.timing_assessment.grade === 'fair' ? '#f59e0b' : '#ef4444'
+                        }">${(data.timing_assessment.grade || '').toUpperCase()}</span>
+                    </div>
+                    <div class="analysis-section-body">
+                        ${data.timing_assessment.insight || ''}
+                    </div>
+                </div>` : ''}
+
+            <!-- Delayed Effects -->
+            ${(data.delayed_effects || []).length ? `
+                <div class="analysis-section">
+                    <div class="analysis-section-title">🔮 Predicted Effects (Next 1-7 Days)</div>
+                    <div class="analysis-section-body">
+                        ${(data.delayed_effects || []).map(e => {
+                            const lc = e.likelihood === 'high'   ? '#ef4444' :
+                                       e.likelihood === 'medium' ? '#f59e0b' : '#22c55e';
+                            const icon = (e.symptom||'').toLowerCase().includes('acne')   ? '😣' :
+                                         (e.symptom||'').toLowerCase().includes('bloat')  ? '🫃' :
+                                         (e.symptom||'').toLowerCase().includes('energy') ? '⚡' :
+                                         (e.symptom||'').toLowerCase().includes('gas')    ? '💨' :
+                                         (e.symptom||'').toLowerCase().includes('skin')   ? '🌡️' : '⚠️';
+                            return '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;padding:8px;background:#fafafa;border-radius:8px;">' +
+                                '<span style="font-size:1rem;">' + icon + '</span>' +
+                                '<div style="flex:1;">' +
+                                '<div style="font-size:.8rem;font-weight:600;color:#1a1a1a;">' + e.symptom +
+                                '<span style="font-size:.7rem;font-weight:500;color:' + lc + ';margin-left:6px;">' + e.likelihood + ' risk</span>' +
+                                '<span style="font-size:.68rem;color:#999;margin-left:4px;">· ' + e.timeframe + '</span></div>' +
+                                '<div style="font-size:.72rem;color:#666;margin-top:2px;">' + e.cause + '</div>' +
+                                '</div></div>';
+                        }).join('')}
+                    </div>
+                </div>` : ''}
+
+            <!-- Gut-Skin Flags -->
+            ${(data.gut_skin_flags || []).length ? `
+                <div class="analysis-section" style="border-left:3px solid #f59e0b;padding-left:10px;">
+                    <div class="analysis-section-title">🌡️ Gut-Skin Axis Alert</div>
+                    <div class="analysis-section-body">
+                        ${(data.gut_skin_flags || []).map(f =>
+                            '<div style="font-size:.78rem;margin-bottom:4px;">⚠️ ' + f + '</div>'
+                        ).join('')}
                     </div>
                 </div>` : ''}
 
