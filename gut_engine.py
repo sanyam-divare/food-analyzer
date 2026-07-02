@@ -134,10 +134,12 @@ Patient profile:
 Today's complete food log with timing and calories:
 {day_log}
 
-Total daily calories: {total_calories} kcal
+Total calories so far: {total_calories} kcal
 Meal timing gaps: {timing_gaps}
 
-Analyse the ENTIRE day holistically across these dimensions:
+⏰ Time context: {time_context}
+
+Analyse the day holistically across these dimensions:
 
 1. MEAL SEQUENCING — did the order of eating help or hurt gut bacteria?
 2. CUMULATIVE FODMAP — total load across the day, not per meal
@@ -164,9 +166,17 @@ Analyse the ENTIRE day holistically across these dimensions:
 
 Return ONLY valid JSON, no markdown, no explanation outside JSON:
 {{
+  "headline": "10 words max plain English e.g. Rough day — acne risk high, act tomorrow",
+  "risk_level": "low|moderate|high|critical",
+  "top3": [
+    "Specific action 1 — max 12 words",
+    "Specific action 2 — max 12 words",
+    "Specific action 3 — max 12 words"
+  ],
   "true_daily_score": 6.2,
   "score_adjustment": -0.6,
   "score_reason": "one line why true score differs from average",
+  "narrative": "2-3 sentence human-friendly summary",
   "sequencing_grade": "good|fair|poor",
   "sequencing_insight": "2-3 sentences about meal order and timing today",
   "fodmap_status": "within range|borderline|exceeded",
@@ -1210,7 +1220,7 @@ def check_bacteria_progress_today(patient_profile, meals_today):
 
     return progress
 
-def analyse_full_day_with_claude(day_meals, patient_profile):
+def analyse_full_day_with_claude(day_meals, patient_profile, current_time='23:59', is_partial=False):
     """
     Send entire day's food log to Claude for holistic gut analysis.
     Returns structured JSON with sequencing, FODMAP load, bacteria
@@ -1287,6 +1297,19 @@ def analyse_full_day_with_claude(day_meals, patient_profile):
     condition = patient_profile.get('condition', 'IBS / gut dysbiosis')
 
     # ── Build prompt ──────────────────────────────────────────────────────
+    # Build time context
+    if is_partial:
+        hour = int(current_time.split(':')[0]) if ':' in current_time else 12
+        pct  = round((hour / 24) * 100)
+        time_context = (
+            f"Current time: {current_time} — approximately {pct}% through the day. "
+            f"This is a PARTIAL day analysis. Do NOT flag calorie deficit or missing "
+            f"meals for times that haven't occurred yet. Only assess what has been "
+            f"logged so far. Adjust tomorrow's priorities based on remaining meals today."
+        )
+    else:
+        time_context = "Full day analysis — all meals for the day have been logged."
+
     prompt = DAILY_ANALYSIS_PROMPT.format(
         bacteria_boost  = bacteria_boost,
         bacteria_reduce = bacteria_reduce,
@@ -1294,7 +1317,8 @@ def analyse_full_day_with_claude(day_meals, patient_profile):
         condition       = condition,
         day_log         = day_log,
         total_calories  = total_calories if total_calories > 0 else 'Not available',
-        timing_gaps     = timing_gaps
+        timing_gaps     = timing_gaps,
+        time_context    = time_context
     )
 
     try:

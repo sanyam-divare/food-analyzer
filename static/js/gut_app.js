@@ -615,16 +615,34 @@ async function loadGutHistory() {
             return;
         }
 
-        // Group by date, newest first
+        // Sort by timestamp newest first, then group by date
+        const sorted = [...data].sort((a, b) => {
+            const ta = a.timestamp || a.date || '';
+            const tb = b.timestamp || b.date || '';
+            return tb.localeCompare(ta);  // newest first
+        });
+
         const byDate = {};
-        [...data].reverse().forEach(meal => {
+        sorted.forEach(meal => {
             const date = (meal.timestamp || meal.date || '').slice(0, 10);
             if (!byDate[date]) byDate[date] = [];
             byDate[date].push(meal);
         });
 
-        container.innerHTML = Object.entries(byDate)
-            .map(([date, meals]) => renderDayRibbon(date, meals))
+        // Sort meals within each day by time (newest first)
+        Object.values(byDate).forEach(meals => {
+            meals.sort((a, b) => {
+                const ta = a.timestamp || '';
+                const tb = b.timestamp || '';
+                return tb.localeCompare(ta);
+            });
+        });
+
+        // Sort dates newest first
+        const sortedDates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+
+        container.innerHTML = sortedDates
+            .map(date => renderDayRibbon(date, byDate[date]))
             .join('');
 
     } catch (err) {
@@ -3553,7 +3571,8 @@ async function loadDayAnalysis() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 patient_id: gutPatientId,
-                date:       date
+                date:       date,
+                timezone:   getUserTimezone()
             })
         });
         const data = await res.json();
@@ -3654,181 +3673,226 @@ function renderDayAnalysis(panel, data) {
     panel.innerHTML = `
         <div class="ai-analysis-card">
 
-            <!-- Header -->
+            <!-- ── LAYER 1: Always visible ── -->
             <div class="analysis-header">
                 <div class="analysis-header-left">
                     <span class="analysis-badge">✨ AI Analysis</span>
-                    <span class="analysis-meals">
-                        ${data.meal_count} meals reviewed
-                    </span>
+                    <span class="analysis-meals">${data.meal_count} meals reviewed</span>
                 </div>
+                <span style="font-size:.75rem;font-weight:700;padding:3px 10px;
+                             border-radius:20px;
+                             background:${
+                                data.risk_level==='critical' ? '#fde8e8' :
+                                data.risk_level==='high'     ? '#fff3cd' :
+                                data.risk_level==='moderate' ? '#fff8e1' : '#e8f5e9'};
+                             color:${
+                                data.risk_level==='critical' ? '#c0392b' :
+                                data.risk_level==='high'     ? '#e67e22' :
+                                data.risk_level==='moderate' ? '#f39c12' : '#27ae60'};">
+                    ${(data.risk_level||'').toUpperCase()}
+                </span>
             </div>
 
-            <!-- True score vs average -->
+            <!-- Headline -->
+            <div style="font-size:.95rem;font-weight:600;color:#1a1a1a;
+                        margin:10px 0 8px;line-height:1.4;">
+                ${data.headline || data.narrative || ''}
+            </div>
+
+            <!-- True score -->
             <div class="analysis-score-row">
-                <div class="analysis-true-score"
-                     style="border-color:${trueColor}">
-                    <div class="analysis-score-circle"
-                         style="background:${trueColor}">
-                        <span class="analysis-score-num">
-                            ${trueScore}
-                        </span>
+                <div class="analysis-true-score" style="border-color:${trueColor}">
+                    <div class="analysis-score-circle" style="background:${trueColor}">
+                        <span class="analysis-score-num">${trueScore}</span>
                         <span class="analysis-score-label">/ 10</span>
                     </div>
                     <div>
-                        <div class="analysis-score-title">
-                            True Day Score
-                        </div>
-                        <div class="analysis-score-adj"
-                             style="color:${adjColor}">
+                        <div class="analysis-score-title">True Day Score</div>
+                        <div class="analysis-score-adj" style="color:${adjColor}">
                             ${adjSign}${adjustment} vs meal average
                         </div>
-                        <div class="analysis-score-reason">
-                            ${data.score_reason || ''}
+                        <div class="analysis-score-reason">${data.score_reason || ''}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 3 actions -->
+            ${(data.top3 || []).length ? `
+                <div style="background:#f0f7f0;border-radius:10px;padding:12px;margin:10px 0;">
+                    <div style="font-size:.75rem;font-weight:700;color:#0d5c38;
+                                margin-bottom:8px;letter-spacing:.5px;">
+                        🎯 YOUR TOP 3 ACTIONS FOR TOMORROW
+                    </div>
+                    ${(data.top3||[]).map((a,i) => `
+                        <div style="display:flex;gap:8px;margin-bottom:6px;
+                                    align-items:flex-start;">
+                            <span style="background:#0d5c38;color:#fff;
+                                         border-radius:50%;width:18px;height:18px;
+                                         font-size:.65rem;font-weight:700;
+                                         display:flex;align-items:center;
+                                         justify-content:center;flex-shrink:0;
+                                         margin-top:1px;">${i+1}</span>
+                            <span style="font-size:.8rem;color:#1a1a1a;
+                                         line-height:1.4;">${a}</span>
+                        </div>`).join('')}
+                </div>` : ''}
+
+            <!-- ── LAYER 2: Predicted effects + timing (expandable) ── -->
+            <div id="analysis-layer2" style="display:none;">
+
+                <!-- Predicted effects -->
+                ${(data.delayed_effects || []).length ? `
+                    <div class="analysis-section">
+                        <div class="analysis-section-title">
+                            🔮 Predicted Effects (Next 1-7 Days)
                         </div>
-                    </div>
-                </div>
-            </div>
+                        <div class="analysis-section-body">
+                            ${(data.delayed_effects||[]).map(e => {
+                                const lc = e.likelihood==='high'   ? '#ef4444' :
+                                           e.likelihood==='medium' ? '#f59e0b' : '#22c55e';
+                                const icon = (e.symptom||'').toLowerCase().includes('acne')   ? '😣' :
+                                             (e.symptom||'').toLowerCase().includes('bloat')  ? '🫃' :
+                                             (e.symptom||'').toLowerCase().includes('energy') ? '⚡' :
+                                             (e.symptom||'').toLowerCase().includes('gas')    ? '💨' :
+                                             (e.symptom||'').toLowerCase().includes('skin')   ? '🌡️' : '⚠️';
+                                return '<div style="display:flex;gap:8px;margin-bottom:8px;' +
+                                    'padding:8px;background:#fafafa;border-radius:8px;">' +
+                                    '<span>' + icon + '</span>' +
+                                    '<div style="flex:1;">' +
+                                    '<div style="font-size:.8rem;font-weight:600;">' + e.symptom +
+                                    '<span style="font-size:.7rem;color:' + lc + ';margin-left:6px;">' +
+                                    e.likelihood + ' risk</span>' +
+                                    '<span style="font-size:.68rem;color:#999;margin-left:4px;">· ' +
+                                    e.timeframe + '</span></div>' +
+                                    '<div style="font-size:.72rem;color:#666;margin-top:2px;">' +
+                                    e.cause + '</div></div></div>';
+                            }).join('')}
+                        </div>
+                    </div>` : ''}
 
-            <!-- Narrative -->
-            <div class="analysis-narrative">
-                ${data.narrative || ''}
-            </div>
+                <!-- Gut-Skin flags -->
+                ${(data.gut_skin_flags||[]).length ? `
+                    <div class="analysis-section"
+                         style="border-left:3px solid #f59e0b;padding-left:10px;">
+                        <div class="analysis-section-title">🌡️ Gut-Skin Axis</div>
+                        <div class="analysis-section-body">
+                            ${(data.gut_skin_flags||[]).map(f =>
+                                '<div style="font-size:.78rem;margin-bottom:4px;">⚠️ ' + f + '</div>'
+                            ).join('')}
+                        </div>
+                    </div>` : ''}
 
-            <!-- Sequencing -->
-            <div class="analysis-section">
-                <div class="analysis-section-header">
-                    <span class="analysis-section-title">
-                        🔄 Meal Sequencing
-                    </span>
-                    <span class="analysis-grade"
-                          style="color:${seqColor}">
-                        ${(data.sequencing_grade || '').toUpperCase()}
-                    </span>
-                </div>
-                <div class="analysis-section-body">
-                    ${data.sequencing_insight || ''}
-                </div>
-            </div>
+                <!-- Quantity -->
+                ${data.quantity_assessment ? `
+                    <div class="analysis-section">
+                        <div class="analysis-section-header">
+                            <span class="analysis-section-title">🔢 Calories</span>
+                            <span class="analysis-grade" style="color:${
+                                data.quantity_assessment.status==='appropriate' ? '#22c55e' :
+                                data.quantity_assessment.status==='low'         ? '#3b82f6' :
+                                data.quantity_assessment.status==='very high'   ? '#ef4444' : '#f59e0b'
+                            }">${(data.quantity_assessment.status||'').toUpperCase()}</span>
+                        </div>
+                        <div class="analysis-section-body">
+                            ${data.quantity_assessment.total_kcal
+                                ? '<strong>~' + data.quantity_assessment.total_kcal + ' kcal</strong> today. ' : ''}
+                            ${data.quantity_assessment.flag && data.quantity_assessment.flag!=='null'
+                                ? '⚠️ ' + data.quantity_assessment.flag : ''}
+                        </div>
+                    </div>` : ''}
 
-            <!-- FODMAP load -->
-            <div class="analysis-section">
-                <div class="analysis-section-header">
-                    <span class="analysis-section-title">
-                        🌿 FODMAP Load
-                    </span>
-                    <span class="analysis-grade"
-                          style="color:${fodmapColor}">
-                        ${(data.fodmap_status || '').toUpperCase()}
-                    </span>
-                </div>
-                <div class="analysis-section-body">
-                    ${data.fodmap_insight || ''}
-                </div>
-            </div>
+                <!-- Timing -->
+                ${data.timing_assessment ? `
+                    <div class="analysis-section">
+                        <div class="analysis-section-header">
+                            <span class="analysis-section-title">⏱️ Meal Timing</span>
+                            <span class="analysis-grade" style="color:${
+                                data.timing_assessment.grade==='good' ? '#22c55e' :
+                                data.timing_assessment.grade==='fair' ? '#f59e0b' : '#ef4444'
+                            }">${(data.timing_assessment.grade||'').toUpperCase()}</span>
+                        </div>
+                        <div class="analysis-section-body">
+                            ${data.timing_assessment.insight||''}
+                        </div>
+                    </div>` : ''}
 
-            <!-- Key interaction -->
-            ${data.key_interaction ? `
-                <div class="analysis-section">
-                    <div class="analysis-section-title">
-                        ⚡ Key Interaction
-                    </div>
-                    <div class="analysis-section-body">
-                        ${data.key_interaction}
-                    </div>
-                </div>` : ''}
+            </div><!-- end layer 2 -->
 
-            <!-- Quantity & Calories -->
-            ${data.quantity_assessment ? `
+            <!-- Layer 2 toggle -->
+            <button onclick="
+                    const l2=document.getElementById('analysis-layer2');
+                    const show=l2.style.display==='none';
+                    l2.style.display=show?'block':'none';
+                    this.textContent=show?'🔮 Hide effects ▲':
+                    '🔮 Predicted effects & timing ▼';"
+                style="width:100%;background:#f8f9fa;border:1px solid #e5e7eb;
+                       border-radius:8px;padding:8px;font-size:.78rem;
+                       color:#666;cursor:pointer;margin:8px 0;text-align:left;">
+                🔮 Predicted effects & timing ▼
+            </button>
+
+            <!-- ── LAYER 3: Deep dive (expandable) ── -->
+            <button onclick="
+                    const l3=document.getElementById('analysis-layer3');
+                    const show=l3.style.display==='none';
+                    l3.style.display=show?'block':'none';
+                    this.textContent=show?'🦠 Hide detailed breakdown ▲':
+                    '🦠 Detailed breakdown (bacteria, FODMAP, sequencing) ▼';"
+                style="width:100%;background:#f8f9fa;border:1px solid #e5e7eb;
+                       border-radius:8px;padding:8px;font-size:.78rem;
+                       color:#666;cursor:pointer;margin:4px 0 8px;text-align:left;">
+                🦠 Detailed breakdown (bacteria, FODMAP, sequencing) ▼
+            </button>
+            <div id="analysis-layer3" style="display:none;">
+
+                <!-- Narrative -->
+                ${data.narrative ? `
+                    <div class="analysis-narrative">${data.narrative}</div>` : ''}
+
+                <!-- Sequencing -->
                 <div class="analysis-section">
                     <div class="analysis-section-header">
-                        <span class="analysis-section-title">🔢 Quantity & Calories</span>
-                        <span class="analysis-grade" style="color:${
-                            data.quantity_assessment.status === 'appropriate' ? '#22c55e' :
-                            data.quantity_assessment.status === 'low'         ? '#3b82f6' :
-                            data.quantity_assessment.status === 'very high'   ? '#ef4444' : '#f59e0b'
-                        }">${(data.quantity_assessment.status || '').toUpperCase()}</span>
+                        <span class="analysis-section-title">🔄 Meal Sequencing</span>
+                        <span class="analysis-grade" style="color:${seqColor}">
+                            ${(data.sequencing_grade||'').toUpperCase()}
+                        </span>
                     </div>
-                    <div class="analysis-section-body">
-                        ${data.quantity_assessment.total_kcal
-                            ? '<strong>~' + data.quantity_assessment.total_kcal + ' kcal</strong> today. ' : ''}
-                        ${data.quantity_assessment.flag && data.quantity_assessment.flag !== 'null'
-                            ? '⚠️ ' + data.quantity_assessment.flag : ''}
-                    </div>
-                </div>` : ''}
+                    <div class="analysis-section-body">${data.sequencing_insight||''}</div>
+                </div>
 
-            <!-- Meal Timing -->
-            ${data.timing_assessment ? `
+                <!-- FODMAP -->
                 <div class="analysis-section">
                     <div class="analysis-section-header">
-                        <span class="analysis-section-title">⏱️ Meal Timing</span>
-                        <span class="analysis-grade" style="color:${
-                            data.timing_assessment.grade === 'good' ? '#22c55e' :
-                            data.timing_assessment.grade === 'fair' ? '#f59e0b' : '#ef4444'
-                        }">${(data.timing_assessment.grade || '').toUpperCase()}</span>
+                        <span class="analysis-section-title">🌿 FODMAP Load</span>
+                        <span class="analysis-grade" style="color:${fodmapColor}">
+                            ${(data.fodmap_status||'').toUpperCase()}
+                        </span>
                     </div>
-                    <div class="analysis-section-body">
-                        ${data.timing_assessment.insight || ''}
-                    </div>
-                </div>` : ''}
+                    <div class="analysis-section-body">${data.fodmap_insight||''}</div>
+                </div>
 
-            <!-- Delayed Effects -->
-            ${(data.delayed_effects || []).length ? `
-                <div class="analysis-section">
-                    <div class="analysis-section-title">🔮 Predicted Effects (Next 1-7 Days)</div>
-                    <div class="analysis-section-body">
-                        ${(data.delayed_effects || []).map(e => {
-                            const lc = e.likelihood === 'high'   ? '#ef4444' :
-                                       e.likelihood === 'medium' ? '#f59e0b' : '#22c55e';
-                            const icon = (e.symptom||'').toLowerCase().includes('acne')   ? '😣' :
-                                         (e.symptom||'').toLowerCase().includes('bloat')  ? '🫃' :
-                                         (e.symptom||'').toLowerCase().includes('energy') ? '⚡' :
-                                         (e.symptom||'').toLowerCase().includes('gas')    ? '💨' :
-                                         (e.symptom||'').toLowerCase().includes('skin')   ? '🌡️' : '⚠️';
-                            return '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;padding:8px;background:#fafafa;border-radius:8px;">' +
-                                '<span style="font-size:1rem;">' + icon + '</span>' +
-                                '<div style="flex:1;">' +
-                                '<div style="font-size:.8rem;font-weight:600;color:#1a1a1a;">' + e.symptom +
-                                '<span style="font-size:.7rem;font-weight:500;color:' + lc + ';margin-left:6px;">' + e.likelihood + ' risk</span>' +
-                                '<span style="font-size:.68rem;color:#999;margin-left:4px;">· ' + e.timeframe + '</span></div>' +
-                                '<div style="font-size:.72rem;color:#666;margin-top:2px;">' + e.cause + '</div>' +
-                                '</div></div>';
-                        }).join('')}
-                    </div>
-                </div>` : ''}
+                <!-- Key interaction -->
+                ${data.key_interaction ? `
+                    <div class="analysis-section">
+                        <div class="analysis-section-title">⚡ Key Interaction</div>
+                        <div class="analysis-section-body">${data.key_interaction}</div>
+                    </div>` : ''}
 
-            <!-- Gut-Skin Flags -->
-            ${(data.gut_skin_flags || []).length ? `
-                <div class="analysis-section" style="border-left:3px solid #f59e0b;padding-left:10px;">
-                    <div class="analysis-section-title">🌡️ Gut-Skin Axis Alert</div>
-                    <div class="analysis-section-body">
-                        ${(data.gut_skin_flags || []).map(f =>
-                            '<div style="font-size:.78rem;margin-bottom:4px;">⚠️ ' + f + '</div>'
-                        ).join('')}
-                    </div>
-                </div>` : ''}
+                <!-- Bacteria net effect -->
+                ${bacteriaRows ? `
+                    <div class="analysis-section">
+                        <div class="analysis-section-title">🦠 Bacteria Net Effect</div>
+                        <div class="analysis-bacteria-list">${bacteriaRows}</div>
+                    </div>` : ''}
 
-            <!-- Bacteria net effect -->
-            ${bacteriaRows ? `
-                <div class="analysis-section">
-                    <div class="analysis-section-title">
-                        🦠 Bacteria Net Effect
-                    </div>
-                    <div class="analysis-bacteria-list">
-                        ${bacteriaRows}
-                    </div>
-                </div>` : ''}
+                <!-- Tomorrow's priorities (full list) -->
+                ${priorities ? `
+                    <div class="analysis-section">
+                        <div class="analysis-section-title">🎯 Full Priority List</div>
+                        <div class="analysis-priorities">${priorities}</div>
+                    </div>` : ''}
 
-            <!-- Tomorrow's priorities -->
-            ${priorities ? `
-                <div class="analysis-section">
-                    <div class="analysis-section-title">
-                        🎯 Tomorrow's Priorities
-                    </div>
-                    <div class="analysis-priorities">
-                        ${priorities}
-                    </div>
-                </div>` : ''}
+            </div><!-- end layer 3 -->
 
             <div class="analysis-disclaimer">
                 ⚠️ AI analysis — validate with your practitioner

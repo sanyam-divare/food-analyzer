@@ -221,7 +221,13 @@ def gut_history():
     try:
         patient_id = request.args.get('patient_id', 'guest')
         meals      = load_gut_meals(patient_id)
-        return jsonify(meals[-20:])
+        # Sort by timestamp so edits are reflected immediately
+        meals_sorted = sorted(
+            meals,
+            key=lambda m: m.get('timestamp', m.get('date', '')),
+            reverse=False  # oldest first — frontend reverses to newest first
+        )
+        return jsonify(meals_sorted[-20:])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -680,7 +686,17 @@ def gut_daily_analysis():
                 "error": "Log at least 2 meals for a day analysis"
             }), 400
 
-        analysis = analyse_full_day_with_claude(day_meals, profile)
+        # Pass current time so AI knows how far through the day we are
+        from datetime import datetime as _dt
+        timezone_str = data.get('timezone', '')
+        current_time = get_local_timestamp(timezone_str)[-5:]  # HH:MM
+        is_today     = (date == get_today_str())
+
+        analysis = analyse_full_day_with_claude(
+            day_meals, profile,
+            current_time=current_time if is_today else '23:59',
+            is_partial=is_today
+        )
 
         if not analysis:
             return jsonify({"error": "Analysis returned empty"}), 500
